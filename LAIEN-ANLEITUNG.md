@@ -2,151 +2,80 @@
 
 ## Was ist AIO-Tool?
 
-AIO-Tool bündelt wiederkehrende Aufgaben in einer gemeinsamen Oberfläche. Die Bedienung soll einfach, sichtbar und sicher bleiben.
+AIO-Tool bündelt wiederkehrende Aufgaben in einer gemeinsamen, lokalen Oberfläche. Die Bedienung soll einfach, sichtbar und sicher bleiben.
 
-## Aktueller Entwicklungsstand
+## Aktueller Stand: 0.2.1-robustness
 
-Die Version `0.2.0-core` erweitert den startbaren Grundkern um eine sichere lokale Datenbasis.
+Der bisherige Versions-, Ereignis- und TODO-Kern wurde um zusätzliche Schutzschichten ergänzt:
 
-Neu vorbereitet sind:
+- geprüfte Musterdateien,
+- Testdateien für typische Fehler,
+- verständliche und versionierte Hilfetexte,
+- intelligente Fehlerhinweise,
+- ein Entwicklungs-Lerngedächtnis, damit bekannte Fehlerarten nicht immer wieder neu entstehen.
 
-- professionelle Versionsverwaltung,
-- verständliche Ereignishistorie,
-- persistente TODOs,
-- gemerkte TODO-Titel,
-- Erledigt-Archiv mit Zeitstempel.
+## Was sind Mustervorlagen?
 
-Die sichtbare Kalender- und TODO-Oberfläche folgt im nächsten Entwicklungsschritt.
+Eine Mustervorlage zeigt, wie eine gültige Config- oder JSON-Datei aussehen soll. Sie dient als **Vergleich**, nicht als automatischer Ersatz.
 
-## Was bedeutet „persistent“?
+Wenn deine lokale Datei beschädigt ist, darf das Tool die Musterdatei nicht einfach darüberkopieren. Stattdessen soll es erklären, was nicht stimmt und welche sichere Möglichkeit du hast.
 
-Das bedeutet einfach:
+## Intelligente Fehlerhilfe
 
-> Das Tool kann Informationen lokal speichern und nach einem Neustart wiederfinden.
+Bei bekannten Fehlern kann das Backend jetzt zusätzlich angeben:
 
-Die neuen Daten liegen nur im lokalen `runtime`-Bereich. Sie werden nicht ins Internet übertragen und nicht in ein Release-ZIP übernommen.
+- 🔴/🟠/🟡 wie kritisch das Problem ist,
+- was wahrscheinlich passiert ist,
+- was du als Nächstes tun kannst,
+- ob ein erneuter Versuch sicher ist,
+- welche geprüfte Mustervorlage zum Vergleichen passt.
 
-## TODO-Grundprinzip
+Technische Details bleiben für Diagnosezwecke vorhanden, stehen aber nicht an erster Stelle.
 
-Ein TODO kann später bequem über Buttons und Auswahldialoge angelegt werden.
+## Versionierte Texte
 
-Gespeichert werden können:
+Wiederkehrende Meldungen werden zentral gespeichert. Dadurch können sie gemeinsam verbessert und geprüft werden, statt an vielen Stellen leicht unterschiedlich zu werden.
 
-- Titel,
-- Kategorie optional,
-- Datum/Uhrzeit optional,
-- Priorität,
-- Notiz optional.
+## Entwicklungs-Lerngedächtnis
 
-Ein Kalender ist **nicht Pflicht**.
+`LEARNING_MEMORY.jsonl` enthält **keine privaten Nutzerdaten**. Dort stehen Entwicklungslektionen wie:
 
-### Bereits verwendete Titel
+- optionale Werte ausdrücklich testen,
+- Eingabefehler und beschädigte Dateien unterscheiden,
+- Prüfungen dürfen nichts verändern,
+- eine Version niemals ohne Prüfnachweis als getestet markieren.
 
-Wenn du denselben oder einen ähnlichen TODO-Titel mehrfach nutzt, merkt das Tool den Titel lokal.
+Die automatische Prüfung kontrolliert auch diese Datei.
 
-Beispiel:
+## TODOs und Ereignisse
 
-`Backup prüfen`
+TODOs bleiben nach Neustart erhalten. Verwendete Titel können wieder angeboten werden. Ein erledigtes TODO wird mit Zeitstempel ins Archiv verschoben statt gelöscht.
 
-Beim nächsten Mal kann dieser Titel als Auswahl angeboten werden. Dadurch musst du weniger tippen.
-
-### TODO abhaken
-
-Ein erledigtes TODO wird nicht einfach gelöscht.
-
-Stattdessen:
-
-`Offen → abhaken → Archiv / Erledigt`
-
-Dabei bleibt erhalten:
-
-- ursprünglicher Titel,
-- Erstellungszeit,
-- weitere Angaben,
-- Zeitpunkt der Erledigung.
-
-## Ereignisse
-
-Wichtige Aktionen werden in einfacher Sprache vorbereitet.
-
-Beispiele:
-
-- „TODO „Backup prüfen“ wurde angelegt.“
-- „TODO „Backup prüfen“ wurde erledigt und ins Archiv verschoben.“
-- „Version 0.2.0-core wurde als neuer Entwicklungsstand registriert.“
-
-Technische Rohdaten sollen später nicht die normale Ereignisanzeige überladen. Das Dashboard wird standardmäßig nur die letzten fünf verständlichen Ereignisse zeigen.
-
-## Versionierung
-
-Das Tool besitzt jetzt eine eigene Versions-Registry.
-
-Sie unterscheidet unter anderem:
-
-- Entwicklung,
-- getestet,
-- Release Candidate,
-- freigegeben,
-- veraltet.
-
-Wichtig:
-
-> Eine Version darf nicht einfach als getestet oder freigegeben markiert werden, wenn kein Prüfnachweis vorhanden ist.
-
-## Start unter Kubuntu/Linux
-
-1. Öffne den AIO-Tool-Ordner.
-2. Starte `start_tool.sh`.
-3. Beim ersten Start richtet das Tool automatisch `.venv` ein.
-4. Danach läuft eine kurze Vorprüfung.
-5. Das Backend startet nur lokal auf deinem Rechner.
-6. Die Oberfläche öffnet sich im Browser.
-
-Falls nötig:
-
-```bash
-chmod +x start_tool.sh
-./start_tool.sh
-```
+Wichtige Ereignisse werden mit einem kurzen verständlichen Satz gespeichert. Später zeigt das Dashboard davon standardmäßig die letzten fünf.
 
 ## Datenschutz
 
-- Kernfunktionen brauchen kein Internet.
-- Backend nur auf `127.0.0.1`.
-- keine Telemetrie als Standard.
-- keine externen Python-Pakete.
-- TODOs, Ereignisse und Registry-Daten bleiben lokal.
+- kein Internetzwang,
+- Backend nur lokal auf `127.0.0.1`,
+- keine Telemetrie,
+- keine externen Python-Pakete,
+- lokale TODO-/Event-/Config-Daten nicht im Release-ZIP.
 
 ## Bedienprinzip
 
-Du sollst möglichst wenig technische Zeichen oder Pfade eintippen müssen.
-
-Reihenfolge:
-
-1. Buttons,
-2. Auswahldialoge,
-3. zuletzt verwendete sichere Auswahl,
-4. Presets / Empfehlungen,
-5. Freitext nur wenn wirklich nötig.
+**Button → Auswahldialog → gemerkte Auswahl → Preset/Empfehlung → erst dann eigene Texteingabe.**
 
 ## Ampelsystem
 
-- 🟢 **bereit** – alles in Ordnung.
-- 🟡 **optional** – kann sinnvoll sein.
-- 🟠 **prüfen** – Entscheidung oder Prüfung offen.
-- 🔴 **Eingriff** – Fehler, Risiko oder Schutzmaßnahme nötig.
+- 🟢 bereit / erfolgreich
+- 🟡 optional / Hinweis
+- 🟠 prüfen / Entscheidung nötig
+- 🔴 Fehler / Risiko / Eingriff nötig
 
-Farbe wird immer zusätzlich mit Text oder Symbol erklärt.
+Farbe wird immer zusätzlich durch Text erklärt.
 
 ## Was kommt als Nächstes?
 
-Als nächster Slice wird das **Kalendermodul** auf dieselbe sichere Datenbasis gesetzt.
+Als nächstes wird der **Kalender-Core** gebaut: Termine persistent speichern, Erinnerungszeiten verwalten, Monats-/Wochen-/Jahresdaten erzeugen und eine TODO-Verknüpfung nur optional anbieten.
 
-Danach werden im Dashboard integriert:
-
-- die nächsten drei TODOs,
-- optionale Kalenderinformationen,
-- die letzten fünf Ereignisse,
-- direkter Zugang zum Debug-/Diagnosemodul.
-
-Echte Dateioperationen folgen erst danach kontrolliert mit Copy als erstem SAFE-FILE-CORE-Schritt.
+Danach folgt das kompaktere Dashboard mit den nächsten drei TODOs, Terminen, den letzten fünf Ereignissen und einem direkten Debug-Zugang.
