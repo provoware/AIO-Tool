@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "current_version": "0.2.0-core",
+  "versions": [
+    {
+      "version": "0.1.0-foundation",
+      "created_at": "2026-08-27T00:32:13+02:00",
+      "status": "deprecated",
+      "release_status": "deprecated",
+      "commit_sha": "e21ebbfc1930582a647805815594eb663c94285e",
+      "summary": "Saubere Dokumentations- und Projektgrundlage ohne Altcode.",
+      "changes": [
+        "Repository auf Clean Foundation zurückgesetzt",
+        "verbindliche Projekt- und Entwicklungsdokumentation angelegt"
+      ],
+      "known_issues": [],
+      "regression_status": "historical-baseline",
+      "evidence": []
+    },
+    {
+      "version": "0.1.1-foundation",
+      "created_at": "2026-08-27T00:41:40+02:00",
+      "status": "tested",
+      "release_status": "draft",
+      "commit_sha": "754f1e6a9534eb12503d5191aad0bebf45fa8a6d",
+      "summary": "Erster ausführbarer Foundation-Kern mit lokalem Backend, Persistenz, UI-Shell, Tests und Release-Builder.",
+      "changes": [
+        "Klick-&-Start und lokales Loopback-Backend",
+        "atomare Konfigurationspersistenz",
+        "responsive Dashboard-Shell",
+        "CI- und Release-Gates"
+      ],
+      "known_issues": [
+        "reale Kubuntu-, Firefox- und Chrome/Chromium-Zielsystemgates noch offen"
+      ],
+      "regression_status": "passed-ci",
+      "evidence": [
+        {
+          "time": "2026-08-27T00:41:57+02:00",
+          "kind": "github-actions",
+          "reference": "run:33020484403",
+          "note": "foundation-ci erfolgreich: Syntax, Unit-Tests, Validierung, Launcher, JavaScript und Release-Builder."
+        }
+      ]
+    },
+    {
+      "version": "0.2.0-core",
+      "created_at": "2026-08-27T01:00:00+02:00",
+      "status": "development",
+      "release_status": "draft",
+      "commit_sha": null,
+      "summary": "Gemeinsamer persistenter Kern für Versionierung, Ereignisse und TODOs.",
+      "changes": [
+        "VersionRegistry mit Evidenz- und Driftvertrag",
+        "EventRegistry mit menschenlesbaren Ereignissen",
+        "TODO-Core mit Titelgedächtnis und Erledigt-Archiv"
+      ],
+      "known_issues": [],
+      "regression_status": "pending",
+      "evidence": []
+    }
+  ]
+}
