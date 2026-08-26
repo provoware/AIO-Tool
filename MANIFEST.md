@@ -4,86 +4,127 @@
 
 - **Name:** AIO-Tool
 - **Repository:** `provoware/AIO-Tool`
-- **Phase:** CLEAN FOUNDATION
-- **Version:** 0.1.0-foundation
+- **Phase:** CLEAN FOUNDATION — ausführbarer Kern
+- **Version:** `0.1.1-foundation`
 - **Stand:** 2026-08-27
 
-## Verbindlicher Grundbestand
+## Verbindlicher Projektbestand
 
-| Pfad | Rolle | Pflicht |
-|---|---|---|
-| `README.md` | Einstieg, Status, Prinzipien | ja |
-| `TODO.md` | priorisierte Arbeit und Gates | ja |
-| `AGENTS.md` | Entwicklungs- und Sicherheitsregeln | ja |
-| `CHANGELOG.md` | Versionshistorie | ja |
-| `LAIEN-ANLEITUNG.md` | einfache Nutzererklärung | ja |
-| `TOOLBESCHREIBUNG.md` | Produktvision und Funktionsrahmen | ja |
-| `MANIFEST.md` | definierter Projekt-/Releasebestand | ja |
-| `REGRESSIONSINFOS.md` | Regressionen, Tests und Evidenz | ja |
+### Root
 
-## Aktueller Codebestand
+| Pfad | Rolle |
+|---|---|
+| `README.md` | Einstieg, Status, Start und Projektüberblick |
+| `TODO.md` | priorisierte Arbeit und Gates |
+| `AGENTS.md` | verbindliche Entwicklungs- und Sicherheitsregeln |
+| `CHANGELOG.md` | Versionshistorie |
+| `LAIEN-ANLEITUNG.md` | einfache Nutzererklärung |
+| `TOOLBESCHREIBUNG.md` | Produktvision und Funktionsrahmen |
+| `MANIFEST.md` | definierter Projekt-/Releasebestand |
+| `REGRESSIONSINFOS.md` | Regressionen, Tests und Evidenz |
+| `VERSION` | zentrale Versionsquelle |
+| `start_tool.sh` | primärer Linux/Kubuntu-Launcher |
+| `start_tool.desktop` | Desktop-Starter-Vorlage |
+| `.gitignore` | lokale/releasefremde Ausschlüsse |
 
-**Kein produktiver Anwendungscode.**
+### Anwendung
 
-Die Clean-Foundation-Phase enthält absichtlich nur die verbindliche Dokumentationsbasis. Quellcode wird erst mit einem klar abgegrenzten, testbaren Slice ergänzt.
+| Pfad | Rolle |
+|---|---|
+| `app/__init__.py` | Root-/Versionszugriff |
+| `app/config.py` | validierte atomare Konfigurationspersistenz |
+| `app/server.py` | lokaler HTTP/API-Server und statische Oberfläche |
+| `web/index.html` | Dashboard-Shell |
+| `web/app.js` | UI-Zustand und lokale API-Anbindung |
+| `web/styles.css` | Themes, Kontrast und responsive Darstellung |
 
-## Geplante spätere Struktur
+### Qualität / Release
 
-Noch nicht verbindlich, aber als Zielbild vorgesehen:
+| Pfad | Rolle |
+|---|---|
+| `tests/test_config.py` | Persistenzvertrag |
+| `tests/test_server.py` | Loopback-/Origin-Sicherheitsvertrag |
+| `scripts/validate.py` | Foundation-Vorprüfung |
+| `scripts/release.py` | reproduzierbarer ZIP-Builder |
+| `.github/workflows/foundation-ci.yml` | automatisierte CI-Gates |
+| `runtime/.gitkeep` | Platzhalter; reale Runtime-Inhalte ausgeschlossen |
+
+## Laufzeitvoraussetzungen
+
+- Linux/Kubuntu als primäres Zielsystem.
+- Python 3.12 angestrebt; Code nutzt nur Standardbibliothek.
+- `python3-venv` muss auf dem Zielsystem verfügbar sein, damit der Launcher `.venv` erstellen kann.
+- Browser mit lokalem HTTP-Zugriff; Firefox und Chrome/Chromium sind Zielbrowser.
+- `xdg-open` wird bevorzugt, Browser-Fallbacks sind vorgesehen.
+
+## Abhängigkeiten
+
+### Python
+
+**Keine externen Python-Pakete.**
+
+### Browser
+
+- keine externen JavaScript-Bibliotheken,
+- keine CDN-Abhängigkeit,
+- keine Remote-Fonts.
+
+## Lokale Persistenz
+
+Zur Laufzeit vorgesehen:
 
 ```text
-app/            # Anwendungs- und Domänenlogik
-web/            # Browseroberfläche
-runtime/        # erzeugte lokale Laufzeitdaten, nicht Teil des Releases
-tests/          # automatisierte Tests
-docs/           # ergänzende technische Dokumente
-scripts/        # Start-, Validierungs- und Release-Skripte
+runtime/config.json
+runtime/config.json.bak
+runtime/server.log
+runtime/launcher.log
+runtime/server.pid
 ```
 
-Die tatsächliche Struktur darf erst nach dem P0-Architekturentscheid festgeschrieben werden.
+Diese Dateien gehören nicht in Releases und nicht in Git.
+
+## Netzwerkvertrag
+
+- Backend bindet ausschließlich an `127.0.0.1`.
+- Standardport: `8765`.
+- kein Internetzwang.
+- keine Telemetrie.
+- Host-/Origin-Prüfung auf lokale Herkunft.
+- keine CORS-Freigabe.
 
 ## Release-Ausschlüsse
 
-Folgende Inhalte gehören grundsätzlich nicht in ein sauberes Release:
-
 - `.venv/`
+- `runtime/*` außer `.gitkeep` im Repository
 - `__pycache__/`
 - Testcache
-- temporäre Dateien
-- lokale Logs, sofern sie nicht ausdrücklich Teil eines Diagnoseartefakts sind
-- PINs, Passwörter oder Secrets
-- lokale Profile
-- persönliche Projektpfade
-- Recovery-/Checkpoint-Daten realer Nutzer
-- Build-Zwischenstände
+- `dist/`, `build/`
+- lokale Logs
+- lokale Profile/Pfade
+- Recovery-Daten realer Nutzer
+- Secrets/PINs/Passwörter
 
-## Daten- und Netzvertrag
+## Testkommandos
 
-- Kern: offline-first.
-- kein Internetzwang.
-- keine Telemetrie als Default.
-- lokale Persistenz nur für klar definierte Funktionen.
-- sensible Daten nicht im Klartext protokollieren.
+```bash
+python3 -m unittest discover -s tests -v
+python3 scripts/validate.py
+bash -n start_tool.sh
+node --check web/app.js
+python3 scripts/release.py --check
+```
 
-## Qualitätsvertrag
+## Statusvertrag
 
-Ein zukünftiges Release darf nur als geprüft bezeichnet werden, wenn:
-
-1. relevante automatisierte Tests grün sind,
-2. notwendige manuelle Gates dokumentiert sind,
-3. Regressionseinträge aktuell sind,
-4. Changelog und TODO konsistent sind,
-5. dieses Manifest den tatsächlichen Releasebestand widerspiegelt,
-6. ein sauber entpackter Release erneut geprüft wurde.
+Der Codebestand ist **UMGESETZT**. Zielsystem- und CI-Prüfungen dürfen erst nach tatsächlicher Ausführung als **GEPRÜFT** oder **BEWIESEN** markiert werden.
 
 ## Nächster Manifest-Schritt
 
-Mit Beginn des ersten Code-Slices müssen ergänzt werden:
+Mit SAFE-FILE-CORE ergänzen:
 
-- Laufzeitvoraussetzungen,
-- Startdateien,
-- genaue Ordnerstruktur,
-- Abhängigkeiten mit Versionen/Begründung,
-- Konfigurations- und Persistenzdateien,
-- Testkommandos,
-- Release-Inhalt und Ausschlüsse.
+- Datei-/Ordnerauswahldialog-Vertrag,
+- Copy-Job-Datenmodell,
+- Vorschau-/Konfliktdaten,
+- Undo-/Recovery-Datensatz,
+- Job-Persistenz,
+- zusätzliche Regressionstests und Release-Gates.

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=AIO-Tool
+Comment=Laienfreundliches Offline-First MultiTool starten
+Terminal=false
+Categories=Utility;
+Exec=bash -lc 'cd "$(dirname "$1")" && ./start_tool.sh' _ %k
+Icon=applications-utilities
+StartupNotify=true

@@ -2,74 +2,105 @@
 
 ## Was ist AIO-Tool?
 
-AIO-Tool soll viele wiederkehrende Aufgaben in einer gemeinsamen Oberfläche bündeln. Der Schwerpunkt liegt auf einfacher Bedienung, klaren Schritten und sicheren Änderungen.
+AIO-Tool soll viele wiederkehrende Aufgaben in einer gemeinsamen Oberfläche bündeln. Die Bedienung soll einfach, sichtbar und sicher bleiben.
 
-## Aktueller Stand
+## Was funktioniert in dieser Foundation-Version bereits?
 
-Das Repository befindet sich bewusst in der Phase **CLEAN FOUNDATION**. Es gibt noch kein fertiges Programm zum Starten. Zuerst werden Regeln, Aufbau, Sicherheit und Entwicklungsreihenfolge sauber festgelegt.
+Die Version `0.1.1-foundation` ist der erste startbare Grundkern.
 
-## Wie soll die spätere Bedienung funktionieren?
+Du kannst:
 
-1. Tool starten.
-2. Projekt oder Aufgabe über Buttons auswählen.
-3. Das Tool prüft Voraussetzungen.
-4. Passende Aktion auswählen.
-5. Vor einer Änderung erscheint eine verständliche Vorschau.
-6. Kritische Änderungen werden bestätigt.
-7. Während der Arbeit zeigt das Tool Fortschritt und aktuellen Schritt.
-8. Danach wird das Ergebnis kontrolliert.
-9. Falls möglich, kann die Änderung rückgängig gemacht oder ein Recovery-Stand genutzt werden.
+- das Tool über `start_tool.sh` starten,
+- die lokale Browser-Oberfläche öffnen,
+- zwischen 4 Farbthemes wählen,
+- die Schriftgröße per Button ändern,
+- den Expertenbereich ein- oder ausblenden,
+- den Systemstatus erneut prüfen.
 
-## Wichtiges Bedienprinzip
+Noch nicht enthalten sind echte Dateiaktionen wie Kopieren, Verschieben, Umbenennen oder Löschen.
+
+## Start unter Kubuntu/Linux
+
+1. Öffne den AIO-Tool-Ordner.
+2. Starte `start_tool.sh`.
+3. Beim ersten Start richtet das Tool automatisch eine lokale Python-Umgebung `.venv` ein.
+4. Danach läuft eine kurze Vorprüfung.
+5. Das lokale Backend startet nur auf deinem Rechner.
+6. Die Oberfläche öffnet sich im Browser.
+
+Falls die Datei nicht startbar ist:
+
+```bash
+chmod +x start_tool.sh
+./start_tool.sh
+```
+
+Falls die virtuelle Umgebung nicht erstellt werden kann, fehlt auf Ubuntu/Kubuntu meist `python3-venv`. Der Launcher zeigt dafür eine verständliche Fehlermeldung.
+
+## Wichtig: Das Tool bleibt lokal
+
+- Kernfunktionen brauchen kein Internet.
+- Das Backend bindet nur an `127.0.0.1`.
+- Es gibt keine Telemetrie als Standard.
+- Es werden keine externen Python-Pakete installiert.
+
+## Bedienprinzip
 
 Du sollst möglichst wenig technische Zeichen oder Pfade eintippen müssen.
 
 Bevorzugt werden:
 
-- große Buttons,
-- verständliche Auswahldialoge,
-- empfohlene Standards,
-- zuletzt verwendete sichere Auswahlmöglichkeiten,
-- Presets,
-- kurze Erklärungen.
+1. Buttons,
+2. Auswahldialoge,
+3. Presets und zuletzt verwendete sichere Optionen,
+4. Empfehlungen,
+5. Freitext nur wenn wirklich nötig.
 
-Freitext wird nur verwendet, wenn er wirklich nötig ist, zum Beispiel für eine Notiz.
+## Darstellung
+
+### Theme
+
+Wähle einfach einen Button:
+
+- Trash Neon
+- Steel Night
+- Clean Light
+- High Contrast
+
+### Schriftgröße
+
+Verfügbare Buttons:
+
+`90 % · 100 % · 110 % · 120 % · 130 % · 140 %`
+
+### Expertenbereich
+
+Der Expertenbereich ist standardmäßig verborgen. Er zeigt zusätzliche technische Informationen, ist aber für die normale Bedienung nicht nötig.
 
 ## Ampelsystem
 
 - 🟢 **bereit** – alles in Ordnung.
-- 🟡 **optional** – kann sinnvoll sein, ist aber nicht zwingend.
-- 🟠 **prüfen** – eine Entscheidung oder ein möglicher Konflikt ist offen.
-- 🔴 **Eingriff** – Risiko, Fehler oder wichtige Schutzmaßnahme.
+- 🟡 **optional** – kann sinnvoll sein.
+- 🟠 **prüfen** – Entscheidung oder Prüfung offen.
+- 🔴 **Eingriff** – Fehler, Risiko oder Schutzmaßnahme nötig.
 
-Die Farbe wird immer zusätzlich durch Text oder Symbol erklärt.
+Farbe wird immer zusätzlich mit Text/Symbol erklärt.
 
-## Sicherheit
+## Wenn das Tool schon läuft
 
-AIO-Tool soll Änderungen nicht einfach im Hintergrund durchführen.
+Ein zweiter Start soll keine zweite Backend-Instanz erzeugen. Der Launcher versucht stattdessen, die bereits laufende lokale Oberfläche zu öffnen.
 
-Bei wichtigen Dateiaktionen ist vorgesehen:
+## Wenn etwas nicht startet
 
-`Auswählen → prüfen → Vorschau → bestätigen → ausführen → nachprüfen → bei Bedarf rückgängig`
+1. Meldung im Terminal lesen.
+2. Bei Bedarf `runtime/launcher.log` ansehen.
+3. Nichts manuell aus Runtime-Dateien löschen, solange unklar ist, was passiert ist.
+4. Die Foundation-Vorprüfung kann technisch mit `python3 scripts/validate.py` gestartet werden.
 
-Endgültiges Löschen soll nicht der normale Standard sein.
+## Nächster Entwicklungsschritt
 
-## Wenn etwas schiefgeht
+Die erste echte Dateiaktion wird **Kopieren** sein. Dabei ist der geplante sichere Ablauf:
 
-Das spätere Tool soll verständlich zeigen:
+`Quelle wählen → Ziel wählen → prüfen → Vorschau → bestätigen → kopieren → nachprüfen → Recovery-Datensatz`
 
-- was passiert ist,
-- welcher Schritt betroffen ist,
-- ob Daten verändert wurden,
-- ob weitergearbeitet werden kann,
-- welche sichere Lösung empfohlen wird.
-
-Längere Aufgaben sollen nach Möglichkeit pausiert, abgebrochen oder später fortgesetzt werden können.
-
-## Datenschutz
-
-Die Kernfunktionen sind offline-first geplant. Es soll keine versteckte Telemetrie geben. Internetfunktionen werden nur ergänzt, wenn ihr Zweck klar dokumentiert ist.
-
-## Für Entwickler
-
-Die technischen Regeln stehen in `AGENTS.md`. Offene Arbeit steht in `TODO.md`. Bekannte Regressionen und Prüfregeln stehen in `REGRESSIONSINFOS.md`.
+Verschieben, Umbenennen und Löschen werden erst danach ergänzt.

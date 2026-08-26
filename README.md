@@ -1,66 +1,99 @@
 # AIO-Tool
 
-> Saubere Projektgrundlage für ein modulares, laienfreundliches, offline-first All-in-One-Tool.
+> Modulares, laienfreundliches, offline-first All-in-One-Tool mit lokalem Backend.
 
 ## Status
 
-- **Phase:** CLEAN FOUNDATION
-- **Version:** 0.1.0-foundation
+- **Phase:** CLEAN FOUNDATION — ausführbarer Kern
+- **Version:** `0.1.1-foundation`
 - **Datum:** 2026-08-27
-- **Produktcode:** noch nicht begonnen
-- **Zielsystem:** primär Linux/Kubuntu; Browser-Oberfläche mit lokalem Backend ist vorgesehen
+- **Zielsystem:** primär Linux/Kubuntu
+- **Oberfläche:** Browser-UI
+- **Backend:** Python-Standardbibliothek, ausschließlich Loopback
+- **Externe Python-Pakete:** keine
 
-## Zweck
+## Was ist bereits vorhanden?
 
-AIO-Tool soll wiederkehrende Datei-, Projekt-, Organisations- und Automatisierungsaufgaben in einer einheitlichen Oberfläche bündeln. Die Bedienung richtet sich zuerst an Laien und soll technische Entscheidungen soweit möglich automatisch oder über verständliche Auswahlmöglichkeiten auflösen.
+Der erste ausführbare Foundation-Slice enthält bewusst noch keine verändernden Dateioperationen. Vorhanden sind:
 
-## Verbindliche Produktprinzipien
+- `start_tool.sh` als Klick-&-Start-Launcher,
+- lokale `.venv` ohne Fremdpakete,
+- idempotenter Start: vorhandene Instanz öffnen statt zweites Backend starten,
+- lokales Python-Backend auf `127.0.0.1`,
+- Host-/Origin-Prüfung für API-Schreibzugriffe,
+- atomare JSON-Konfiguration mit Backup-Fallback,
+- responsive Dashboard-Shell,
+- 4 Themes,
+- Schriftgrößen 90–140 % über Buttons,
+- standardmäßig verborgener Expertenbereich,
+- automatische Foundation-Validierung,
+- Standardbibliothek-Unit-Tests,
+- reproduzierbarer Release-Builder,
+- GitHub-Actions-CI.
 
-1. **Auswahl vor Zeicheneingabe** – Buttons, Presets und Auswahldialoge haben Vorrang vor Freitext.
-2. **Laien zuerst** – Alltagssprache, klare nächste Schritte, kurze Hilfen und sichtbare Empfehlungen.
-3. **Offline-first** – Kernfunktionen benötigen kein Internet; keine Telemetrie ohne ausdrückliche Produktentscheidung.
-4. **Sicherheit vor Bequemlichkeit** – Vorschau, Vorprüfung, Nachprüfung, Undo/Recovery und nachvollziehbare Änderungen.
-5. **Transparenz** – laufende Prozesse, Fortschritt, aktueller Schritt, Fehler und Ergebnis bleiben sichtbar.
-6. **Modularität** – Funktionen werden in klar abgegrenzte Module getrennt.
-7. **Datensparsamkeit** – nur Daten speichern, die für Funktion, Recovery oder ausdrücklich gewünschte Historie nötig sind.
-8. **Wartbarkeit** – kleine, gezielte Änderungen; keine unnötigen Umbauten; klare Zuständigkeiten und Dokumentation.
-9. **Regression vor Wiederholung** – bestätigte Fehler erhalten einen reproduzierbaren Regressionstest oder einen begründeten Nachweis, warum das nicht möglich ist.
-10. **Beweisbarer Status** – „fertig“, „grün“ oder „sicher“ nur mit überprüfbarer Evidenz.
+## Schnellstart unter Kubuntu/Linux
 
-## Geplante Hauptbereiche
+1. Repository herunterladen oder klonen.
+2. `start_tool.sh` ausführbar machen, falls nötig: `chmod +x start_tool.sh`.
+3. `./start_tool.sh` starten.
+4. Beim ersten Start wird lokal `.venv` erzeugt.
+5. Das Backend bindet ausschließlich an `127.0.0.1:8765` und die Oberfläche öffnet sich im Browser.
 
-- Dashboard und geführter Workflow
-- Projekte und Projektordner
-- Favoriten und Schnellaktionen
-- Module / Plugin-Struktur
-- sichere Dateioperationen
-- Aufgaben, Kalender und Notizen
-- Verlauf, Reports und Diagnose
-- Presets und wiederholbare Workflows
-- Job-Queue, Recovery und Undo
-- optionaler Expertenbereich
+Es werden keine externen Python-Pakete installiert.
 
-## Dokumentation
+## Produktprinzipien
 
-| Datei | Zweck |
-|---|---|
-| `README.md` | Einstieg und Projektüberblick |
-| `TOOLBESCHREIBUNG.md` | Produktvision, Zielgruppe und Funktionsrahmen |
-| `TODO.md` | priorisierte Entwicklungsarbeit |
-| `AGENTS.md` | verbindliche Entwicklungs- und Agentenregeln |
-| `CHANGELOG.md` | nachvollziehbare Änderungen je Version |
-| `LAIEN-ANLEITUNG.md` | einfache Nutzungserklärung |
-| `MANIFEST.md` | definierter Projekt- und Releasebestand |
-| `REGRESSIONSINFOS.md` | Regressionen, Prüfregeln und Evidenzschema |
+1. **Auswahl vor Zeicheneingabe** – Buttons, Presets und Auswahldialoge vor Freitext.
+2. **Laien zuerst** – Alltagssprache, sichtbarer nächster Schritt, kurze Hilfen.
+3. **Offline-first** – kein Internetzwang, keine Telemetrie als Standard.
+4. **Sicherheit vor Bequemlichkeit** – Vorschau, Vor-/Nachprüfung, Undo/Recovery für verändernde Operationen.
+5. **Transparenz** – Fortschritt, Fehler, Ergebnis und Auswirkungen sichtbar.
+6. **Modularität** – UI, Backend, Persistenz und Domänenlogik getrennt.
+7. **Datensparsamkeit** – nur notwendige lokale Daten.
+8. **Wartbarkeit** – kleine überprüfbare Slices statt Großumbauten.
+9. **Regression vor Wiederholung** – bestätigte Fehler als dauerhaftes Gate.
+10. **Beweisbarer Status** – `UMGESETZT`, `GEPRÜFT`, `BEWIESEN` werden getrennt verwendet.
 
-## Entwicklungszustand
+## Projektstruktur
 
-Dieses Repository wurde am **27. August 2026** bewusst auf eine saubere Dokumentationsbasis zurückgesetzt. Vorheriger Dateiinhalt ist nicht Teil der neuen Projektgrundlage. Funktionaler Code wird erst nach Festlegung und Prüfung des ersten Entwicklungs-Slices aufgenommen.
+```text
+app/                    # Backend und Persistenz
+web/                    # Browser-Oberfläche
+scripts/                # Validierung und Release-Builder
+tests/                  # automatisierte Regression-/Vertragstests
+runtime/                # lokale Laufzeitdaten; nicht im Release
+.github/workflows/      # CI-Gates
+start_tool.sh           # Klick-&-Start
+start_tool.desktop      # Desktop-Starter-Vorlage
+VERSION                 # Versionsquelle
+```
 
-## Nächster empfohlener Slice
+## Entwicklung / Prüfung
 
-**SAFE-FILE-CORE**
+```bash
+python3 -m unittest discover -s tests -v
+python3 scripts/validate.py
+bash -n start_tool.sh
+node --check web/app.js
+python3 scripts/release.py --check
+```
 
-`Quelle wählen → Aktion wählen → Vorschau → Konflikte erklären → bestätigen → ausführen → nachprüfen → Undo/Recovery`
+Die CI führt diese Gates bei Push und Pull Request aus.
 
-Dabei gilt: zunächst ein kleiner, vollständig geprüfter Kern statt vieler halbfertiger Funktionen.
+## Was ist ausdrücklich noch nicht enthalten?
+
+- keine Copy-/Move-/Rename-/Delete-Operation,
+- noch keine persistente Job-Queue,
+- noch kein Undo-Datensatz für Dateiaktionen,
+- noch kein Recovery-Center für reale Dateioperationen,
+- noch keine produktive Projektverwaltung.
+
+Diese Trennung ist Absicht: SAFE-FILE-CORE beginnt erst nach grünem Foundation-Gate.
+
+## Nächster Slice
+
+**P1 — SAFE-FILE-CORE: Copy zuerst**
+
+`Quelle wählen → Ziel wählen → Vorprüfung → Vorschau → bestätigen → kopieren → nachprüfen → Undo-Datensatz`
+
+Move, Rename und Löschen folgen erst nach belastbarer Copy-Evidenz.

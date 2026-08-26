@@ -2,108 +2,95 @@
 
 ## Zweck
 
-Diese Datei hält dauerhaft fest, welche Fehlerklassen bereits bekannt sind und wie verhindert wird, dass sie unbemerkt zurückkehren.
+Diese Datei hält bekannte Fehlerklassen und dauerhafte Schutzverträge fest.
 
-Ein Regressionseintrag ist kein allgemeiner Bugreport. Er beschreibt einen bereits verstandenen Fehlervertrag mit reproduzierbarem Prüfweg.
-
-## Grundregel
-
-**Bestätigter Fehler → reproduzierbarer Test oder dokumentierte Prüfevidenz → Fix → erneute Prüfung → dauerhaftes Gate.**
-
-## Pflichtfelder je Regression
-
-```text
-ID:
-Titel:
-Status: OFFEN | GEFIXT | GEPRÜFT | BEWIESEN
-Entdeckt in Version:
-Betroffener Bereich:
-Auslöser:
-Erwartetes Verhalten:
-Fehlerhaftes Verhalten:
-Risiko:
-Fix:
-Regressionstest:
-Evidenz:
-Letzte Prüfung:
-```
+**Bestätigter Fehler → reproduzierbarer Test oder Prüfevidenz → Fix → erneute Prüfung → dauerhaftes Gate.**
 
 ## Statusdefinitionen
 
 - **OFFEN** – Fehler bekannt, noch nicht behoben.
-- **GEFIXT** – Änderung implementiert, aber noch nicht vollständig nachgewiesen.
+- **UMGESETZT** – Schutz/Fix im Code vorhanden, aber noch nicht vollständig ausgeführt geprüft.
 - **GEPRÜFT** – vorgesehene Prüfung wurde erfolgreich ausgeführt.
-- **BEWIESEN** – reproduzierbare Evidenz und dauerhaftes Regression-Gate vorhanden.
+- **BEWIESEN** – reproduzierbare Evidenz und dauerhaftes Gate vorhanden.
 
 ## Verbindliche Regressionsthemen
 
 ### REG-001 — Abschlussstatus vor Persistenz
 
-**Risiko:** UI meldet 100 % / DONE, obwohl Abschlusszustand noch nicht sicher gespeichert wurde.
-
-**Vertrag:** Abschlusszustand zuerst persistent schreiben und verifizieren; erst danach `DONE` nach außen melden.
-
-**Status:** BASELINE-REGEL – muss mit Job-System implementiert und getestet werden.
+- **Risiko:** UI meldet DONE, obwohl Abschlusszustand noch nicht sicher gespeichert wurde.
+- **Vertrag:** persistent schreiben und verifizieren; erst danach DONE melden.
+- **Status:** OFFEN FÜR JOB-SYSTEM; in Foundation noch keine Job-Queue.
 
 ### REG-002 — Setup/Wizard durch harmlose Prüfung entwertet
 
-**Risiko:** Ein bereits vollständig eingerichtetes System springt nach einer reinen Projektprüfung wieder in einen unvollständigen Setup-Zustand.
-
-**Vertrag:** Nur echte ungültige Voraussetzungen dürfen `setup_complete` zurücksetzen. Erfolgreiche Prüfungen dürfen keinen validen Zustand zerstören.
-
-**Status:** BASELINE-REGEL.
+- **Risiko:** gültiger Setup-Zustand wird durch reine Prüfung zerstört.
+- **Vertrag:** Prüfungen dürfen gültigen Zustand nicht ohne echte ungültige Voraussetzung zurücksetzen.
+- **Status:** OFFEN FÜR WIZARD-SLICE; Foundation enthält noch keinen Setup-Wizard.
 
 ### REG-003 — Unterbrochener Job erscheint nach Neustart als laufend
 
-**Risiko:** falsche Prozessanzeige und unsichere Bedienentscheidung.
-
-**Vertrag:** Nicht sauber abgeschlossene Jobs werden beim Neustart als `unterbrochen` rekonstruiert und erhalten kontrollierte Recovery-Optionen.
-
-**Status:** BASELINE-REGEL.
+- **Vertrag:** unvollständige Jobs beim Neustart als `unterbrochen` rekonstruieren.
+- **Status:** OFFEN FÜR JOB-SYSTEM.
 
 ### REG-004 — Prüfoperation verändert Konfiguration
 
-**Risiko:** reine Validierung erzeugt unbeabsichtigte Zustandsänderungen.
-
-**Vertrag:** Prüfungen sind seiteneffektfrei, außer der Nutzer startet ausdrücklich eine Reparatur oder Übernahme.
-
-**Status:** BASELINE-REGEL.
+- **Vertrag:** reine Prüfungen bleiben seiteneffektfrei.
+- **Foundation-Schutz:** `scripts/validate.py` arbeitet mit temporärer Testkonfiguration und verändert `runtime/config.json` nicht.
+- **Status:** UMGESETZT; CI-/Zielsystemevidenz für 0.1.1 noch ausstehend.
 
 ### REG-005 — Mehrfachstart erzeugt mehrere Backends
 
-**Risiko:** konkurrierende Prozesse, Portkonflikte und inkonsistente Persistenz.
-
-**Vertrag:** Startvorgang ist idempotent. Wenn eine valide lokale Instanz läuft, wird diese geöffnet statt eine zweite zu starten.
-
-**Status:** BASELINE-REGEL.
+- **Vertrag:** Start ist idempotent; valide laufende Instanz öffnen statt zweite starten.
+- **Foundation-Schutz:** `start_tool.sh` prüft `/api/status` vor Backendstart.
+- **Status:** UMGESETZT; Zielsystemtest ausstehend.
 
 ### REG-006 — Einfache Bedienung wird durch Zusatzoptionen überladen
 
-**Risiko:** Laienmodus verliert seine Funktion durch gleichzeitig sichtbare Profioptionen.
-
-**Vertrag:** Zusatz- und Expertenoptionen bleiben standardmäßig eingeklappt. Auswahl vor Zeicheneingabe.
-
-**Status:** BASELINE-REGEL.
+- **Vertrag:** Expertenoptionen standardmäßig verborgen; Auswahl vor Zeicheneingabe.
+- **Foundation-Schutz:** Expertenbereich startet verborgen; Themes/Schriftgröße über Buttons.
+- **Status:** UMGESETZT; Browser-/Zoom-Gate ausstehend.
 
 ### REG-007 — Unsichtbare Dateiänderung
 
-**Risiko:** Nutzer kann nicht erkennen, welche Daten verändert werden.
-
-**Vertrag:** Jede verändernde Dateioperation benötigt verständliche Vorschau, Ziel/Quelle, Konfliktanzeige und Nachprüfung.
-
-**Status:** für SAFE-FILE-CORE verpflichtend.
+- **Vertrag:** jede verändernde Dateioperation benötigt Vorschau, Ziel/Quelle, Konfliktanzeige und Nachprüfung.
+- **Status:** verpflichtendes P1-Gate für SAFE-FILE-CORE.
 
 ### REG-008 — endgültiges Löschen als Standard
 
-**Risiko:** unnötiger Datenverlust.
+- **Vertrag:** Papierkorb/Recovery vor endgültigem Löschen.
+- **Status:** verpflichtendes P1-Gate.
 
-**Vertrag:** Papierkorb/Recovery vor endgültigem Löschen. Endgültige Entfernung nur als ausdrücklich bestätigte Sonderaktion.
+### REG-009 — Fremder Host erreicht lokales Backend
 
-**Status:** für SAFE-FILE-CORE verpflichtend.
+- **Risiko:** Browser-/Netzwerkzugriff unter falschem Hostkontext erreicht lokale API.
+- **Vertrag:** nur `127.0.0.1`/`localhost` mit richtigem Port akzeptieren.
+- **Schutz:** `allowed_host()` und Unit-Test in `tests/test_server.py`.
+- **Status:** UMGESETZT; CI-Evidenz ausstehend.
 
-## Testklassen für zukünftige Releases
+### REG-010 — Fremde Origin schreibt lokale Konfiguration
 
-Mindestens prüfen, soweit für die Änderung relevant:
+- **Risiko:** fremde Webseite versucht einen mutierenden API-Aufruf.
+- **Vertrag:** schreibende Endpunkte nur mit lokaler Origin oder ohne Browser-Origin im lokalen Werkzeugkontext.
+- **Schutz:** `allowed_origin()` + Host-Prüfung + keine CORS-Freigabe.
+- **Status:** UMGESETZT; CI-Evidenz ausstehend.
+
+### REG-011 — Beschädigte Hauptkonfiguration macht Tool unbrauchbar
+
+- **Risiko:** abgebrochener Schreibvorgang oder Dateikorruption zerstört Einstellungen.
+- **Vertrag:** atomare Hauptdatei; gültiges Backup als Fallback.
+- **Schutz:** `ConfigStore.save/load` + `test_backup_fallback`.
+- **Status:** UMGESETZT; CI-Evidenz ausstehend.
+
+### REG-012 — Release enthält lokale Nutzerdaten
+
+- **Risiko:** Runtime, `.venv`, Logs oder persönliche Daten gelangen ins ZIP.
+- **Vertrag:** Release-Builder schließt Runtime/venv/Caches/Builddaten aus und prüft Ausschlüsse.
+- **Schutz:** `scripts/release.py --check` und `.gitignore`.
+- **Status:** UMGESETZT; CI-Evidenz ausstehend.
+
+## Testklassen für Releases
+
+Je nach Slice mindestens prüfen:
 
 1. Normalfall.
 2. ungültige Eingabe.
@@ -119,25 +106,23 @@ Mindestens prüfen, soweit für die Änderung relevant:
 12. leere Datenmenge.
 13. Mehrfachstart.
 14. Zoom/Kontrast/Tastatur bei UI-Änderungen.
+15. Fremdhost/Fremd-Origin bei lokaler API.
+16. Release auf lokale Daten/Caches prüfen.
 
-## Regressionseintrag-Vorlage
+## Foundation-Gates 0.1.1
 
-```markdown
-### REG-XXX — Kurztitel
+Automatisiert vorgesehen:
 
-- **Status:** OFFEN
-- **Entdeckt:** x.y.z
-- **Bereich:**
-- **Auslöser:**
-- **Erwartet:**
-- **Fehler:**
-- **Risiko:**
-- **Fix:**
-- **Test:**
-- **Evidenz:**
-- **Letzte Prüfung:**
+```bash
+python3 -m unittest discover -s tests -v
+python3 scripts/validate.py
+bash -n start_tool.sh
+node --check web/app.js
+python3 scripts/release.py --check
 ```
+
+**Wichtig:** Vor Ausführung gelten diese Gates nur als implementiert, nicht als bestanden.
 
 ## Release-Gate
 
-Ein Release mit einem bekannten P0/P1-Regressionsfehler darf nicht als stabil freigegeben werden. Ausnahmen müssen ausdrücklich in README, CHANGELOG und dieser Datei dokumentiert werden.
+Ein Release mit bekanntem P0/P1-Regressionsfehler darf nicht als stabil freigegeben werden. Ausnahmen müssen ausdrücklich in README, CHANGELOG und hier dokumentiert werden.

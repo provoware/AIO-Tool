@@ -1,0 +1,20 @@
+# Laufzeit / Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Lokale Tooldaten
+runtime/*
+!runtime/.gitkeep
+
+# Builds
+build/
+dist/
+*.zip
+
+# Editoren / Betriebssystem
+.vscode/
+.idea/
+.DS_Store
+*~
