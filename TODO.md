@@ -14,7 +14,7 @@ Neue Funktionen werden nicht aufgenommen, solange höhere Sicherheits- oder Inte
 - [x] lokales Sicherheitsmodell umgesetzt: Bindung an `127.0.0.1`, Host-/Origin-Prüfung, Security-Header.
 - [x] UI-Grundvertrag umgesetzt: Laienmodus, Expertenbereich, 4 Themes, Schriftgrößen-Presets, responsive Dashboard-Shell.
 - [x] Release-/Validierungsstruktur implementiert: Unit-Tests, `validate.py`, CI, reproduzierbarer ZIP-Builder.
-- [ ] GitHub-CI für `0.1.1-foundation` tatsächlich grün bestätigen.
+- [x] GitHub-CI für `0.1.1-foundation` grün bestätigt.
 - [ ] frischen Klick-&-Start auf Kubuntu aus sauberem Checkout prüfen.
 - [ ] Firefox- und Chrome/Chromium-Grundgate auf Zielsystem prüfen.
 
@@ -96,4 +96,4 @@ Ein Slice gilt erst als abgeschlossen, wenn:
 
 ## Aktuell empfohlener nächster Schritt
 
-**Foundation-CI + frischer Kubuntu-Start verifizieren. Danach P1 SAFE-FILE-CORE ausschließlich mit Copy beginnen.**
+**Frischen Kubuntu-Start und Browser-Grundgate verifizieren. Parallel darf der P1 SAFE-FILE-CORE-Vertrag vorbereitet werden; die erste reale Operation bleibt ausschließlich Copy.**
