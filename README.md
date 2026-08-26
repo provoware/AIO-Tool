@@ -4,8 +4,8 @@
 
 ## Status
 
-- **Phase:** CLEAN FOUNDATION — ausführbarer Kern
-- **Version:** `0.1.1-foundation`
+- **Phase:** P1 — gemeinsamer persistenter Kern
+- **Version:** `0.2.0-core`
 - **Datum:** 2026-08-27
 - **Zielsystem:** primär Linux/Kubuntu
 - **Oberfläche:** Browser-UI
@@ -14,22 +14,83 @@
 
 ## Was ist bereits vorhanden?
 
-Der erste ausführbare Foundation-Slice enthält bewusst noch keine verändernden Dateioperationen. Vorhanden sind:
+Die Clean Foundation bleibt erhalten und wurde um den ersten gemeinsamen Datenkern erweitert:
 
-- `start_tool.sh` als Klick-&-Start-Launcher,
+- Klick-&-Start über `start_tool.sh`,
 - lokale `.venv` ohne Fremdpakete,
-- idempotenter Start: vorhandene Instanz öffnen statt zweites Backend starten,
-- lokales Python-Backend auf `127.0.0.1`,
-- Host-/Origin-Prüfung für API-Schreibzugriffe,
-- atomare JSON-Konfiguration mit Backup-Fallback,
-- responsive Dashboard-Shell,
-- 4 Themes,
-- Schriftgrößen 90–140 % über Buttons,
-- standardmäßig verborgener Expertenbereich,
-- automatische Foundation-Validierung,
-- Standardbibliothek-Unit-Tests,
-- reproduzierbarer Release-Builder,
-- GitHub-Actions-CI.
+- idempotenter Mehrfachstartschutz,
+- lokales Backend auf `127.0.0.1`,
+- Host-/Origin-Prüfung und Security-Header,
+- atomare Konfiguration mit Backup-Fallback,
+- responsive Dashboard-Shell mit 4 Themes und Schriftgrößen-Presets,
+- **VersionRegistry** mit Status-, Release- und Evidenzvertrag,
+- **EventRegistry** für kurze menschenlesbare Ereignisse,
+- **TODO-Datenmodell** mit aktiven Einträgen, Titelgedächtnis und Erledigt-Archiv,
+- API für Versionen, Ereignisse, TODOs, Titelvorschläge und Abhaken,
+- automatische Tests, Vorvalidierung und reproduzierbarer Release-Builder.
+
+## Persistenter Kern
+
+### VersionRegistry
+
+`runtime/versions.json`
+
+Speichert:
+
+- aktuelle Version,
+- bekannte Versionen,
+- Entwicklungs-/Test-/Release-Status,
+- Commit-SHA optional,
+- Änderungen,
+- bekannte Probleme,
+- Regressionstatus,
+- Evidenznachweise.
+
+Wichtig: Ein Stand darf nicht auf `tested`, `release-candidate` oder `released` gesetzt werden, solange kein Evidenznachweis hinterlegt ist.
+
+### EventRegistry
+
+`runtime/events.json`
+
+Speichert wichtige Ereignisse in einfacher Sprache, z. B.:
+
+> TODO „Dashboard prüfen“ wurde erledigt und ins Archiv verschoben.
+
+Die Registry ist auf die letzten 500 Ereignisse begrenzt. Das Dashboard wird später standardmäßig die letzten fünf anzeigen.
+
+### TODO-Core
+
+`runtime/todos.json`
+
+Ein TODO kann enthalten:
+
+- Titel,
+- Kategorie optional,
+- Datum/Uhrzeit optional,
+- Priorität,
+- Notiz optional,
+- optionale spätere Kalenderverknüpfung.
+
+Beim Erledigen wird ein TODO **nicht gelöscht**, sondern mit Zeitstempel ins Archiv verschoben. Bereits verwendete Titel werden lokal gemerkt und können später wieder als Buttons/Auswahl angeboten werden.
+
+## API-Grundvertrag
+
+Lesend:
+
+- `GET /api/status`
+- `GET /api/versions`
+- `GET /api/events?limit=5`
+- `GET /api/todos`
+- `GET /api/todos/archive`
+- `GET /api/todos/suggestions`
+
+Schreibend:
+
+- `POST /api/config`
+- `POST /api/todos`
+- `POST /api/todos/<id>/complete`
+
+Schreibende Aufrufe bleiben an den bestehenden lokalen Host-/Origin-Vertrag gebunden.
 
 ## Schnellstart unter Kubuntu/Linux
 
@@ -57,7 +118,7 @@ Es werden keine externen Python-Pakete installiert.
 ## Projektstruktur
 
 ```text
-app/                    # Backend und Persistenz
+app/                    # Backend, Persistenz und Datenmodelle
 web/                    # Browser-Oberfläche
 scripts/                # Validierung und Release-Builder
 tests/                  # automatisierte Regression-/Vertragstests
@@ -78,22 +139,21 @@ node --check web/app.js
 python3 scripts/release.py --check
 ```
 
-Die CI führt diese Gates bei Push und Pull Request aus.
+## Noch nicht enthalten
 
-## Was ist ausdrücklich noch nicht enthalten?
+- Kalenderdatenmodell und Kalender-UI,
+- Dashboard-Anzeige der letzten fünf Ereignisse,
+- sichtbare TODO-Verwaltung im Dashboard,
+- persistente Job-Queue,
+- Copy-/Move-/Rename-/Delete-Operationen,
+- Undo-/Recovery-Datensatz für reale Dateiaktionen.
 
-- keine Copy-/Move-/Rename-/Delete-Operation,
-- noch keine persistente Job-Queue,
-- noch kein Undo-Datensatz für Dateiaktionen,
-- noch kein Recovery-Center für reale Dateioperationen,
-- noch keine produktive Projektverwaltung.
-
-Diese Trennung ist Absicht: SAFE-FILE-CORE beginnt erst nach grünem Foundation-Gate.
+Diese Trennung ist Absicht: Erst ein stabiler gemeinsamer Datenkern, dann Kalender/Dashboard und anschließend SAFE-FILE-CORE.
 
 ## Nächster Slice
 
-**P1 — SAFE-FILE-CORE: Copy zuerst**
+Nach grünem Registry-/TODO-Core-Gate:
 
-`Quelle wählen → Ziel wählen → Vorprüfung → Vorschau → bestätigen → kopieren → nachprüfen → Undo-Datensatz`
+**Kalender-Core + Dashboard-Integration auf Basis der vorhandenen Registries.**
 
-Move, Rename und Löschen folgen erst nach belastbarer Copy-Evidenz.
+Danach folgt SAFE-FILE-CORE mit Copy als erster realer Dateioperation.
