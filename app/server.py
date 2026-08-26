@@ -10,7 +10,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from . import ROOT_DIR, VERSION
-from .config import ConfigError, ConfigStore
+from .config import ConfigError, ConfigIntegrityError, ConfigStore
 from .event_registry import EventRegistry, EventRegistryError
 from .persistence import PersistenceError
 from .todo_store import TodoStore, TodoStoreError
@@ -213,7 +213,7 @@ class AIORequestHandler(BaseHTTPRequestHandler):
         except RequestError as exc:
             self._json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": str(exc)})
             return
-        except (ConfigError, PersistenceError, VersionRegistryError, EventRegistryError, TodoStoreError) as exc:
+        except (ConfigError, PersistenceError, VersionRegistryError, EventRegistryError, TodoStoreError, OSError) as exc:
             self._integrity_error(exc)
             return
         self._serve_static(path)
@@ -274,10 +274,13 @@ class AIORequestHandler(BaseHTTPRequestHandler):
         except RequestError as exc:
             self._json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": str(exc)})
             return
-        except TodoStoreError as exc:
+        except ConfigIntegrityError as exc:
+            self._integrity_error(exc)
+            return
+        except (ConfigError, TodoStoreError) as exc:
             self._json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": str(exc)})
             return
-        except (ConfigError, PersistenceError, VersionRegistryError, EventRegistryError) as exc:
+        except (PersistenceError, VersionRegistryError, EventRegistryError, OSError) as exc:
             self._integrity_error(exc)
             return
 
