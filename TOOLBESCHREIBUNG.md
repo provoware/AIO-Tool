@@ -6,7 +6,7 @@
 
 ## Produktidee
 
-AIO-Tool ist als lokales, modulares All-in-One-Werkzeug für wiederkehrende Datei-, Projekt-, Organisations- und Automatisierungsaufgaben geplant. Statt viele Spezialprogramme einzeln bedienen zu müssen, sollen häufige Abläufe in einer einheitlichen, sicheren und laienfreundlichen Oberfläche zusammengeführt werden.
+AIO-Tool ist ein lokales, modulares All-in-One-Werkzeug für wiederkehrende Datei-, Projekt-, Organisations- und Automatisierungsaufgaben. Häufige Abläufe sollen in einer einheitlichen, sicheren und laienfreundlichen Oberfläche zusammengeführt werden.
 
 ## Zielgruppe
 
@@ -25,7 +25,47 @@ Sekundär:
 
 **Keine Zeicheneingabe, wenn eine Auswahl ausreicht.**
 
-Das Tool soll zuerst Buttons, Dialoge, Presets, Favoriten und zuletzt verwendete sichere Eingaben anbieten. Eigene Texteingabe bleibt als gezielter Fallback erhalten.
+Das Tool bietet zuerst Buttons, Dialoge, Presets, Favoriten und zuletzt verwendete sichere Eingaben. Eigene Texteingabe bleibt ein gezielter Fallback.
+
+## Technischer Grundkern
+
+Seit `0.2.0-core` besitzt AIO-Tool einen gemeinsamen persistenten Datenkern.
+
+### VersionRegistry
+
+Die Versionierung wird nicht nur über eine sichtbare Versionsnummer dargestellt, sondern über eine persistente Registry mit:
+
+- Versionsnummer,
+- Erstellungszeit,
+- Entwicklungs-/Test-/Release-Status,
+- optionalem Commit-SHA,
+- Zusammenfassung und Änderungen,
+- bekannten Problemen,
+- Regressionstatus,
+- Evidenznachweisen.
+
+Ein Prüf-/Release-Status darf nicht ohne Evidenz vergeben werden.
+
+### EventRegistry
+
+Wichtige Ereignisse werden in einer separaten Registry in verständlicher Sprache festgehalten. Technische Details bleiben optional getrennt.
+
+Die spätere Standardansicht im Dashboard zeigt höchstens die letzten fünf relevanten Ereignisse, neuestes zuerst.
+
+### TODO-Core
+
+TODOs sind persistent und bleiben auch nach einem Neustart erhalten.
+
+Ein TODO kann enthalten:
+
+- Titel,
+- Kategorie optional,
+- Datum/Uhrzeit optional,
+- Priorität,
+- Notiz optional,
+- optionale Kalenderverknüpfung.
+
+Wiederkehrende Titel werden lokal gemerkt und als spätere Auswahl vorbereitet. Abgehakte TODOs werden mit Zeitstempel in ein Erledigt-Archiv verschoben statt gelöscht.
 
 ## Geplanter Startablauf
 
@@ -35,20 +75,24 @@ Das Tool soll zuerst Buttons, Dialoge, Presets, Favoriten und zuletzt verwendete
 4. Projektordner auswählen oder anlegen.
 5. Berechtigungen transparent klären.
 6. Profil auswählen.
-7. Einstellungen laden.
+7. Einstellungen und persistente Daten laden.
 8. Dashboard öffnen.
 
 ## Hauptoberfläche
 
-Geplant sind:
+Geplant bzw. teilweise vorbereitet sind:
 
-- Dashboard mit klaren Statusinformationen,
-- linke oder adaptive Navigation,
+- kompaktes Dashboard mit klaren Statusinformationen,
+- adaptive Navigation,
 - Favoriten / Schnellaktionen,
 - sichtbarer nächster Schritt,
 - aktiver Vorgang mit Fortschritt,
 - Ampelstatus,
 - Projektkontext,
+- nächste drei TODOs,
+- optionaler Kalenderbereich,
+- letzte fünf Ereignisse in einfacher Sprache,
+- direkter Debug-/Diagnosezugang,
 - optionaler Expertenbereich,
 - mehrere Farbthemes und veränderbare Schriftgröße.
 
@@ -64,15 +108,19 @@ Suchen, kopieren, verschieben, umbenennen und später weitere Operationen – je
 
 ### Organisation
 
-Aufgaben, Kalender, Notizen und projektbezogene Informationen.
+TODOs, Kalender, Notizen und projektbezogene Informationen. TODOs dürfen vollständig ohne Kalender funktionieren; Kalenderverknüpfung ist optional.
 
 ### Entwicklerinformationen
 
-Notizen zu Fehlern, Schwachstellen, Aufgaben, Optimierungen, Entscheidungen und Regressionen. Wiederverwendbare Titel werden gemerkt und als Auswahl angeboten.
+Notizen zu Fehlern, Schwachstellen, Aufgaben, Optimierungen, Entscheidungen und Regressionen. Wiederverwendbare Titel sollen gemerkt und als Auswahl angeboten werden.
 
 ### Verlauf und Reports
 
-Nachvollziehbar zeigen, was ausgeführt, geprüft oder geändert wurde.
+Nachvollziehbar zeigen, was ausgeführt, geprüft oder geändert wurde. Die EventRegistry bildet dafür den ersten persistenten Kern.
+
+### Versionierung
+
+Versionsstand, Vorgängerversion, Status, Evidenz und bekannte Probleme sollen zentral verwaltet werden. Widersprüche zwischen Registry, VERSION, CHANGELOG und Manifest werden schrittweise automatisiert erkannt.
 
 ### Presets und Automatisierung
 
@@ -89,11 +137,12 @@ Für verändernde Operationen gilt grundsätzlich:
 ## Technische Richtung
 
 - Linux/Kubuntu zuerst.
-- lokale, browserbasierte Oberfläche ist bevorzugt, sofern sie den Funktionsvertrag erfüllt.
+- lokale browserbasierte Oberfläche.
 - lokales Backend nur auf Loopback.
 - möglichst wenige externe Abhängigkeiten.
 - modulare Architektur.
 - persistent, aber datensparsam.
+- Schema-Versionen und Migrationen für langlebige lokale Daten.
 - reproduzierbare Tests und Releases.
 
 ## Nicht-Ziele der ersten Version
