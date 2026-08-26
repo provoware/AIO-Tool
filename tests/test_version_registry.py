@@ -16,6 +16,33 @@ class VersionRegistryTests(unittest.TestCase):
             self.assertEqual(registry.previous_version()["version"], "0.1.0")
             self.assertTrue(registry.consistency("0.2.0")["ok"])
 
+    def test_seed_preserves_history_before_runtime_file_exists(self):
+        seed = {
+            "schema_version": 1,
+            "current_version": "0.1.1",
+            "versions": [
+                {
+                    "version": "0.1.1",
+                    "created_at": "2026-08-27T00:00:00+00:00",
+                    "status": "tested",
+                    "release_status": "draft",
+                    "commit_sha": "abc123",
+                    "summary": "Foundation",
+                    "changes": ["Basis"],
+                    "known_issues": [],
+                    "regression_status": "passed-ci",
+                    "evidence": [{"kind": "ci", "reference": "run-1"}],
+                }
+            ],
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "versions.json"
+            registry = VersionRegistry(path, default=seed)
+            self.assertFalse(path.exists())
+            self.assertEqual(registry.load()["versions"][0]["version"], "0.1.1")
+            registry.ensure_current("0.2.0")
+            self.assertEqual([item["version"] for item in registry.load()["versions"]], ["0.1.1", "0.2.0"])
+
     def test_optional_commit_sha_accepts_none(self):
         with tempfile.TemporaryDirectory() as tmp:
             registry = VersionRegistry(Path(tmp) / "versions.json")
