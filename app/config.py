@@ -26,6 +26,10 @@ class ConfigError(ValueError):
     pass
 
 
+class ConfigIntegrityError(ConfigError):
+    """The stored configuration cannot be safely recovered."""
+
+
 def validate_config(value: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ConfigError("Konfiguration muss ein Objekt sein.")
@@ -63,7 +67,7 @@ class ConfigStore:
                     return validate_config(json.loads(self.backup.read_text(encoding="utf-8")))
                 except (OSError, json.JSONDecodeError, ConfigError):
                     pass
-            raise ConfigError("Konfiguration ist beschädigt und kein gültiges Backup ist verfügbar.")
+            raise ConfigIntegrityError("Konfiguration ist beschädigt und kein gültiges Backup ist verfügbar.")
 
     def save(self, value: dict[str, Any]) -> dict[str, Any]:
         clean = validate_config(value)
