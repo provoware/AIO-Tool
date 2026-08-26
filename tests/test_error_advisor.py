@@ -1,7 +1,7 @@
 import unittest
 
 from app import ROOT_DIR
-from app.config import ConfigError
+from app.config import ConfigError, ConfigIntegrityError
 from app.error_advisor import ErrorAdvisor
 from app.persistence import PersistenceError
 
@@ -26,6 +26,14 @@ class ErrorAdvisorTests(unittest.TestCase):
         self.assertEqual(advice["category"], "integrity")
         self.assertEqual(advice["severity"], "red")
         self.assertFalse(advice["retry_safe"])
+
+    def test_subclass_inherits_parent_error_rule(self):
+        advice = self.advisor.advise(
+            ConfigIntegrityError("Konfiguration ist beschädigt und kein gültiges Backup ist verfügbar."),
+            area="Konfiguration",
+        )
+        self.assertEqual(advice["rule_id"], "ERR-PERSIST-001")
+        self.assertEqual(advice["category"], "integrity")
 
     def test_unknown_error_falls_back_without_claiming_recovery(self):
         advice = self.advisor.advise(RuntimeError("Unbekannt"))
