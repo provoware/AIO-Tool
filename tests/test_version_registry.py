@@ -16,6 +16,12 @@ class VersionRegistryTests(unittest.TestCase):
             self.assertEqual(registry.previous_version()["version"], "0.1.0")
             self.assertTrue(registry.consistency("0.2.0")["ok"])
 
+    def test_optional_commit_sha_accepts_none(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            registry = VersionRegistry(Path(tmp) / "versions.json")
+            registry.ensure_current("0.2.0", commit_sha=None)
+            self.assertIsNone(registry.load()["versions"][0]["commit_sha"])
+
     def test_no_duplicate_when_ensuring_same_version(self):
         with tempfile.TemporaryDirectory() as tmp:
             registry = VersionRegistry(Path(tmp) / "versions.json")
