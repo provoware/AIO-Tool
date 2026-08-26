@@ -81,7 +81,6 @@ class CoreApiTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             runtime = Path(tmp)
             events = EventRegistry(runtime / "events.json")
-            events.store.path.write_text("{kaputt", encoding="utf-8")
             with self._patched_server(
                 runtime,
                 ConfigStore(runtime / "config.json"),
@@ -91,9 +90,48 @@ class CoreApiTests(unittest.TestCase):
             ):
                 httpd, thread, port = self._start_server()
                 try:
+                    events.store.path.write_text("{kaputt", encoding="utf-8")
                     status, payload = self._request(port, "GET", "/api/events")
                     self.assertEqual(status, 500)
-                    self.assertIn("nicht sicher gelesen", payload["error"])
+                    self.assertIn("nicht sicher", payload["error"])
+                finally:
+                    self._stop_server(httpd, thread)
+
+    def test_invalid_theme_is_client_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runtime = Path(tmp)
+            with self._patched_server(
+                runtime,
+                ConfigStore(runtime / "config.json"),
+                VersionRegistry(runtime / "versions.json"),
+                EventRegistry(runtime / "events.json"),
+                TodoStore(runtime / "todos.json"),
+            ):
+                httpd, thread, port = self._start_server()
+                try:
+                    status, payload = self._request(port, "POST", "/api/config", {"theme": "unbekannt"})
+                    self.assertEqual(status, 400)
+                    self.assertIn("Theme", payload["error"])
+                finally:
+                    self._stop_server(httpd, thread)
+
+    def test_corrupted_config_is_server_integrity_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runtime = Path(tmp)
+            config = ConfigStore(runtime / "config.json")
+            with self._patched_server(
+                runtime,
+                config,
+                VersionRegistry(runtime / "versions.json"),
+                EventRegistry(runtime / "events.json"),
+                TodoStore(runtime / "todos.json"),
+            ):
+                httpd, thread, port = self._start_server()
+                try:
+                    config.path.write_text("{kaputt", encoding="utf-8")
+                    status, payload = self._request(port, "POST", "/api/config", {"theme": "clean-light"})
+                    self.assertEqual(status, 500)
+                    self.assertIn("nicht sicher", payload["error"])
                 finally:
                     self._stop_server(httpd, thread)
 
