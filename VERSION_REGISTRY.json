@@ -46,18 +46,31 @@
     {
       "version": "0.2.0-core",
       "created_at": "2026-08-27T01:00:00+02:00",
-      "status": "development",
+      "status": "tested",
       "release_status": "draft",
-      "commit_sha": null,
+      "commit_sha": "7d8450933d6ed3e88ff7461f691de64d73bdaaa1",
       "summary": "Gemeinsamer persistenter Kern für Versionierung, Ereignisse und TODOs.",
       "changes": [
         "VersionRegistry mit Evidenz- und Driftvertrag",
         "EventRegistry mit menschenlesbaren Ereignissen",
-        "TODO-Core mit Titelgedächtnis und Erledigt-Archiv"
+        "TODO-Core mit Titelgedächtnis und Erledigt-Archiv",
+        "getrackte Projekt-Versionshistorie als Seed für frische Installationen",
+        "getrennte HTTP-Klassifizierung von Nutzereingabe und Persistenzfehlern"
       ],
-      "known_issues": [],
-      "regression_status": "pending",
-      "evidence": []
+      "known_issues": [
+        "reale Kubuntu-, Firefox- und Chrome/Chromium-Zielsystemgates noch offen",
+        "Dashboard-UI für TODOs und letzte Ereignisse folgt im nächsten Slice",
+        "Kalender-Core folgt im nächsten Slice"
+      ],
+      "regression_status": "passed-ci",
+      "evidence": [
+        {
+          "time": "2026-08-27T01:12:43+02:00",
+          "kind": "github-actions",
+          "reference": "run:33022404071",
+          "note": "foundation-ci erfolgreich: Python-Syntax, Unit-/Integrationstests, Core-Validierung, Launcher, JavaScript und Release-Builder."
+        }
+      ]
     }
   ]
 }
