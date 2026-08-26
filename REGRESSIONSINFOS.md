@@ -2,115 +2,88 @@
 
 ## Zweck
 
-Diese Datei hält bekannte Fehlerklassen und dauerhafte Schutzverträge fest.
+**Bestätigter Fehler → reproduzierbarer Test → Fix → erneute Prüfung → Learning Memory falls strukturell → dauerhaftes Gate.**
 
-**Bestätigter Fehler → reproduzierbarer Test oder Prüfevidenz → Fix → erneute Prüfung → dauerhaftes Gate.**
+Status: OFFEN / UMGESETZT / GEPRÜFT / BEWIESEN.
 
-## Statusdefinitionen
+## Bestehende Kernverträge
 
-- **OFFEN** – Fehler bekannt, noch nicht behoben.
-- **UMGESETZT** – Schutz/Fix im Code vorhanden, aber noch nicht vollständig ausgeführt geprüft.
-- **GEPRÜFT** – vorgesehene Prüfung wurde erfolgreich ausgeführt.
-- **BEWIESEN** – reproduzierbare Evidenz und dauerhaftes Gate vorhanden.
+- **REG-001:** DONE erst nach sicherer Persistenz — offen für Job-System.
+- **REG-002:** reine Prüfung darf Setup nicht entwerten — offen für Wizard.
+- **REG-003:** unterbrochener Job darf nicht als laufend erscheinen — offen für Job-System.
+- **REG-004:** Prüfung bleibt seiteneffektfrei — GEPRÜFT.
+- **REG-005:** Mehrfachstart erzeugt kein zweites Backend — umgesetzt, Zielsystemtest offen.
+- **REG-006:** Laienmodus bleibt schlank — umgesetzt, Browser-/Zoom-Gate offen.
+- **REG-007:** keine unsichtbare Dateiänderung — verpflichtend für SAFE-FILE-CORE.
+- **REG-008:** endgültiges Löschen nie Standard — verpflichtend für SAFE-FILE-CORE.
+- **REG-009/010:** Fremdhost/Fremd-Origin blockiert — GEPRÜFT.
+- **REG-011:** beschädigte Persistenz → Backup-Fallback/Integritätsfehler — GEPRÜFT.
+- **REG-012:** lokale Runtime/Nutzerdaten nicht im Release — GEPRÜFT.
+- **REG-013:** Test-/Release-Status nur mit Evidenz — GEPRÜFT.
+- **REG-014:** VERSION/Registry-Drift erkennen — GEPRÜFT; CHANGELOG/MANIFEST-Drift später erweitern.
+- **REG-015:** erledigtes TODO archivieren statt löschen — GEPRÜFT.
+- **REG-016:** TODO-Titelgedächtnis ohne case-sensitive Dubletten — GEPRÜFT.
+- **REG-017:** sichtbares Event braucht verständlichen Text — GEPRÜFT.
+- **REG-018:** frische Installation behält getrackte Versionshistorie — GEPRÜFT.
+- **REG-019:** Nutzerfehler 400, Persistenz-/Integritätsfehler 500 — GEPRÜFT.
 
-## Verbindliche Regressionsthemen
+## Robustheitsregressionen 0.2.1
 
-### REG-001 — Abschlussstatus vor Persistenz
-- **Vertrag:** persistent schreiben und verifizieren; erst danach DONE melden.
-- **Status:** OFFEN FÜR JOB-SYSTEM.
+### REG-020 — Musterdatei driftet vom Validator weg
 
-### REG-002 — Setup/Wizard durch harmlose Prüfung entwertet
-- **Vertrag:** reine Prüfung darf gültigen Setup-Zustand nicht zerstören.
-- **Status:** OFFEN FÜR WIZARD-SLICE.
+- **Risiko:** Hilfe verweist auf eine veraltete oder ungültige Vorlage.
+- **Vertrag:** alle Referenzvorlagen werden von denselben Validatoren wie Produktdaten geprüft.
+- **Tests:** `test_reference_templates_match_current_validators`, `test_valid_testdata_uses_same_contracts`.
+- **Status:** GEPRÜFT in Run `33024919165`.
 
-### REG-003 — Unterbrochener Job erscheint nach Neustart als laufend
-- **Vertrag:** unvollständige Jobs als `unterbrochen` rekonstruieren.
-- **Status:** OFFEN FÜR JOB-SYSTEM.
+### REG-021 — Negative Testdaten werden versehentlich akzeptiert
 
-### REG-004 — Prüfoperation verändert Konfiguration
-- **Vertrag:** reine Prüfungen bleiben seiteneffektfrei.
+- **Vertrag:** bekannte ungültige Fälle bleiben reproduzierbar ungültig.
+- **Beispiele:** unbekanntes Theme, korruptes JSON, doppelte Version, leere Eventmeldung, doppeltes TODO-Titelgedächtnis.
+- **Tests:** `tests/test_templates.py`.
 - **Status:** GEPRÜFT.
 
-### REG-005 — Mehrfachstart erzeugt mehrere Backends
-- **Vertrag:** valide laufende Instanz öffnen statt zweite starten.
-- **Status:** UMGESETZT; Zielsystemtest offen.
+### REG-022 — Fehlerhilfe erkennt spezialisierte Unterklasse nicht
 
-### REG-006 — Laienmodus durch Zusatzoptionen überladen
-- **Vertrag:** Expertenoptionen verborgen; Auswahl vor Zeicheneingabe.
-- **Status:** UMGESETZT; Browser-/Zoom-Gate offen.
+- **Gefundener Fehler:** `ConfigIntegrityError` wurde zunächst nicht als Integritätsfamilie erkannt, weil nur der exakte Klassenname verglichen wurde.
+- **Fix:** Matcher prüft die vollständige Exception-Klassenhierarchie (`mro`).
+- **Test:** `test_subclass_inherits_parent_error_rule` plus API-Integritätstest.
+- **Learning:** LRN-002 / hierarchische Fehlerfamilien werden als Strukturvertrag behandelt.
+- **Status:** BEWIESEN durch roten Erstlauf `33024839956` und grünen Fixlauf `33024919165`.
 
-### REG-007 — Unsichtbare Dateiänderung
-- **Vertrag:** verändernde Dateioperation braucht Vorschau, Quelle/Ziel, Konflikte und Nachprüfung.
-- **Status:** verpflichtend für SAFE-FILE-CORE.
+### REG-023 — Fehlerhilfe behauptet unsichere automatische Recovery
 
-### REG-008 — endgültiges Löschen als Standard
-- **Vertrag:** Papierkorb/Recovery vor endgültigem Löschen.
-- **Status:** verpflichtend für SAFE-FILE-CORE.
-
-### REG-009 — Fremder Host erreicht lokales Backend
-- **Vertrag:** nur Loopback/localhost.
+- **Vertrag:** unbekannte Fehler haben `retry_safe=false`; Mustervorlagen werden nur empfohlen, nie automatisch über Nutzerdaten geschrieben.
+- **Tests:** `test_unknown_error_falls_back_without_claiming_recovery`, Template-Pfadvalidierung.
 - **Status:** GEPRÜFT.
 
-### REG-010 — Fremde Origin schreibt lokale Daten
-- **Vertrag:** mutierende Endpunkte nur mit lokalem Host-/Origin-Vertrag.
+### REG-024 — wiederkehrende sichtbare Texte driften auseinander
+
+- **Vertrag:** wiederverwendete Core-Systemtexte liegen versioniert im Textkatalog; fehlende Schlüssel sind Fehler statt still erfundener Fallback.
+- **Tests:** `tests/test_text_catalog.py`.
 - **Status:** GEPRÜFT.
 
-### REG-011 — Beschädigte Hauptpersistenz
-- **Vertrag:** atomare Hauptdatei + Backup-Fallback.
-- **Tests:** Config-Backup-Test, `test_roundtrip_and_backup_fallback`.
+### REG-025 — bestätigte Entwicklungslektion geht verloren
+
+- **Vertrag:** `LEARNING_MEMORY.jsonl` enthält eindeutige, validierte Lektionen; CI führt `scripts/learning_guard.py` aus.
+- **Tests:** `tests/test_learning_memory.py` + Learning-Guard-CI.
 - **Status:** GEPRÜFT.
 
-### REG-012 — Release enthält lokale Nutzerdaten
-- **Vertrag:** Runtime, venv, Caches und lokale Daten aus Release ausschließen.
-- **Status:** GEPRÜFT durch Release-Builder-CI.
+### REG-026 — sekundärer Eventfehler zerstört bereits gespeichertes TODO
 
-### REG-013 — Version ohne Evidenz als getestet/freigegeben
-- **Vertrag:** `tested`, `release-candidate`, `released` benötigen Evidenz.
-- **Test:** `test_tested_status_requires_evidence`.
+- **Vertrag:** Hauptaktion bleibt erfolgreich, Ereignisfehler wird als Warnung zurückgegeben.
+- **Test:** `test_todo_survives_broken_event_log_and_returns_warning`.
 - **Status:** GEPRÜFT.
-
-### REG-014 — VERSION und Registry driften auseinander
-- **Vertrag:** `VERSION_REGISTRY.json` und `VERSION` müssen dieselbe aktuelle Version führen; lokale Registry übernimmt den Seed.
-- **Tests:** `test_consistency_detects_version_drift`, Core-Validierung.
-- **Status:** GEPRÜFT für VERSION/Registry; CHANGELOG/MANIFEST-Drift folgt später.
-
-### REG-015 — Erledigtes TODO wird gelöscht
-- **Vertrag:** ins Archiv verschieben, `created_at` behalten, `completed_at` ergänzen.
-- **Test:** `test_complete_moves_item_to_archive_with_timestamp`.
-- **Status:** GEPRÜFT.
-
-### REG-016 — TODO-Titel wird nicht wieder angeboten oder doppelt gespeichert
-- **Vertrag:** case-insensitive zusammenführen, Nutzung zählen, wieder anbieten.
-- **Test:** `test_title_memory_counts_and_reoffers_titles`.
-- **Status:** GEPRÜFT.
-
-### REG-017 — Event ohne verständlichen Text
-- **Vertrag:** nichtleerer menschenlesbarer `message`-Text; technische Details getrennt.
-- **Tests:** `test_message_must_be_human_readable_nonempty_text`, `test_latest_returns_newest_first`.
-- **Status:** GEPRÜFT; sichtbare Dashboard-Darstellung folgt.
-
-### REG-018 — Frische Installation verliert Versionshistorie
-- **Vertrag:** `VERSION_REGISTRY.json` ist getrackte Historie und Seed für frische Runtime.
-- **Tests:** `test_seed_preserves_history_before_runtime_file_exists`; `scripts/validate.py` prüft Historie und `VERSION`-Übereinstimmung.
-- **Status:** GEPRÜFT in GitHub Actions Run `33022569880`.
-
-### REG-019 — Persistenzfehler wird als Nutzerfehler gemeldet
-- **Vertrag:** ungültige Parameter/Eingaben → 400; beschädigte Persistenz → 500/Integritätsmeldung.
-- **Tests:** `test_invalid_limit_is_client_error`, `test_corrupted_event_registry_is_server_integrity_error`, `test_invalid_theme_is_client_error`, `test_corrupted_config_is_server_integrity_error`.
-- **Status:** GEPRÜFT in GitHub Actions Run `33022569880`.
-
-## Testklassen für Releases
-
-Mindestens je nach Slice prüfen: Normalfall, ungültige Eingabe, Berechtigungsfehler, vorhandenes Ziel, Speicherknappheit, Abbruch, Neustart, beschädigte Persistenz, Recovery, Browser-Reload, große/leere Datenmenge, Mehrfachstart, Zoom/Kontrast/Tastatur, Fremdhost/Origin, Release-Ausschlüsse, Schema-/Versionsdrift, Archivierung, Vorschlagsgedächtnis, menschenlesbare Events, frische Versionshistorie und korrekte HTTP-Fehlerklasse.
 
 ## Nachweise
 
-- Foundation 0.1.1 — Run `33020484403`: **SUCCESS**.
-- Core 0.2.0 — Run `33022404071`: **SUCCESS**.
-- Finaler Core-Merge-Kandidat inkl. REG-018/019 — Run `33022569880`: **SUCCESS**.
+- Foundation 0.1.1 — Run `33020484403`: SUCCESS.
+- Core 0.2.0 — finaler Kandidat Run `33022569880`: SUCCESS; Merge `a110132acc4104e0f0c48c736a3fd4bc98a9c290`.
+- Robustness 0.2.1 — erster Lauf `33024839956`: FAILURE, dadurch REG-022 entdeckt.
+- Robustness 0.2.1 — korrigierter Lauf `33024919165`: **SUCCESS**.
 
-Erfolgreiche Gates: Python-Syntax, Unit-/Integrationstests, Core-Validierung, Launcher-Syntax, JavaScript-Syntax und Release-Builder.
+Im grünen Robustheitslauf erfolgreich: Python-Syntax, 49 Unit-/Integrationstests, Validierung, Learning Guard, Launcher, JavaScript, Release-Builder und Release-ZIP-Upload.
 
 ## Release-Gate
 
-`0.2.0-core` ist automatisiert **GEPRÜFT**, aber nur **draft**. Reale Kubuntu-/Firefox-/Chrome-/Zoom-Gates bleiben offen und dürfen nicht aus CI-Erfolg abgeleitet werden.
+`0.2.1-robustness` ist automatisiert GEPRÜFT, aber nur `draft`. Reale Kubuntu-/Firefox-/Chrome-/Zoom-Gates bleiben offen.

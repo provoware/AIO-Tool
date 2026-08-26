@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "current_version": "0.2.1-robustness",
+  "versions": [
+    {
+      "version": "0.2.1-robustness",
+      "created_at": "2026-08-27T01:45:00+02:00",
+      "status": "development",
+      "release_status": "draft",
+      "commit_sha": null,
+      "summary": "Beispiel für einen versionierten Entwicklungsstand.",
+      "changes": ["Beispieländerung"],
+      "known_issues": [],
+      "regression_status": "pending",
+      "evidence": []
+    }
+  ]
+}

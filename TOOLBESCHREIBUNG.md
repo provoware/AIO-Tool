@@ -8,153 +8,83 @@
 
 AIO-Tool ist ein lokales, modulares All-in-One-Werkzeug für wiederkehrende Datei-, Projekt-, Organisations- und Automatisierungsaufgaben. Häufige Abläufe sollen in einer einheitlichen, sicheren und laienfreundlichen Oberfläche zusammengeführt werden.
 
-## Zielgruppe
-
-Primär:
-
-- Nutzer ohne technisches Spezialwissen,
-- Nutzer, die klare visuelle Führung bevorzugen,
-- Nutzer, die lokale/offline Arbeitsweisen möchten,
-- Nutzer mit wiederkehrenden Datei- und Projektabläufen.
-
-Sekundär:
-
-- fortgeschrittene Nutzer über einen bewusst eingeblendeten Expertenbereich.
-
 ## Leitidee der Bedienung
 
 **Keine Zeicheneingabe, wenn eine Auswahl ausreicht.**
 
-Das Tool bietet zuerst Buttons, Dialoge, Presets, Favoriten und zuletzt verwendete sichere Eingaben. Eigene Texteingabe bleibt ein gezielter Fallback.
+Reihenfolge: Button → Auswahldialog → Preset/zuletzt verwendet → Empfehlung → Freitext nur als Fallback.
 
-## Technischer Grundkern
-
-Seit `0.2.0-core` besitzt AIO-Tool einen gemeinsamen persistenten Datenkern.
+## Aktueller technischer Kern
 
 ### VersionRegistry
 
-Die Versionierung wird nicht nur über eine sichtbare Versionsnummer dargestellt, sondern über eine persistente Registry mit:
-
-- Versionsnummer,
-- Erstellungszeit,
-- Entwicklungs-/Test-/Release-Status,
-- optionalem Commit-SHA,
-- Zusammenfassung und Änderungen,
-- bekannten Problemen,
-- Regressionstatus,
-- Evidenznachweisen.
-
-Ein Prüf-/Release-Status darf nicht ohne Evidenz vergeben werden.
+Getrackte Projekt-Historie und lokale Runtime-Registry mit Status, Commit-SHA, Änderungen, bekannten Problemen, Regressionstatus und Evidenz. Getestet/freigegeben darf nicht ohne Prüfnachweis vergeben werden.
 
 ### EventRegistry
 
-Wichtige Ereignisse werden in einer separaten Registry in verständlicher Sprache festgehalten. Technische Details bleiben optional getrennt.
-
-Die spätere Standardansicht im Dashboard zeigt höchstens die letzten fünf relevanten Ereignisse, neuestes zuerst.
+Persistente wichtige Ereignisse mit eigenem verständlichem Meldungstext und getrennten technischen Details. Das spätere Dashboard zeigt davon standardmäßig die letzten fünf.
 
 ### TODO-Core
 
-TODOs sind persistent und bleiben auch nach einem Neustart erhalten.
+Persistente TODOs mit Titelgedächtnis, optionalem Datum/Kalenderbezug und Erledigt-Archiv mit Zeitstempel. Die nächsten drei offenen TODOs können serverseitig ermittelt werden.
 
-Ein TODO kann enthalten:
+## Robustheitskern 0.2.1
 
-- Titel,
-- Kategorie optional,
-- Datum/Uhrzeit optional,
-- Priorität,
-- Notiz optional,
-- optionale Kalenderverknüpfung.
+AIO-Tool schützt nicht nur Nutzerdaten, sondern zunehmend auch den Entwicklungsprozess selbst.
 
-Wiederkehrende Titel werden lokal gemerkt und als spätere Auswahl vorbereitet. Abgehakte TODOs werden mit Zeitstempel in ein Erledigt-Archiv verschoben statt gelöscht.
+### Mustervorlagen und Testdaten
 
-## Geplanter Startablauf
+Jedes langlebige JSON-/Config-Format soll eine geprüfte Referenzdatei besitzen. Positive Testdaten müssen akzeptiert, bekannte negative Testfälle gezielt abgelehnt werden. Mustervorlagen sind Vergleichshilfen und dürfen niemals still über Nutzerdaten geschrieben werden.
 
-1. Klick-&-Start.
-2. System- und Abhängigkeitsprüfung.
-3. fehlende lokale Voraussetzungen verständlich auflösen.
-4. Projektordner auswählen oder anlegen.
-5. Berechtigungen transparent klären.
-6. Profil auswählen.
-7. Einstellungen und persistente Daten laden.
-8. Dashboard öffnen.
+### Versionierte Texte
 
-## Hauptoberfläche
+Wiederkehrende Nutzer- und Systemmeldungen werden in einem versionierten deutschen Textkatalog gepflegt. Dadurch lassen sich Sprache, Verständlichkeit und Konsistenz zentral testen und später erweitern.
 
-Geplant bzw. teilweise vorbereitet sind:
+### Intelligente Fehlerhilfe
 
-- kompaktes Dashboard mit klaren Statusinformationen,
-- adaptive Navigation,
-- Favoriten / Schnellaktionen,
-- sichtbarer nächster Schritt,
-- aktiver Vorgang mit Fortschritt,
-- Ampelstatus,
-- Projektkontext,
-- nächste drei TODOs,
-- optionaler Kalenderbereich,
-- letzte fünf Ereignisse in einfacher Sprache,
-- direkter Debug-/Diagnosezugang,
-- optionaler Expertenbereich,
-- mehrere Farbthemes und veränderbare Schriftgröße.
+Versionierte Fehlerregeln ordnen bekannte Fehlerfamilien einer verständlichen Erklärung, Ampelstufe und sicheren nächsten Handlung zu. Optional kann eine passende Mustervorlage genannt werden. Ein unbekannter Fehler behauptet keine automatische Recovery.
 
-## Funktionsbereiche
+### Entwicklungs-Lerngedächtnis
 
-### Projekte
+`LEARNING_MEMORY.jsonl` bewahrt bestätigte Entwicklungslektionen. Der Learning Guard validiert diese Datei in CI. Strukturelle Fehler sollen künftig nicht nur lokal repariert, sondern als Regel + Regression dauerhaft gegen Wiederholung abgesichert werden.
 
-Projektordner prüfen, anlegen, wechseln und den aktuellen Kontext sichtbar halten.
+### Codesparendes Patchen
 
-### Sichere Dateioperationen
+Vor breiten Umbauten wird die kleinste verantwortliche Codezone bestimmt: Datei, Funktion/Klasse, Zeilenbereich und passender Test. Lokale Fixes mit Regression werden bevorzugt.
 
-Suchen, kopieren, verschieben, umbenennen und später weitere Operationen – jeweils mit Vorschau, Konfliktbehandlung, Prüfung und Recovery-Vertrag.
+## Geplanter Organisationsbereich
 
-### Organisation
+Als nächster Schritt entsteht der Kalender-Core:
 
-TODOs, Kalender, Notizen und projektbezogene Informationen. TODOs dürfen vollständig ohne Kalender funktionieren; Kalenderverknüpfung ist optional.
+- Termine persistent speichern,
+- Titel merken und wieder anbieten,
+- Erinnerungen verwalten,
+- Monats-/Wochen-/Jahresdaten erzeugen,
+- TODO-Verknüpfung optional halten.
 
-### Entwicklerinformationen
-
-Notizen zu Fehlern, Schwachstellen, Aufgaben, Optimierungen, Entscheidungen und Regressionen. Wiederverwendbare Titel sollen gemerkt und als Auswahl angeboten werden.
-
-### Verlauf und Reports
-
-Nachvollziehbar zeigen, was ausgeführt, geprüft oder geändert wurde. Die EventRegistry bildet dafür den ersten persistenten Kern.
-
-### Versionierung
-
-Versionsstand, Vorgängerversion, Status, Evidenz und bekannte Probleme sollen zentral verwaltet werden. Widersprüche zwischen Registry, VERSION, CHANGELOG und Manifest werden schrittweise automatisiert erkannt.
-
-### Presets und Automatisierung
-
-Wiederkehrende Abläufe speichern und kontrolliert automatisieren. Kritische Aktionen bleiben absicherbar.
+Danach folgt Dashboard V2 mit nächsten drei TODOs, Terminen, letzten fünf Ereignissen und Debug-Zugang.
 
 ## Sicherheitsphilosophie
-
-Eine Funktion ist nicht allein deshalb fertig, weil der Normalfall funktioniert. Relevante Fehler- und Abbruchfälle gehören zum Funktionsvertrag.
 
 Für verändernde Operationen gilt grundsätzlich:
 
 `Vorprüfung → Vorschau → Bestätigung → Aktion → Nachprüfung → Protokoll → Undo/Recovery`
 
+Prüfungen bleiben seiteneffektfrei. Ein sekundärer Protokollfehler darf eine bereits sicher gespeicherte Hauptaktion nicht rückwirkend als fehlgeschlagen darstellen.
+
 ## Technische Richtung
 
-- Linux/Kubuntu zuerst.
-- lokale browserbasierte Oberfläche.
-- lokales Backend nur auf Loopback.
-- möglichst wenige externe Abhängigkeiten.
-- modulare Architektur.
-- persistent, aber datensparsam.
-- Schema-Versionen und Migrationen für langlebige lokale Daten.
-- reproduzierbare Tests und Releases.
+- Linux/Kubuntu zuerst,
+- lokale Browseroberfläche,
+- Loopback-Backend,
+- Standardbibliothek bevorzugt,
+- keine Telemetrie,
+- atomare Persistenz,
+- versionierte Schemata/Text-/Fehlerverträge,
+- reproduzierbare Tests und Releases,
+- Release-ZIP als automatisch geprüftes CI-Artefakt.
 
-## Nicht-Ziele der ersten Version
-
-- keine Cloud-Pflicht,
-- keine Telemetrieplattform,
-- kein ungeprüfter Funktionssammler,
-- keine automatische endgültige Löschung,
-- keine Expertenoberfläche als Standard,
-- keine große Plugin-Landschaft vor stabilem Kern.
-
-## Definition eines guten AIO-Tool-Workflows
+## Definition eines guten Workflows
 
 Ein Laie soll jederzeit beantworten können:
 
@@ -165,4 +95,4 @@ Ein Laie soll jederzeit beantworten können:
 5. Kann ich es rückgängig machen?
 6. Was ist das Ergebnis?
 
-Wenn eine Hauptansicht diese Fragen nicht ausreichend beantwortet, ist sie noch nicht fertig optimiert.
+Wenn eine Hauptansicht diese Fragen nicht beantwortet, ist sie noch nicht fertig optimiert.

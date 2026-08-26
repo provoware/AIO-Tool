@@ -11,6 +11,7 @@ from urllib.parse import parse_qs, urlparse
 
 from . import ROOT_DIR, VERSION
 from .config import ConfigError, ConfigIntegrityError, ConfigStore
+from .error_advisor import ErrorAdvisor
 from .event_registry import EventRegistry, EventRegistryError
 from .persistence import PersistenceError
 from .todo_store import TodoStore, TodoStoreError
@@ -24,6 +25,8 @@ VERSION_SEED = validate_registry(json.loads(VERSION_SEED_PATH.read_text(encoding
 VERSION_REGISTRY = VersionRegistry(RUNTIME_DIR / "versions.json", default=VERSION_SEED)
 EVENT_REGISTRY = EventRegistry(RUNTIME_DIR / "events.json")
 TODO_STORE = TodoStore(RUNTIME_DIR / "todos.json")
+ERROR_ADVISOR = ErrorAdvisor()
+TEXTS = ERROR_ADVISOR.catalog
 MAX_BODY_BYTES = 64 * 1024
 ALLOWED_CONFIG_KEYS = {"theme", "font_scale", "expert_visible", "setup_complete", "active_project", "favorites"}
 TODO_ALLOWED_KEYS = {"title", "category", "due_date", "due_time", "priority", "note", "calendar_event_id"}
@@ -52,11 +55,12 @@ def ensure_core_state() -> None:
     known = {item["version"] for item in VERSION_REGISTRY.load()["versions"]}
     VERSION_REGISTRY.ensure_current(
         VERSION,
-        summary="VersionRegistry, EventRegistry und persistenter TODO-Kern.",
+        summary="Robustheitskern mit versionierten Vorlagen, Texten, Fehlerhilfe und Entwicklungs-Lerngedächtnis.",
         changes=[
-            "VersionRegistry mit Evidenzvertrag",
-            "menschenlesbare EventRegistry",
-            "TODO-Kern mit Titelgedächtnis und Erledigt-Archiv",
+            "versionierte Config-/JSON-Mustervorlagen",
+            "versionierter deutscher Textkatalog",
+            "regelbasierte sichere Fehlerhilfe",
+            "validiertes LEARNING_MEMORY.jsonl",
         ],
     )
     if VERSION not in known:
@@ -65,7 +69,7 @@ def ensure_core_state() -> None:
                 kind="version_registered",
                 area="Versionierung",
                 level="info",
-                message=f"Version {VERSION} wurde als neuer Entwicklungsstand registriert.",
+                message=TEXTS.get("event.version_registered", version=VERSION),
                 details={"version": VERSION},
             )
         except (EventRegistryError, PersistenceError):
@@ -77,7 +81,23 @@ def _safe_event(**kwargs: object) -> str | None:
         EVENT_REGISTRY.add(**kwargs)
         return None
     except (EventRegistryError, PersistenceError):
-        return "Aktion wurde gespeichert, das Ereignisprotokoll konnte aber nicht aktualisiert werden."
+        return TEXTS.get("server.event_warning")
+
+
+def _advice_for(exc: Exception, *, area: str) -> dict:
+    try:
+        return ERROR_ADVISOR.advise(exc, area=area)
+    except Exception:
+        return {
+            "rule_id": "ERR-ADVISOR-FALLBACK",
+            "category": "unknown",
+            "severity": "red",
+            "message": "Fehlerhilfe konnte nicht sicher geladen werden.",
+            "action": "Keine Nutzerdaten automatisch verändern; Diagnose öffnen.",
+            "template_path": None,
+            "retry_safe": False,
+            "area": area,
+        }
 
 
 class AIORequestHandler(BaseHTTPRequestHandler):
@@ -102,10 +122,10 @@ class AIORequestHandler(BaseHTTPRequestHandler):
 
     def _reject_if_untrusted(self, mutating: bool = False) -> bool:
         if not allowed_host(self.headers.get("Host", ""), self.app_port):
-            self._json(HTTPStatus.FORBIDDEN, {"ok": False, "error": "Ungültiger Host."})
+            self._json(HTTPStatus.FORBIDDEN, {"ok": False, "error": TEXTS.get("server.invalid_host")})
             return True
         if mutating and not allowed_origin(self.headers.get("Origin"), self.app_port):
-            self._json(HTTPStatus.FORBIDDEN, {"ok": False, "error": "Ungültige Herkunft."})
+            self._json(HTTPStatus.FORBIDDEN, {"ok": False, "error": TEXTS.get("server.invalid_origin")})
             return True
         return False
 
@@ -145,12 +165,16 @@ class AIORequestHandler(BaseHTTPRequestHandler):
             raise RequestError(f"limit muss zwischen 1 und {maximum} liegen.")
         return limit
 
-    def _integrity_error(self, exc: Exception) -> None:
-        self._json(HTTPStatus.INTERNAL_SERVER_ERROR, {
+    def _respond_error(self, exc: Exception, *, area: str, default_status: int) -> None:
+        help_info = _advice_for(exc, area=area)
+        status = HTTPStatus.INTERNAL_SERVER_ERROR if help_info.get("category") == "integrity" else default_status
+        payload = {
             "ok": False,
-            "error": "Lokale Daten konnten nicht sicher gelesen oder gespeichert werden.",
+            "error": help_info["message"],
             "detail": str(exc),
-        })
+            "help": help_info,
+        }
+        self._json(status, payload)
 
     def do_GET(self) -> None:
         if self._reject_if_untrusted():
@@ -175,6 +199,7 @@ class AIORequestHandler(BaseHTTPRequestHandler):
                         "events": EVENT_REGISTRY.count(),
                         "todos_open": len(todos["items"]),
                         "todos_archived": len(todos["archive"]),
+                        "error_help": ERROR_ADVISOR.metadata(),
                     },
                 })
                 return
@@ -210,11 +235,14 @@ class AIORequestHandler(BaseHTTPRequestHandler):
                 limit = self._query_limit(parsed, 12, 50)
                 self._json(HTTPStatus.OK, {"ok": True, "titles": TODO_STORE.title_suggestions(limit)})
                 return
+            if path == "/api/help/meta":
+                self._json(HTTPStatus.OK, {"ok": True, "help": ERROR_ADVISOR.metadata()})
+                return
         except RequestError as exc:
-            self._json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": str(exc)})
+            self._respond_error(exc, area="API", default_status=HTTPStatus.BAD_REQUEST)
             return
         except (ConfigError, PersistenceError, VersionRegistryError, EventRegistryError, TodoStoreError, OSError) as exc:
-            self._integrity_error(exc)
+            self._respond_error(exc, area="Persistenz", default_status=HTTPStatus.INTERNAL_SERVER_ERROR)
             return
         self._serve_static(path)
 
@@ -244,7 +272,7 @@ class AIORequestHandler(BaseHTTPRequestHandler):
                     kind="todo_created",
                     area="TODO",
                     level="green",
-                    message=f"TODO „{item['title']}“ wurde angelegt.",
+                    message=TEXTS.get("event.todo_created", title=item["title"]),
                     details={"todo_id": item["id"]},
                 )
                 response = {"ok": True, "item": item}
@@ -263,7 +291,7 @@ class AIORequestHandler(BaseHTTPRequestHandler):
                     kind="todo_completed",
                     area="TODO",
                     level="green",
-                    message=f"TODO „{item['title']}“ wurde erledigt und ins Archiv verschoben.",
+                    message=TEXTS.get("event.todo_completed", title=item["title"]),
                     details={"todo_id": item["id"], "completed_at": item["completed_at"]},
                 )
                 response = {"ok": True, "item": item}
@@ -272,19 +300,19 @@ class AIORequestHandler(BaseHTTPRequestHandler):
                 self._json(HTTPStatus.OK, response)
                 return
         except RequestError as exc:
-            self._json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": str(exc)})
+            self._respond_error(exc, area="Eingabe", default_status=HTTPStatus.BAD_REQUEST)
             return
         except ConfigIntegrityError as exc:
-            self._integrity_error(exc)
+            self._respond_error(exc, area="Konfiguration", default_status=HTTPStatus.INTERNAL_SERVER_ERROR)
             return
         except (ConfigError, TodoStoreError) as exc:
-            self._json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": str(exc)})
+            self._respond_error(exc, area="Eingabe", default_status=HTTPStatus.BAD_REQUEST)
             return
         except (PersistenceError, VersionRegistryError, EventRegistryError, OSError) as exc:
-            self._integrity_error(exc)
+            self._respond_error(exc, area="Persistenz", default_status=HTTPStatus.INTERNAL_SERVER_ERROR)
             return
 
-        self._json(HTTPStatus.NOT_FOUND, {"ok": False, "error": "Unbekannter API-Pfad."})
+        self._json(HTTPStatus.NOT_FOUND, {"ok": False, "error": TEXTS.get("server.unknown_api")})
 
     def _serve_static(self, request_path: str) -> None:
         relative = "index.html" if request_path in {"", "/"} else request_path.lstrip("/")

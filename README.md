@@ -4,152 +4,107 @@
 
 ## Status
 
-- **Phase:** P1 — gemeinsamer persistenter Kern
-- **Version:** `0.2.0-core`
+- **Phase:** P1 — Robustheits- und Datenkern
+- **Version:** `0.2.1-robustness`
 - **Datum:** 2026-08-27
 - **Zielsystem:** primär Linux/Kubuntu
 - **Oberfläche:** Browser-UI
 - **Backend:** Python-Standardbibliothek, ausschließlich Loopback
 - **Externe Python-Pakete:** keine
 
-## Was ist bereits vorhanden?
+## Aktueller Kern
 
-Die Clean Foundation bleibt erhalten und wurde um den ersten gemeinsamen Datenkern erweitert:
+Vorhanden sind Klick-&-Start, lokales Backend, atomare Konfiguration, VersionRegistry, EventRegistry und persistenter TODO-Core. Zusätzlich schützt `0.2.1-robustness` die Entwicklung selbst stärker:
 
-- Klick-&-Start über `start_tool.sh`,
-- lokale `.venv` ohne Fremdpakete,
-- idempotenter Mehrfachstartschutz,
-- lokales Backend auf `127.0.0.1`,
-- Host-/Origin-Prüfung und Security-Header,
-- atomare Konfiguration mit Backup-Fallback,
-- responsive Dashboard-Shell mit 4 Themes und Schriftgrößen-Presets,
-- **VersionRegistry** mit Status-, Release- und Evidenzvertrag,
-- **EventRegistry** für kurze menschenlesbare Ereignisse,
-- **TODO-Datenmodell** mit aktiven Einträgen, Titelgedächtnis und Erledigt-Archiv,
-- API für Versionen, Ereignisse, TODOs, Titelvorschläge und Abhaken,
-- automatische Tests, Vorvalidierung und reproduzierbarer Release-Builder.
+- versionierte Config-/JSON-Mustervorlagen,
+- gültige und absichtlich ungültige Testdaten,
+- versionierter deutscher Textkatalog,
+- regelbasierte Fehlerhilfe mit Ampelstufe und sicherer Handlungsempfehlung,
+- `LEARNING_MEMORY.jsonl` für bestätigte Entwicklungslektionen,
+- eigener Learning-Guard in CI,
+- vollständiges Release-ZIP als CI-Artefakt.
 
-## Professionelle Versionsverwaltung
+## Versionierung
 
-Die Versionierung ist zweigeteilt:
+`VERSION_REGISTRY.json` enthält die getrackte Projektgeschichte; `runtime/versions.json` führt den lokalen Laufzustand. `tested`, `release-candidate` und `released` benötigen Evidenz. `VERSION` und Registry werden automatisch gegeneinander geprüft.
 
-### `VERSION_REGISTRY.json` — Projekt-Historie
+## Musterdateien und Testdaten
 
-Diese Datei gehört ins Repository und enthält den bekannten offiziellen Versionsstamm. Dadurch kennt auch eine frisch heruntergeladene Installation frühere Projektversionen.
+Geprüfte Referenzen liegen unter `resources/templates/`:
 
-Enthalten sind je Version unter anderem:
+- Config,
+- VersionRegistry,
+- EventRegistry,
+- TODOs.
 
-- Versionsnummer,
-- Zeit/Stand,
-- Entwicklungs-/Test-/Release-Status,
-- Commit-SHA optional,
-- Zusammenfassung und Änderungen,
-- bekannte Probleme,
-- Regressionstatus,
-- Evidenznachweise.
+`testdata/valid/` muss von den aktuellen Validatoren akzeptiert werden. `testdata/invalid/` bildet bekannte Fehlerklassen reproduzierbar ab.
 
-### `runtime/versions.json` — lokale Laufzeit-Registry
+**Wichtig:** Musterdateien sind Vergleichs- und Testgrundlagen. Sie überschreiben niemals automatisch lokale Nutzerdaten.
 
-Beim ersten Start wird die getrackte Projekt-Historie als sichere Ausgangsbasis verwendet. Die lokale Runtime kann danach zusätzliche lokale Zustände aufnehmen, ohne die getrackte Historie still umzuschreiben.
+## Versionierte Texte und intelligente Fehlerhilfe
 
-`VERSION` und `VERSION_REGISTRY.json` werden in der Vorvalidierung gegeneinander geprüft. Weitere automatische Driftprüfungen gegen CHANGELOG und MANIFEST sind als nächster Verwaltungsschritt vorgesehen.
+Wiederkehrende Systemtexte liegen unter `resources/texts/de/v1.json`. Fehlerregeln liegen getrennt unter `resources/error_rules/v1.json`.
 
-Wichtig: Ein Stand darf nicht auf `tested`, `release-candidate` oder `released` gesetzt werden, solange kein Evidenznachweis hinterlegt ist.
+Eine Fehlerantwort kann dadurch zusätzlich enthalten:
 
-## EventRegistry
+- Regel-ID,
+- Kategorie,
+- Ampel-/Schweregrad,
+- einfache Erklärung,
+- sichere nächste Handlung,
+- optional passende Mustervorlage,
+- Information, ob ein erneuter Versuch als sicher gilt.
 
-`runtime/events.json` speichert wichtige Ereignisse in einfacher Sprache, z. B.:
+`GET /api/help/meta` liefert die verwendeten Regel- und Textversionen.
 
-> TODO „Dashboard prüfen“ wurde erledigt und ins Archiv verschoben.
+## Entwicklungs-Lerngedächtnis
 
-Die Registry ist auf die letzten 500 Ereignisse begrenzt. Das Dashboard wird später standardmäßig die letzten fünf anzeigen. Technische Details bleiben getrennt von der normalen menschenlesbaren Meldung.
+`LEARNING_MEMORY.jsonl` speichert keine Nutzerdaten, sondern bestätigte Entwicklungslektionen. Beispiele: optionale Felder explizit testen, Nutzerfehler von Persistenzfehlern trennen, Prüfungen seiteneffektfrei halten und Qualitätsstatus nie ohne Evidenz erhöhen.
+
+Der CI-Schritt `python scripts/learning_guard.py` validiert diese Regeln bei jeder Änderung.
 
 ## TODO-Core
 
-`runtime/todos.json` verwaltet:
+TODOs werden persistent gespeichert, Titel gemerkt und wieder angeboten. Abhaken verschiebt einen Eintrag mit `completed_at` ins Archiv statt ihn zu löschen. Ein Kalenderbezug ist optional vorbereitet. Die nächsten drei TODOs können serverseitig ermittelt werden.
 
-- aktive TODOs,
-- Erledigt-Archiv,
-- gemerkte TODO-Titel.
+## Ereignisse
 
-Ein TODO kann enthalten:
+Die EventRegistry speichert maximal 500 wichtige Ereignisse mit kurzem verständlichem `message`-Text. Technische Details bleiben getrennt. Die spätere Dashboard-Spalte verwendet standardmäßig die letzten fünf Ereignisse.
 
-- Titel,
-- Kategorie optional,
-- Datum/Uhrzeit optional,
-- Priorität,
-- Notiz optional,
-- optionale spätere Kalenderverknüpfung.
+## Sicherheit und Datenschutz
 
-Beim Erledigen wird ein TODO **nicht gelöscht**, sondern mit Zeitstempel ins Archiv verschoben. Bereits verwendete Titel werden lokal gemerkt, case-insensitive zusammengeführt und können später wieder als Buttons/Auswahl angeboten werden.
-
-## API-Grundvertrag
-
-Lesend:
-
-- `GET /api/status`
-- `GET /api/versions`
-- `GET /api/events?limit=5`
-- `GET /api/todos`
-- `GET /api/todos/archive`
-- `GET /api/todos/suggestions`
-
-Schreibend:
-
-- `POST /api/config`
-- `POST /api/todos`
-- `POST /api/todos/<id>/complete`
-
-Schreibende Aufrufe bleiben an den lokalen Host-/Origin-Vertrag gebunden. Ungültige Anfrageparameter werden als Nutzerfehler behandelt; beschädigte lokale Lesedaten werden getrennt als Integritätsfehler gemeldet.
-
-## Schnellstart unter Kubuntu/Linux
-
-1. Repository herunterladen oder klonen.
-2. `start_tool.sh` ausführbar machen, falls nötig: `chmod +x start_tool.sh`.
-3. `./start_tool.sh` starten.
-4. Beim ersten Start wird lokal `.venv` erzeugt.
-5. Das Backend bindet ausschließlich an `127.0.0.1:8765` und die Oberfläche öffnet sich im Browser.
-
-Es werden keine externen Python-Pakete installiert.
-
-## Produktprinzipien
-
-1. **Auswahl vor Zeicheneingabe** – Buttons, Presets und Auswahldialoge vor Freitext.
-2. **Laien zuerst** – Alltagssprache, sichtbarer nächster Schritt, kurze Hilfen.
-3. **Offline-first** – kein Internetzwang, keine Telemetrie als Standard.
-4. **Sicherheit vor Bequemlichkeit** – Vorschau, Vor-/Nachprüfung, Undo/Recovery für verändernde Operationen.
-5. **Transparenz** – Fortschritt, Fehler, Ergebnis und Auswirkungen sichtbar.
-6. **Modularität** – UI, Backend, Persistenz und Domänenlogik getrennt.
-7. **Datensparsamkeit** – nur notwendige lokale Daten.
-8. **Wartbarkeit** – kleine überprüfbare Slices statt Großumbauten.
-9. **Regression vor Wiederholung** – bestätigte Fehler als dauerhaftes Gate.
-10. **Beweisbarer Status** – `UMGESETZT`, `GEPRÜFT`, `BEWIESEN` werden getrennt verwendet.
+- kein Internetzwang,
+- keine Telemetrie,
+- Backend nur `127.0.0.1`,
+- Host-/Origin-Guard,
+- keine externen Python-Pakete,
+- atomare Persistenz + Backup-Fallback,
+- Runtime/Nutzerdaten nicht im Release-ZIP.
 
 ## Entwicklung / Prüfung
 
 ```bash
 python3 -m unittest discover -s tests -v
 python3 scripts/validate.py
+python3 scripts/learning_guard.py
 bash -n start_tool.sh
 node --check web/app.js
 python3 scripts/release.py --check
 ```
 
-## Noch nicht enthalten
+CI lädt bei vollständig grünem Lauf zusätzlich das komplette Release-ZIP als Artefakt hoch.
 
-- Kalenderdatenmodell und Kalender-UI,
-- Dashboard-Anzeige der letzten fünf Ereignisse,
-- sichtbare TODO-Verwaltung im Dashboard,
-- persistente Job-Queue,
-- Copy-/Move-/Rename-/Delete-Operationen,
-- Undo-/Recovery-Datensatz für reale Dateiaktionen.
+## Noch offen
 
-Diese Trennung ist Absicht: Erst ein stabiler gemeinsamer Datenkern, dann Kalender/Dashboard und anschließend SAFE-FILE-CORE.
+- Kalender-Core und Erinnerungsmodell,
+- Monats-/Wochen-/Jahresansicht,
+- Dashboard V2 mit nächsten drei TODOs und letzten fünf Ereignissen,
+- Debugmodul,
+- reale Kubuntu-/Firefox-/Chrome-/Zoom-Gates,
+- später SAFE-FILE-CORE.
 
 ## Nächster Slice
 
-Nach grünem Registry-/TODO-Core-Gate:
+**`0.3.0-calendar-core` — Kalenderdaten, Erinnerungen, Titelgedächtnis und optionale TODO-Verknüpfung.**
 
-**Kalender-Core + Dashboard-Integration auf Basis der vorhandenen Registries.**
-
-Danach folgt SAFE-FILE-CORE mit Copy als erster realer Dateioperation.
+Danach folgt Dashboard V2 auf Basis von TODO-, Kalender-, Event- und Versionsdaten.

@@ -21,9 +21,19 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Foundation validation
         run: python scripts/validate.py
+      - name: Development learning guard
+        run: python scripts/learning_guard.py
       - name: Launcher syntax
         run: bash -n start_tool.sh
       - name: JavaScript syntax
         run: node --check web/app.js
       - name: Release builder
         run: python scripts/release.py --check
+      - name: Upload complete release ZIP
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AIO-Tool-${{ github.sha }}
+          path: dist/*.zip
+          if-no-files-found: error
+          retention-days: 30

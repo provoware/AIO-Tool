@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "items": [],
+  "archive": [],
+  "title_memory": [
+    {
+      "title": "Gleicher Titel",
+      "count": 1,
+      "last_used_at": "2026-08-27T01:45:00+02:00"
+    },
+    {
+      "title": "gleicher titel",
+      "count": 2,
+      "last_used_at": "2026-08-27T01:46:00+02:00"
+    }
+  ]
+}

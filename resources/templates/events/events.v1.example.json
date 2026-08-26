@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "events": [
+    {
+      "id": "example-event-001",
+      "time": "2026-08-27T01:45:00+02:00",
+      "kind": "example",
+      "area": "Beispiel",
+      "level": "info",
+      "message": "Beispielereignis wurde erfolgreich geladen.",
+      "details": {}
+    }
+  ]
+}

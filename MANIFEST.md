@@ -4,179 +4,110 @@
 
 - **Name:** AIO-Tool
 - **Repository:** `provoware/AIO-Tool`
-- **Phase:** P1 — gemeinsamer persistenter Kern
-- **Version:** `0.2.0-core`
+- **Phase:** P1 — Robustheits- und Datenkern
+- **Version:** `0.2.1-robustness`
 - **Stand:** 2026-08-27
 
 ## Verbindlicher Projektbestand
 
 ### Root
 
-| Pfad | Rolle |
-|---|---|
-| `README.md` | Einstieg, Status, Start und Projektüberblick |
-| `TODO.md` | priorisierte Arbeit und Gates |
-| `AGENTS.md` | verbindliche Entwicklungs- und Sicherheitsregeln |
-| `CHANGELOG.md` | Versionshistorie in menschenlesbarer Form |
-| `LAIEN-ANLEITUNG.md` | einfache Nutzererklärung |
-| `TOOLBESCHREIBUNG.md` | Produktvision und Funktionsrahmen |
-| `MANIFEST.md` | definierter Projekt-/Releasebestand |
-| `REGRESSIONSINFOS.md` | Regressionen, Tests und Evidenz |
-| `VERSION` | aktuelle Versionsquelle |
-| `VERSION_REGISTRY.json` | getrackte maschinenlesbare Projekt-Versionshistorie |
-| `start_tool.sh` | primärer Linux/Kubuntu-Launcher |
-| `start_tool.desktop` | Desktop-Starter-Vorlage |
-| `.gitignore` | lokale/releasefremde Ausschlüsse |
+`README.md`, `TODO.md`, `AGENTS.md`, `CHANGELOG.md`, `LAIEN-ANLEITUNG.md`, `TOOLBESCHREIBUNG.md`, `MANIFEST.md`, `REGRESSIONSINFOS.md`, `VERSION`, `VERSION_REGISTRY.json`, `LEARNING_MEMORY.jsonl`, `start_tool.sh`, `start_tool.desktop`, `.gitignore`.
 
 ### Anwendung
 
-| Pfad | Rolle |
-|---|---|
-| `app/__init__.py` | Root-/Versionszugriff |
-| `app/config.py` | bestehende validierte Konfigurationspersistenz |
-| `app/persistence.py` | gemeinsamer atomarer JSON-Speicher für neue Domänenmodelle |
-| `app/version_registry.py` | Versionshistorie, Status, Evidenz und Driftprüfung |
-| `app/event_registry.py` | menschenlesbare Ereignishistorie |
-| `app/todo_store.py` | persistente TODOs, Titelgedächtnis und Erledigt-Archiv |
-| `app/server.py` | lokaler HTTP/API-Server und Core-API |
-| `web/index.html` | Dashboard-Shell |
-| `web/app.js` | UI-Zustand und lokale API-Anbindung |
-| `web/styles.css` | Themes, Kontrast und responsive Darstellung |
+- `app/config.py` — validierte Config-Persistenz.
+- `app/persistence.py` — atomarer JSON-Speicher.
+- `app/version_registry.py` — Versionen/Evidenz/Drift.
+- `app/event_registry.py` — menschenlesbare Ereignisse.
+- `app/todo_store.py` — TODOs/Titelgedächtnis/Archiv.
+- `app/text_catalog.py` — versionierte Nutztexte.
+- `app/error_advisor.py` — regelbasierte Fehlerhilfe.
+- `app/learning_memory.py` — validiertes Entwicklungs-Lerngedächtnis.
+- `app/server.py` — Loopback-HTTP/API.
+- `web/` — Browser-Dashboard-Shell.
+
+### Ressourcen
+
+- `resources/texts/de/v1.json` — deutscher Textkatalog, Katalogversion 1.0.0.
+- `resources/error_rules/v1.json` — Fehlerregeln, Regelversion 1.0.0.
+- `resources/templates/` — geprüfte Config-/Registry-/Event-/TODO-Referenzen.
+
+### Testdaten
+
+- `testdata/valid/` — muss von den Produktvalidatoren akzeptiert werden.
+- `testdata/invalid/` — muss für die jeweils dokumentierte Fehlerklasse abgelehnt werden.
+- Testdaten werden niemals automatisch nach `runtime/` kopiert.
 
 ### Qualität / Release
 
-| Pfad | Rolle |
-|---|---|
-| `tests/test_config.py` | bestehender Konfigurationsvertrag |
-| `tests/test_server.py` | Loopback-/Origin-Sicherheitsvertrag |
-| `tests/test_persistence.py` | atomarer JSON-Speicher + Backup-Fallback |
-| `tests/test_version_registry.py` | Versionsstatus, Evidenz, Seed-Historie und Drift |
-| `tests/test_event_registry.py` | Ereignisvalidierung und newest-first-Abruf |
-| `tests/test_todo_store.py` | Titelgedächtnis, nächste TODOs und Erledigt-Archiv |
-| `tests/test_core_api.py` | integrierter Version/Event/TODO-API- und Fehlerklassen-Flow |
-| `scripts/validate.py` | Foundation-/Core-Vorprüfung inkl. Registry-Driftcheck |
-| `scripts/release.py` | reproduzierbarer ZIP-Builder |
-| `.github/workflows/foundation-ci.yml` | automatisierte CI-Gates auf `main` und `feature/**` |
-| `runtime/.gitkeep` | Platzhalter; reale Runtime-Inhalte ausgeschlossen |
+- bestehende Config/Server/Persistenz/Registry/Event/TODO-Tests.
+- `tests/test_text_catalog.py`.
+- `tests/test_error_advisor.py`.
+- `tests/test_learning_memory.py`.
+- `tests/test_templates.py`.
+- erweiterte `tests/test_core_api.py`.
+- `scripts/validate.py`.
+- `scripts/learning_guard.py`.
+- `scripts/release.py`.
+- `.github/workflows/foundation-ci.yml`.
 
 ## Laufzeitvoraussetzungen
 
-- Linux/Kubuntu als primäres Zielsystem.
-- Python 3.12 angestrebt; Code nutzt nur Standardbibliothek.
-- `python3-venv` für die lokale `.venv`.
-- Firefox und Chrome/Chromium als Zielbrowser.
-- `xdg-open` bevorzugt; Browser-Fallbacks im Launcher.
+Linux/Kubuntu primär, Python 3.12 angestrebt, nur Standardbibliothek, `python3-venv`, lokaler Browser. Keine externen Python-/JS-Pakete, keine CDN-/Remote-Font-Abhängigkeiten.
 
-## Abhängigkeiten
+## Persistenz
 
-### Python
+Lokale Nutzerdaten bleiben unter `runtime/` und sind aus Git/Release ausgeschlossen. Atomare Hauptdatei + Backup-Fallback gilt für neue Domänenmodelle.
 
-**Keine externen Python-Pakete.**
+Aktuelle persistente Schemata:
 
-### Browser
+- VersionRegistry: 1
+- EventRegistry: 1
+- TODO-Core: 1
+- Textkatalog: 1
+- Fehlerregeln: 1
+- Learning Memory: 1 pro JSONL-Eintrag
 
-- keine externen JavaScript-Bibliotheken,
-- keine CDN-Abhängigkeit,
-- keine Remote-Fonts.
+Schemaänderung benötigt Validator, Vorlage, Testdaten und Regression/Migration gemeinsam.
 
-## Versionsverwaltung
+## Fehlerhilfe-Vertrag
 
-### Getrackte Projekthistorie
+Fehlerantworten können liefern: `rule_id`, Kategorie, Schweregrad/Ampel, verständliche Meldung, sichere Handlung, optional `template_path`, `retry_safe` und Bereich.
 
-`VERSION_REGISTRY.json` ist Teil des Repository- und Releasebestands. Sie enthält den bekannten offiziellen Versionsstamm und wird per CI gegen `VERSION` validiert.
+Mustervorlagen sind reine Referenzen. Keine Regel darf sie ohne ausdrückliche Aktion über echte Nutzerdaten schreiben.
 
-### Lokale Runtime-Registry
+## Learning-Memory-Vertrag
 
-`runtime/versions.json` wird bei frischer Runtime aus der getrackten Historie initialisiert und kann anschließend lokalen Laufzeitstatus führen. Sie ist kein Git-/Releasebestand.
+`LEARNING_MEMORY.jsonl` enthält Entwicklungslektionen, keine Nutzerdaten. CI prüft eindeutige IDs, Schema, Pflichtfelder und aktive Regeln. Bestätigte strukturelle Fehler sollen eine dauerhafte Lektion und Regression erzeugen.
 
-Diese Trennung verhindert, dass eine frische Installation die Projektgeschichte verliert oder lokale Zustände die offizielle Historie still überschreiben.
+## Netzwerk
 
-## Lokale Persistenz
-
-Zur Laufzeit:
-
-```text
-runtime/config.json
-runtime/config.json.bak
-runtime/versions.json
-runtime/versions.json.bak
-runtime/events.json
-runtime/events.json.bak
-runtime/todos.json
-runtime/todos.json.bak
-runtime/server.log
-runtime/launcher.log
-runtime/server.pid
-```
-
-### Schemata
-
-- Config: bestehender Konfigurationsvertrag.
-- VersionRegistry: `schema_version = 1`.
-- EventRegistry: `schema_version = 1`.
-- TODO-Core: `schema_version = 1`.
-
-Schemaänderungen benötigen eine explizite Migration und Regressionstests.
-
-## Datenvertrag
-
-### VersionRegistry
-
-Persistiert Versionsnummer, Zeit, Status, Release-Status, optional Commit-SHA, Zusammenfassung, Änderungen, bekannte Probleme, Regressionstatus und Evidenz.
-
-### EventRegistry
-
-Persistiert kurze menschenlesbare Ereignisse mit Zeit, Art, Bereich, Statusstufe und optionalen technischen Details. Die Eventliste wird auf 500 Einträge begrenzt.
-
-### TODO-Core
-
-Persistiert aktive TODOs, Erledigt-Archiv und Titelgedächtnis. Ein Kalenderbezug ist optional vorbereitet und darf nicht Voraussetzung für normale TODOs werden.
-
-## Netzwerk- und Fehlervertrag
-
-- Backend ausschließlich `127.0.0.1`.
-- Standardport `8765`.
-- kein Internetzwang.
-- keine Telemetrie.
-- Host-/Origin-Prüfung auf lokale Herkunft.
-- keine CORS-Freigabe.
-- ungültige Abfrageparameter: HTTP 400.
-- beschädigte lokale Lesepersistenz: HTTP 500 mit verständlicher Integritätsmeldung.
-- sekundäres Eventlogging darf eine bereits persistierte Hauptaktion nicht rückwirkend als fehlgeschlagen darstellen.
+Backend ausschließlich `127.0.0.1`, Standardport 8765, kein Internetzwang, keine Telemetrie, Host-/Origin-Guard, keine CORS-Freigabe.
 
 ## Release-Ausschlüsse
 
-- `.venv/`
-- `runtime/*` außer `.gitkeep` im Repository
-- `__pycache__/`
-- Testcache
-- `dist/`, `build/`
-- lokale Logs
-- lokale Profile/Pfade
-- reale TODO-/Kalender-/Event-/Recovery-Daten
-- Secrets/PINs/Passwörter
+`.venv/`, `runtime/*` außer `.gitkeep`, `__pycache__`, Testcache, `dist/`, `build/`, Logs, lokale Profile/Pfade, reale TODO-/Event-/spätere Kalender-/Recovery-Daten, Secrets/PINs/Passwörter.
+
+**Nicht ausgeschlossen** werden dokumentierte `resources/templates/`, `testdata/` und Tests: sie sind Teil des vollständigen Entwicklungs-/Releaseprojekts und enthalten ausschließlich künstliche Beispieldaten.
 
 ## Testkommandos
 
 ```bash
 python3 -m unittest discover -s tests -v
 python3 scripts/validate.py
+python3 scripts/learning_guard.py
 bash -n start_tool.sh
 node --check web/app.js
 python3 scripts/release.py --check
 ```
 
-## Statusvertrag
+GitHub Actions lädt nach grünem Build das vollständige Release-ZIP als Artefakt hoch.
 
-`0.2.0-core` bleibt bis zum finalen grünen CI-Head **UMGESETZT**. Reale Kubuntu-/Browser-Gates bleiben separat offen.
+## Status
+
+`0.2.1-robustness` ist automatisiert **GEPRÜFT** durch Run `33024919165`, bleibt jedoch `draft`. Reale Kubuntu-/Browser-/Zoom-Gates sind weiterhin offen.
 
 ## Nächster Manifest-Schritt
 
-Mit Kalender-Core ergänzen:
-
-- `app/calendar_store.py`,
-- Kalender-Schema/Migration,
-- Reminder-Datenvertrag,
-- Kalender-API,
-- Tests für Monat/Woche/Jahr und Persistenz,
-- optionale TODO-Verknüpfung.
+`0.3.0-calendar-core`: `app/calendar_store.py`, Kalender-Mustervorlage/Testdaten, Termin-/Reminder-Datenvertrag, Monats-/Wochen-/Jahresperioden, Kalender-API, Tests und optionale TODO-Verknüpfung.

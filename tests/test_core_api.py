@@ -60,6 +60,25 @@ class CoreApiTests(unittest.TestCase):
                 finally:
                     self._stop_server(httpd, thread)
 
+    def test_help_metadata_is_versioned(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runtime = Path(tmp)
+            with self._patched_server(
+                runtime,
+                ConfigStore(runtime / "config.json"),
+                VersionRegistry(runtime / "versions.json"),
+                EventRegistry(runtime / "events.json"),
+                TodoStore(runtime / "todos.json"),
+            ):
+                httpd, thread, port = self._start_server()
+                try:
+                    status, payload = self._request(port, "GET", "/api/help/meta")
+                    self.assertEqual(status, 200)
+                    self.assertEqual(payload["help"]["rules_version"], "1.0.0")
+                    self.assertEqual(payload["help"]["text_catalog"]["catalog_version"], "1.0.0")
+                finally:
+                    self._stop_server(httpd, thread)
+
     def test_invalid_limit_is_client_error(self):
         with tempfile.TemporaryDirectory() as tmp:
             runtime = Path(tmp)
@@ -72,12 +91,14 @@ class CoreApiTests(unittest.TestCase):
             ):
                 httpd, thread, port = self._start_server()
                 try:
-                    status, _ = self._request(port, "GET", "/api/events?limit=abc")
+                    status, payload = self._request(port, "GET", "/api/events?limit=abc")
                     self.assertEqual(status, 400)
+                    self.assertIn("help", payload)
+                    self.assertEqual(payload["help"]["area"], "API")
                 finally:
                     self._stop_server(httpd, thread)
 
-    def test_corrupted_event_registry_is_server_integrity_error(self):
+    def test_corrupted_event_registry_is_server_integrity_error_with_help(self):
         with tempfile.TemporaryDirectory() as tmp:
             runtime = Path(tmp)
             events = EventRegistry(runtime / "events.json")
@@ -93,11 +114,13 @@ class CoreApiTests(unittest.TestCase):
                     events.store.path.write_text("{kaputt", encoding="utf-8")
                     status, payload = self._request(port, "GET", "/api/events")
                     self.assertEqual(status, 500)
-                    self.assertIn("nicht sicher", payload["error"])
+                    self.assertEqual(payload["help"]["category"], "integrity")
+                    self.assertEqual(payload["help"]["rule_id"], "ERR-PERSIST-001")
+                    self.assertFalse(payload["help"]["retry_safe"])
                 finally:
                     self._stop_server(httpd, thread)
 
-    def test_invalid_theme_is_client_error(self):
+    def test_invalid_theme_is_client_error_with_button_guidance(self):
         with tempfile.TemporaryDirectory() as tmp:
             runtime = Path(tmp)
             with self._patched_server(
@@ -111,7 +134,10 @@ class CoreApiTests(unittest.TestCase):
                 try:
                     status, payload = self._request(port, "POST", "/api/config", {"theme": "unbekannt"})
                     self.assertEqual(status, 400)
-                    self.assertIn("Theme", payload["error"])
+                    self.assertEqual(payload["help"]["rule_id"], "ERR-CONFIG-THEME-001")
+                    self.assertTrue(payload["help"]["retry_safe"])
+                    self.assertIn("Buttons", payload["help"]["action"])
+                    self.assertEqual(payload["help"]["template_path"], "resources/templates/config/config.v1.example.json")
                 finally:
                     self._stop_server(httpd, thread)
 
@@ -131,7 +157,30 @@ class CoreApiTests(unittest.TestCase):
                     config.path.write_text("{kaputt", encoding="utf-8")
                     status, payload = self._request(port, "POST", "/api/config", {"theme": "clean-light"})
                     self.assertEqual(status, 500)
-                    self.assertIn("nicht sicher", payload["error"])
+                    self.assertEqual(payload["help"]["category"], "integrity")
+                    self.assertEqual(payload["help"]["severity"], "red")
+                finally:
+                    self._stop_server(httpd, thread)
+
+    def test_todo_survives_broken_event_log_and_returns_warning(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runtime = Path(tmp)
+            events = EventRegistry(runtime / "events.json")
+            todos = TodoStore(runtime / "todos.json")
+            with self._patched_server(
+                runtime,
+                ConfigStore(runtime / "config.json"),
+                VersionRegistry(runtime / "versions.json"),
+                events,
+                todos,
+            ):
+                events.store.path.write_text("{kaputt", encoding="utf-8")
+                httpd, thread, port = self._start_server()
+                try:
+                    status, payload = self._request(port, "POST", "/api/todos", {"title": "Bleibt gespeichert"})
+                    self.assertEqual(status, 201)
+                    self.assertIn("warning", payload)
+                    self.assertEqual(todos.load()["items"][0]["title"], "Bleibt gespeichert")
                 finally:
                     self._stop_server(httpd, thread)
 
