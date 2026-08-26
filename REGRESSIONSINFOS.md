@@ -16,112 +16,95 @@ Diese Datei hält bekannte Fehlerklassen und dauerhafte Schutzverträge fest.
 ## Verbindliche Regressionsthemen
 
 ### REG-001 — Abschlussstatus vor Persistenz
-
 - **Risiko:** UI meldet DONE, obwohl Abschlusszustand noch nicht sicher gespeichert wurde.
 - **Vertrag:** persistent schreiben und verifizieren; erst danach DONE melden.
-- **Status:** OFFEN FÜR JOB-SYSTEM; noch keine Job-Queue.
+- **Status:** OFFEN FÜR JOB-SYSTEM.
 
 ### REG-002 — Setup/Wizard durch harmlose Prüfung entwertet
-
-- **Risiko:** gültiger Setup-Zustand wird durch reine Prüfung zerstört.
-- **Vertrag:** Prüfungen dürfen gültigen Zustand nicht ohne echte ungültige Voraussetzung zurücksetzen.
+- **Vertrag:** reine Prüfung darf gültigen Setup-Zustand nicht zerstören.
 - **Status:** OFFEN FÜR WIZARD-SLICE.
 
 ### REG-003 — Unterbrochener Job erscheint nach Neustart als laufend
-
-- **Vertrag:** unvollständige Jobs beim Neustart als `unterbrochen` rekonstruieren.
+- **Vertrag:** unvollständige Jobs als `unterbrochen` rekonstruieren.
 - **Status:** OFFEN FÜR JOB-SYSTEM.
 
 ### REG-004 — Prüfoperation verändert Konfiguration
-
 - **Vertrag:** reine Prüfungen bleiben seiteneffektfrei.
-- **Schutz:** `scripts/validate.py` arbeitet mit temporären Persistenzdateien.
-- **Status:** GEPRÜFT durch Foundation-CI 0.1.1.
+- **Status:** GEPRÜFT durch Foundation-CI.
 
 ### REG-005 — Mehrfachstart erzeugt mehrere Backends
-
 - **Vertrag:** Start ist idempotent; valide laufende Instanz öffnen statt zweite starten.
-- **Status:** UMGESETZT; echter Zielsystemtest ausstehend.
+- **Status:** UMGESETZT; Zielsystemtest offen.
 
 ### REG-006 — Einfache Bedienung wird durch Zusatzoptionen überladen
-
 - **Vertrag:** Expertenoptionen standardmäßig verborgen; Auswahl vor Zeicheneingabe.
-- **Status:** UMGESETZT; Browser-/Zoom-Gate ausstehend.
+- **Status:** UMGESETZT; Browser-/Zoom-Gate offen.
 
 ### REG-007 — Unsichtbare Dateiänderung
-
-- **Vertrag:** jede verändernde Dateioperation benötigt Vorschau, Ziel/Quelle, Konfliktanzeige und Nachprüfung.
-- **Status:** verpflichtendes Gate für SAFE-FILE-CORE.
+- **Vertrag:** verändernde Dateioperation benötigt Vorschau, Quelle/Ziel, Konflikte und Nachprüfung.
+- **Status:** verpflichtend für SAFE-FILE-CORE.
 
 ### REG-008 — endgültiges Löschen als Standard
-
 - **Vertrag:** Papierkorb/Recovery vor endgültigem Löschen.
-- **Status:** verpflichtendes Gate für SAFE-FILE-CORE.
+- **Status:** verpflichtend für SAFE-FILE-CORE.
 
 ### REG-009 — Fremder Host erreicht lokales Backend
-
-- **Vertrag:** nur `127.0.0.1`/`localhost` mit richtigem Port akzeptieren.
-- **Schutz:** `allowed_host()` und Unit-Test.
-- **Status:** GEPRÜFT durch Foundation-CI 0.1.1.
+- **Vertrag:** nur `127.0.0.1`/`localhost` akzeptieren.
+- **Status:** GEPRÜFT durch Foundation-CI.
 
 ### REG-010 — Fremde Origin schreibt lokale Daten
-
-- **Risiko:** fremde Webseite versucht mutierende API-Aufrufe.
-- **Vertrag:** schreibende Endpunkte nur unter lokalem Origin-/Host-Vertrag.
-- **Schutz:** TODO-Schreibendpunkte verwenden denselben Host-/Origin-Guard wie Konfiguration.
-- **Status:** Foundation-Schutz GEPRÜFT; neue TODO-Endpunkte in `0.2.0-core` erneut per CI zu prüfen.
+- **Vertrag:** mutierende Endpunkte nur unter lokalem Origin-/Host-Vertrag.
+- **Status:** GEPRÜFT; neue TODO-Endpunkte verwenden denselben Guard.
 
 ### REG-011 — Beschädigte Hauptpersistenz macht Tool unbrauchbar
-
-- **Risiko:** abgebrochener Schreibvorgang oder Dateikorruption zerstört lokalen Zustand.
 - **Vertrag:** atomare Hauptdatei und gültiges Backup als Fallback.
-- **Schutz:** bestehender ConfigStore sowie neuer `AtomicJsonStore` + `tests/test_persistence.py`.
-- **Status:** Config GEPRÜFT; neuer gemeinsamer Store UMGESETZT, CI 0.2.0 ausstehend.
+- **Schutz:** ConfigStore + `AtomicJsonStore`.
+- **Tests:** Config-Backup-Test und `test_roundtrip_and_backup_fallback`.
+- **Status:** GEPRÜFT im Core-CI-Lauf `33022404071`; zusätzliche direkte API-Integritätstests im finalen Head.
 
 ### REG-012 — Release enthält lokale Nutzerdaten
-
-- **Vertrag:** Release-Builder schließt Runtime/venv/Caches/Builddaten aus.
-- **Status:** GEPRÜFT durch Foundation-CI 0.1.1; mit neuen Runtime-Dateien erneut zu prüfen.
+- **Vertrag:** Release-Builder schließt Runtime, venv, Caches und lokale Nutzerdaten aus.
+- **Status:** GEPRÜFT durch CI-Release-Builder.
 
 ### REG-013 — Version wird ohne Evidenz als getestet/freigegeben markiert
-
-- **Risiko:** Dashboard oder Releaseverwaltung zeigt einen Qualitätsstatus, der nicht belegt ist.
-- **Vertrag:** `tested`, `release-candidate` und `released` benötigen mindestens einen Evidenzdatensatz.
-- **Schutz:** `VersionRegistry.set_status()` blockiert den Statuswechsel ohne Evidenz.
+- **Vertrag:** `tested`, `release-candidate` und `released` benötigen Evidenz.
 - **Test:** `test_tested_status_requires_evidence`.
-- **Status:** UMGESETZT; CI 0.2.0 ausstehend.
+- **Status:** GEPRÜFT im Core-CI-Lauf `33022404071`.
 
 ### REG-014 — VERSION und Registry driften auseinander
-
-- **Risiko:** unterschiedliche Versionsanzeigen und falsche Releasezuordnung.
-- **Vertrag:** aktuelle Registry-Version muss `VERSION` entsprechen und dort registriert sein.
-- **Schutz:** `VersionRegistry.consistency()` + API `/api/versions` + `/api/status`.
+- **Vertrag:** getrackte `VERSION_REGISTRY.json` muss dieselbe aktuelle Version wie `VERSION` führen; lokale Registry übernimmt diese Historie.
+- **Schutz:** `VersionRegistry.consistency()` + `scripts/validate.py`.
 - **Test:** `test_consistency_detects_version_drift`.
-- **Status:** UMGESETZT; Drift gegen CHANGELOG/MANIFEST folgt später.
+- **Status:** GEPRÜFT für VERSION/Registry; CHANGELOG/MANIFEST-Drift folgt später.
 
 ### REG-015 — Erledigtes TODO wird gelöscht statt archiviert
-
-- **Risiko:** Verlust von Arbeits- und Verlaufsevidenz.
-- **Vertrag:** Abhaken verschiebt den vollständigen Eintrag ins Archiv, erhält `created_at` und ergänzt `completed_at`.
-- **Schutz:** `TodoStore.complete()`.
+- **Vertrag:** Abhaken verschiebt vollständigen Eintrag ins Archiv, erhält `created_at` und ergänzt `completed_at`.
 - **Test:** `test_complete_moves_item_to_archive_with_timestamp`.
-- **Status:** UMGESETZT; CI 0.2.0 ausstehend.
+- **Status:** GEPRÜFT im Core-CI-Lauf `33022404071`.
 
 ### REG-016 — Wiederkehrender TODO-Titel wird nicht wieder angeboten oder doppelt gespeichert
-
-- **Risiko:** unnötige Zeicheneingabe und unübersichtliche Vorschläge.
-- **Vertrag:** Titel persistent merken, case-insensitive zusammenführen, Nutzung zählen und nach Relevanz anbieten.
-- **Schutz:** `title_memory` + `TodoStore.title_suggestions()`.
+- **Vertrag:** Titel case-insensitive zusammenführen, Nutzung zählen und wieder anbieten.
 - **Test:** `test_title_memory_counts_and_reoffers_titles`.
-- **Status:** UMGESETZT; CI 0.2.0 ausstehend.
+- **Status:** GEPRÜFT im Core-CI-Lauf `33022404071`.
 
-### REG-017 — Eventanzeige zeigt technische Rohdaten statt verständlichem Ereignis
-
-- **Risiko:** rechte Dashboard-Spalte ist für Laien unverständlich.
-- **Vertrag:** jedes Event benötigt einen nichtleeren menschenlesbaren `message`-Text; technische Details sind getrennt optional.
-- **Schutz:** `EventRegistry` validiert `message`; API liefert neueste Ereignisse zuerst.
+### REG-017 — Eventanzeige enthält keinen verständlichen Ereignistext
+- **Vertrag:** jedes Event braucht einen nichtleeren menschenlesbaren `message`-Text; technische Details bleiben getrennt.
 - **Tests:** `test_message_must_be_human_readable_nonempty_text`, `test_latest_returns_newest_first`.
-- **Status:** UMGESETZT; UI-Darstellung folgt im Dashboard-Slice.
+- **Status:** GEPRÜFT im Core-CI-Lauf `33022404071`; sichtbare Dashboard-Darstellung folgt später.
+
+### REG-018 — Frische Installation verliert die Versionshistorie
+- **Risiko:** eine rein lokale Registry kennt nach Neuinstallation nur die aktuelle Version.
+- **Vertrag:** `VERSION_REGISTRY.json` ist getrackte Projekt-Historie und Seed für eine frische Runtime.
+- **Schutz:** `VersionRegistry(default=...)`; Seed wird vor Verwendung validiert.
+- **Tests:** `test_seed_preserves_history_before_runtime_file_exists`; `scripts/validate.py` prüft Historie und `VERSION`-Übereinstimmung.
+- **Status:** UMGESETZT; finaler CI-Head abzunehmen.
+
+### REG-019 — Persistenzfehler wird als Nutzerfehler gemeldet
+- **Risiko:** beschädigte lokale Daten erscheinen als HTTP 400 und suggerieren falsche Bedienung.
+- **Vertrag:** ungültige Parameter/Eingaben → 400; beschädigte lokale Persistenz → 500 mit Integritätsmeldung.
+- **Schutz:** `RequestError`, `ConfigIntegrityError` und getrennte Server-Fehlerpfade.
+- **Tests:** `test_invalid_limit_is_client_error`, `test_corrupted_event_registry_is_server_integrity_error`, `test_invalid_theme_is_client_error`, `test_corrupted_config_is_server_integrity_error`.
+- **Status:** UMGESETZT; finaler CI-Head abzunehmen.
 
 ## Testklassen für Releases
 
@@ -140,34 +123,28 @@ Je nach Slice mindestens prüfen:
 11. große Datenmenge.
 12. leere Datenmenge.
 13. Mehrfachstart.
-14. Zoom/Kontrast/Tastatur bei UI-Änderungen.
-15. Fremdhost/Fremd-Origin bei lokaler API.
+14. Zoom/Kontrast/Tastatur.
+15. Fremdhost/Fremd-Origin.
 16. Release auf lokale Daten/Caches prüfen.
 17. Schema-/Versionsdrift.
 18. Archivierung statt Datenverlust.
 19. Vorschlagsgedächtnis ohne Dubletten.
 20. menschenlesbare Eventtexte.
+21. getrackte Historie auf frischer Runtime.
+22. korrekte HTTP-Fehlerklasse für Nutzer- vs. Integritätsfehler.
 
-## Foundation-Gates 0.1.1
+## Nachweise
 
-Ausgeführt und grün in GitHub Actions:
+### Foundation 0.1.1
 
-```bash
-python3 -m unittest discover -s tests -v
-python3 scripts/validate.py
-bash -n start_tool.sh
-node --check web/app.js
-python3 scripts/release.py --check
-```
+GitHub Actions Run `33020484403`: SUCCESS.
 
-CI-Run für Foundation-Commit `754f1e6a9534eb12503d5191aad0bebf45fa8a6d`: **SUCCESS**.
+### Core 0.2.0
 
-## Core-Gate 0.2.0
+GitHub Actions Run `33022404071`: SUCCESS für Python-Syntax, Unit-/Integrationstests, Core-Validierung, Launcher, JavaScript und Release-Builder.
 
-Neue Tests sind implementiert, aber erst nach tatsächlich grünem Pull-Request-CI als **GEPRÜFT** zu markieren.
-
-Noch offen bleiben reale Zielsystem-Gates unter Kubuntu sowie Firefox/Chrome/Chromium.
+Die danach ergänzten direkten Regressionstests für REG-018/REG-019 müssen im finalen Branch-Head erneut grün sein, bevor gemergt wird.
 
 ## Release-Gate
 
-Ein Release mit bekanntem P0/P1-Regressionsfehler darf nicht als stabil freigegeben werden. Ausnahmen müssen ausdrücklich in README, CHANGELOG und hier dokumentiert werden.
+Ein Release mit bekanntem P0/P1-Regressionsfehler darf nicht als stabil freigegeben werden. Reale Kubuntu-/Browser-Gates bleiben separat offen und dürfen nicht aus CI-Erfolg abgeleitet werden.
