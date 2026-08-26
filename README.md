@@ -29,38 +29,48 @@ Die Clean Foundation bleibt erhalten und wurde um den ersten gemeinsamen Datenke
 - API für Versionen, Ereignisse, TODOs, Titelvorschläge und Abhaken,
 - automatische Tests, Vorvalidierung und reproduzierbarer Release-Builder.
 
-## Persistenter Kern
+## Professionelle Versionsverwaltung
 
-### VersionRegistry
+Die Versionierung ist zweigeteilt:
 
-`runtime/versions.json`
+### `VERSION_REGISTRY.json` — Projekt-Historie
 
-Speichert:
+Diese Datei gehört ins Repository und enthält den bekannten offiziellen Versionsstamm. Dadurch kennt auch eine frisch heruntergeladene Installation frühere Projektversionen.
 
-- aktuelle Version,
-- bekannte Versionen,
+Enthalten sind je Version unter anderem:
+
+- Versionsnummer,
+- Zeit/Stand,
 - Entwicklungs-/Test-/Release-Status,
 - Commit-SHA optional,
-- Änderungen,
+- Zusammenfassung und Änderungen,
 - bekannte Probleme,
 - Regressionstatus,
 - Evidenznachweise.
 
+### `runtime/versions.json` — lokale Laufzeit-Registry
+
+Beim ersten Start wird die getrackte Projekt-Historie als sichere Ausgangsbasis verwendet. Die lokale Runtime kann danach zusätzliche lokale Zustände aufnehmen, ohne die getrackte Historie still umzuschreiben.
+
+`VERSION` und `VERSION_REGISTRY.json` werden in der Vorvalidierung gegeneinander geprüft. Weitere automatische Driftprüfungen gegen CHANGELOG und MANIFEST sind als nächster Verwaltungsschritt vorgesehen.
+
 Wichtig: Ein Stand darf nicht auf `tested`, `release-candidate` oder `released` gesetzt werden, solange kein Evidenznachweis hinterlegt ist.
 
-### EventRegistry
+## EventRegistry
 
-`runtime/events.json`
-
-Speichert wichtige Ereignisse in einfacher Sprache, z. B.:
+`runtime/events.json` speichert wichtige Ereignisse in einfacher Sprache, z. B.:
 
 > TODO „Dashboard prüfen“ wurde erledigt und ins Archiv verschoben.
 
-Die Registry ist auf die letzten 500 Ereignisse begrenzt. Das Dashboard wird später standardmäßig die letzten fünf anzeigen.
+Die Registry ist auf die letzten 500 Ereignisse begrenzt. Das Dashboard wird später standardmäßig die letzten fünf anzeigen. Technische Details bleiben getrennt von der normalen menschenlesbaren Meldung.
 
-### TODO-Core
+## TODO-Core
 
-`runtime/todos.json`
+`runtime/todos.json` verwaltet:
+
+- aktive TODOs,
+- Erledigt-Archiv,
+- gemerkte TODO-Titel.
 
 Ein TODO kann enthalten:
 
@@ -71,7 +81,7 @@ Ein TODO kann enthalten:
 - Notiz optional,
 - optionale spätere Kalenderverknüpfung.
 
-Beim Erledigen wird ein TODO **nicht gelöscht**, sondern mit Zeitstempel ins Archiv verschoben. Bereits verwendete Titel werden lokal gemerkt und können später wieder als Buttons/Auswahl angeboten werden.
+Beim Erledigen wird ein TODO **nicht gelöscht**, sondern mit Zeitstempel ins Archiv verschoben. Bereits verwendete Titel werden lokal gemerkt, case-insensitive zusammengeführt und können später wieder als Buttons/Auswahl angeboten werden.
 
 ## API-Grundvertrag
 
@@ -90,7 +100,7 @@ Schreibend:
 - `POST /api/todos`
 - `POST /api/todos/<id>/complete`
 
-Schreibende Aufrufe bleiben an den bestehenden lokalen Host-/Origin-Vertrag gebunden.
+Schreibende Aufrufe bleiben an den lokalen Host-/Origin-Vertrag gebunden. Ungültige Anfrageparameter werden als Nutzerfehler behandelt; beschädigte lokale Lesedaten werden getrennt als Integritätsfehler gemeldet.
 
 ## Schnellstart unter Kubuntu/Linux
 
@@ -114,20 +124,6 @@ Es werden keine externen Python-Pakete installiert.
 8. **Wartbarkeit** – kleine überprüfbare Slices statt Großumbauten.
 9. **Regression vor Wiederholung** – bestätigte Fehler als dauerhaftes Gate.
 10. **Beweisbarer Status** – `UMGESETZT`, `GEPRÜFT`, `BEWIESEN` werden getrennt verwendet.
-
-## Projektstruktur
-
-```text
-app/                    # Backend, Persistenz und Datenmodelle
-web/                    # Browser-Oberfläche
-scripts/                # Validierung und Release-Builder
-tests/                  # automatisierte Regression-/Vertragstests
-runtime/                # lokale Laufzeitdaten; nicht im Release
-.github/workflows/      # CI-Gates
-start_tool.sh           # Klick-&-Start
-start_tool.desktop      # Desktop-Starter-Vorlage
-VERSION                 # Versionsquelle
-```
 
 ## Entwicklung / Prüfung
 
