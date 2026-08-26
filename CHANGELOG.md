@@ -1,104 +1,96 @@
 # CHANGELOG
 
-Alle wesentlichen Änderungen an AIO-Tool werden hier nachvollziehbar dokumentiert.
+Alle wesentlichen Änderungen an AIO-Tool werden nachvollziehbar dokumentiert.
 
 ## [Unreleased]
 
 ### Geplant
 
-- `0.2.0-core` per finalem CI-Head abnehmen und mergen.
-- Kalender-Core auf dem neuen Persistenzvertrag aufbauen.
+- Kalender-Core auf dem gemeinsamen Persistenzvertrag aufbauen.
 - danach TODO/Kalender/Ereignisse ins kompaktere responsive Dashboard integrieren.
-- SAFE-FILE-CORE weiterhin erst nach stabilem Daten-/Dashboardkern beginnen.
+- SAFE-FILE-CORE erst nach stabilem Daten-/Dashboardkern beginnen.
 
 ## [0.2.0-core] — 2026-08-27
 
 ### Added
 
-- gemeinsamer `AtomicJsonStore` für neue persistente Domänenmodelle.
-- getrackte `VERSION_REGISTRY.json` als projektweite Versionshistorie.
-- lokale `runtime/versions.json`, die bei frischer Installation aus der getrackten Historie initialisiert wird.
-- `VersionRegistry` mit Schema-Version, Versionshistorie, Status, Release-Status, Commit-SHA, Änderungen, bekannten Problemen, Regressionstatus und Evidenz.
-- Schutzregel: `tested`, `release-candidate` und `released` benötigen vorher Evidenz.
-- Erkennung von Drift zwischen `VERSION` und getrackter VersionRegistry.
-- Abruf der letzten registrierten Vorgängerversion.
-- `EventRegistry` für kurze menschenlesbare Ereignisse mit Bereich und Ampel-/Statusstufe.
-- Event-Historie auf 500 Einträge begrenzt; letzte Ereignisse newest-first abrufbar.
-- persistenter TODO-Kern mit Titel, Kategorie, optionalem Termin, Priorität, Notiz und optionaler zukünftiger Kalenderverknüpfung.
-- persistentes TODO-Titelgedächtnis mit Häufigkeit und letzter Verwendung.
-- Erledigt-Archiv: Abhaken verschiebt statt zu löschen und speichert `completed_at`.
+- gemeinsamer `AtomicJsonStore` für persistente Domänenmodelle.
+- getrackte `VERSION_REGISTRY.json` als offizielle Projekt-Versionshistorie.
+- lokale `runtime/versions.json`, die bei frischer Installation aus dieser Historie initialisiert wird.
+- `VersionRegistry` mit Status, Release-Status, Commit-SHA, Änderungen, Problemen, Regressionstatus und Evidenz.
+- Evidenzpflicht für `tested`, `release-candidate` und `released`.
+- Driftprüfung `VERSION` ↔ getrackte Registry und Abruf der Vorgängerversion.
+- `EventRegistry` für kurze menschenlesbare Ereignisse; maximal 500, newest-first.
+- persistenter TODO-Core mit Titel, Kategorie, optionalem Termin, Priorität, Notiz und optionaler Kalenderverknüpfung.
+- TODO-Titelgedächtnis mit Häufigkeit und letzter Verwendung.
+- Erledigt-Archiv mit `completed_at` statt Löschen.
 - serverseitige Ermittlung der nächsten drei TODOs.
 - APIs für Versionen, Ereignisse, TODOs, Archiv und Titelvorschläge.
-- Integrationstests für VersionRegistry → TODO anlegen → Titelvorschlag → abhaken → EventRegistry.
-- zusätzliche Unit-Tests für Persistenz, VersionRegistry, EventRegistry und TODO-Core.
+- Unit- und Integrationstests für Persistenz, Registry, Events, TODOs und HTTP-Fehlerklassen.
 
 ### Changed
 
-- `/api/status` liefert zusätzlich Registry-Konsistenz sowie Anzahl offener/archivierter TODOs und Ereignisse.
-- Foundation-Validierung prüft nun auch die getrackte Versionshistorie, deren Übereinstimmung mit `VERSION`, Ereignisspeicherung, TODO-Titelgedächtnis und Erledigt-Archiv.
-- Feature-Branches unter `feature/**` werden bereits beim Push durch die vollständige CI geprüft.
-- ungültige GET-Abfrageparameter werden als 400/Nutzereingabe behandelt; beschädigte lokale Registry-/TODO-Lesedaten als 500/Integritätsfehler.
-- Entwicklungsreihenfolge auf Datenkern → Kalender-Core → Dashboard-Integration → SAFE-FILE-CORE präzisiert.
+- `/api/status` enthält Registry-Konsistenz sowie TODO-/Event-Zähler.
+- `scripts/validate.py` prüft getrackte Versionshistorie, `VERSION`-Übereinstimmung und frische Runtime-Initialisierung.
+- `feature/**`-Branches laufen bereits beim Push durch die vollständige CI.
+- ungültige Anfrageparameter/Einstellungen → HTTP 400; beschädigte lokale Persistenz → HTTP 500 mit Integritätsmeldung.
+- Entwicklungsreihenfolge: Datenkern → Kalender-Core → Dashboard-Integration → SAFE-FILE-CORE.
 
 ### Fixed
 
-- optionales `commit_sha=null` wurde in der ersten Registry-Implementierung fälschlich abgelehnt; CI hat den Fehler entdeckt und ein direkter Regressionstest sichert ihn nun ab.
-- Seed-/Default-Persistenz wird jetzt ebenfalls validiert und nicht ungeprüft übernommen.
-- ein Fehler im sekundären Ereignisprotokoll darf eine bereits sicher gespeicherte TODO-Aktion nicht mehr fälschlich als fehlgeschlagen erscheinen lassen.
+- optionales `commit_sha=null` wurde in der ersten Registry-Implementierung fälschlich abgelehnt; CI entdeckte den Fehler, direkter Regressionstest ergänzt.
+- Seed-/Default-Persistenz wird vor Verwendung validiert.
+- sekundärer Eventfehler kann eine bereits gespeicherte TODO-Aktion nicht rückwirkend als fehlgeschlagen darstellen.
+- Config-Eingabefehler und beschädigte Config werden im API-Vertrag getrennt klassifiziert.
 
-### Security / Integrity
+### Integrity
 
-- neue Registry-/TODO-Dateien nutzen atomisches Replace mit Backup-Fallback.
-- schreibende TODO-Endpunkte bleiben an den lokalen Host-/Origin-Vertrag gebunden.
-- Versionen können nicht ohne Evidenz fälschlich als getestet/freigegeben markiert werden.
-- TODOs werden beim Erledigen nicht still gelöscht.
-- offizielle Projekt-Historie und lokale Laufzeit-Registry sind getrennt, damit lokale Zustände nicht still die getrackte Historie überschreiben.
+- atomisches Replace + Backup-Fallback für neue Registry-/TODO-Dateien.
+- TODOs werden beim Erledigen archiviert, nicht still gelöscht.
+- offizielle Projekt-Historie und lokale Runtime-Registry sind getrennt.
+- schreibende TODO-Endpunkte bleiben an Host-/Origin-Guard gebunden.
 
-### Verification status
+### Verified
 
-- Zwischenlauf nach Fix des optionalen Commit-SHA: **SUCCESS**.
-- finaler CI-Head mit Registry-Seed und Integritätsklassifizierung: noch abzunehmen.
-- reale Kubuntu-/Browser-Gates: weiterhin offen.
+GitHub Actions Run `33022569880`: **SUCCESS**.
+
+Erfolgreich:
+- Python-Syntax,
+- Unit-/Integrationstests,
+- Core-/Foundation-Validierung,
+- Launcher-Syntax,
+- JavaScript-Syntax,
+- Release-Builder.
+
+### Not yet verified
+
+- frischer realer Kubuntu-Klick-&-Start,
+- Firefox und Chrome/Chromium auf Zielsystem,
+- 125–200 % Browserzoom auf Zielsystem.
+
+Der Stand ist deshalb **tested / draft**, nicht `released`.
 
 ## [0.1.1-foundation] — 2026-08-27
 
 ### Added
 
-- ausführbare Clean-Foundation-Projektstruktur mit `app/`, `web/`, `scripts/`, `tests/` und `runtime/`.
-- `start_tool.sh` als Klick-&-Start-Launcher.
-- lokale `.venv` ohne externe Python-Pakete.
-- Mehrfachstartschutz: vorhandene valide Instanz wird wieder geöffnet.
-- Python-Backend auf `127.0.0.1`.
-- Host-/Origin-Prüfung für lokale API-Zugriffe.
-- Security-Header für die Browser-Oberfläche.
-- atomare JSON-Konfiguration mit Backup-Fallback.
-- responsive Dashboard-Shell mit sichtbarem nächsten Schritt.
-- vier Themes: Trash Neon, Steel Night, Clean Light und High Contrast.
-- Schriftgrößen-Presets 90–140 % über Buttons.
-- standardmäßig verborgener Expertenbereich.
-- `scripts/validate.py` für Foundation-Vorprüfung.
-- `scripts/release.py` für reproduzierbares, bereinigtes ZIP.
-- Standardbibliothek-Unit-Tests für Persistenz- und Loopback-Sicherheitsvertrag.
-- GitHub-Actions-Workflow `foundation-ci`.
+- ausführbarer Foundation-Kern mit Klick-&-Start, Loopback-Backend, atomarer Config, Dashboard-Shell, Themes, Schriftgrößen-Presets, Tests, CI und Release-Builder.
 
 ### Verified
 
-- GitHub-Actions `foundation-ci`: **SUCCESS**.
-- Python-Syntax, Unit-Tests, Foundation-Validierung, Launcher-Syntax, JavaScript-Syntax und Release-Builder: grün.
+GitHub Actions Run `33020484403`: **SUCCESS**.
 
 ### Not yet verified
 
-- tatsächlicher frischer Start auf dem Kubuntu-Zielsystem.
-- Firefox- und Chrome/Chromium-Gate auf Zielsystem.
+- reale Kubuntu-/Browser-Zielsystemgates.
 
 ## [0.1.0-foundation] — 2026-08-27
 
 ### Added
 
-- vollständige saubere Projektgrundlage ohne Altcode.
-- `README.md`, `TODO.md`, `AGENTS.md`, `LAIEN-ANLEITUNG.md`, `TOOLBESCHREIBUNG.md`, `MANIFEST.md`, `REGRESSIONSINFOS.md`.
+- saubere Projektgrundlage ohne Altcode.
+- README, TODO, AGENTS, LAIEN-ANLEITUNG, TOOLBESCHREIBUNG, MANIFEST und REGRESSIONSINFOS.
 
 ### Changed
 
-- Repository inhaltlich vollständig auf CLEAN FOUNDATION zurückgesetzt.
-- Produktphilosophie auf „Auswahl vor Zeicheneingabe“, offline-first, Recovery und transparente Prozesse festgelegt.
+- Repository inhaltlich auf CLEAN FOUNDATION zurückgesetzt.
