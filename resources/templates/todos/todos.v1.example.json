@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "items": [
+    {
+      "id": "example-todo-001",
+      "title": "Dashboard prüfen",
+      "created_at": "2026-08-27T01:45:00+02:00",
+      "updated_at": "2026-08-27T01:45:00+02:00",
+      "category": "Qualität",
+      "due_date": null,
+      "due_time": null,
+      "priority": "normal",
+      "note": null,
+      "calendar_event_id": null
+    }
+  ],
+  "archive": [],
+  "title_memory": [
+    {
+      "title": "Dashboard prüfen",
+      "count": 1,
+      "last_used_at": "2026-08-27T01:45:00+02:00"
+    }
+  ]
+}

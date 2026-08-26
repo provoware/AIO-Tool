@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "catalog_version": "1.0.0",
+  "language": "de",
+  "messages": {
+    "error.generic": "Die Aktion konnte nicht sicher abgeschlossen werden.",
+    "action.generic": "Öffne die Details, prüfe die Eingaben und versuche die Aktion erst danach erneut.",
+    "error.persistence.corrupt": "Eine lokale Datendatei ist beschädigt oder nicht sicher lesbar.",
+    "action.persistence.template": "Nutze die passende geprüfte Mustervorlage nur als Vergleich. Überschreibe keine Nutzerdaten automatisch.",
+    "error.config.theme": "Das gewählte Farbschema ist nicht bekannt.",
+    "action.config.theme": "Wähle eines der angebotenen Themes über die vorhandenen Buttons.",
+    "error.config.font": "Die gewählte Schriftgröße ist nicht vorgesehen.",
+    "action.config.font": "Wähle eine der angebotenen Schriftgrößen über die vorhandenen Buttons.",
+    "error.request.json": "Die übergebenen Daten sind kein gültiges JSON-Objekt.",
+    "action.request.json": "Verwende eine geprüfte Mustervorlage oder die Oberfläche statt freier JSON-Eingabe.",
+    "error.todo.title": "Für das TODO fehlt ein verständlicher Titel.",
+    "action.todo.title": "Wähle zuerst einen gemerkten oder vorgeschlagenen Titel. Eigene Eingabe ist nur der Fallback.",
+    "error.version.drift": "Versionsangaben passen nicht zueinander.",
+    "action.version.drift": "Vergleiche VERSION, VERSION_REGISTRY.json, CHANGELOG und Manifest, bevor ein Release markiert wird.",
+    "error.template.invalid": "Eine interne Muster- oder Testdatei entspricht nicht mehr ihrem Datenvertrag.",
+    "action.template.invalid": "Stoppe den Release und aktualisiere Vorlage, Validator und Regressionstest gemeinsam.",
+    "help.integrity.detail": "Technische Details sind für Diagnosezwecke vorhanden; die sichere Standardaktion verändert keine Nutzerdaten.",
+    "server.invalid_host": "Ungültiger Host. Das Tool akzeptiert nur lokale Zugriffe.",
+    "server.invalid_origin": "Ungültige Herkunft. Schreibzugriffe sind nur aus der lokalen Tool-Oberfläche erlaubt.",
+    "server.unknown_api": "Unbekannter API-Pfad.",
+    "server.event_warning": "Die Aktion wurde gespeichert, aber das Ereignisprotokoll konnte nicht aktualisiert werden.",
+    "event.version_registered": "Version {version} wurde als neuer Entwicklungsstand registriert.",
+    "event.todo_created": "TODO „{title}“ wurde angelegt.",
+    "event.todo_completed": "TODO „{title}“ wurde erledigt und ins Archiv verschoben."
+  }
+}

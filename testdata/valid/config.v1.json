@@ -1,0 +1,9 @@
+{
+  "version": "0.2.1-robustness",
+  "theme": "steel-night",
+  "font_scale": 100,
+  "expert_visible": false,
+  "setup_complete": false,
+  "active_project": null,
+  "favorites": ["projects", "history", "reports"]
+}

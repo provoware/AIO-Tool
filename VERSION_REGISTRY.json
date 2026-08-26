@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "current_version": "0.2.0-core",
+  "current_version": "0.2.1-robustness",
   "versions": [
     {
       "version": "0.1.0-foundation",
@@ -31,15 +31,37 @@
       "created_at": "2026-08-27T01:00:00+02:00",
       "status": "tested",
       "release_status": "draft",
-      "commit_sha": "c30f0d600bb929791c78bbd53a7b0a37a91b1c55",
+      "commit_sha": "a110132acc4104e0f0c48c736a3fd4bc98a9c290",
       "summary": "Gemeinsamer persistenter Kern für Versionierung, Ereignisse und TODOs.",
       "changes": ["VersionRegistry mit Evidenz- und Driftvertrag", "EventRegistry mit menschenlesbaren Ereignissen", "TODO-Core mit Titelgedächtnis und Erledigt-Archiv", "getrackte Projekt-Versionshistorie als Seed für frische Installationen", "getrennte HTTP-Klassifizierung von Nutzereingabe und Persistenzfehlern"],
       "known_issues": ["reale Kubuntu-, Firefox- und Chrome/Chromium-Zielsystemgates noch offen", "Dashboard-UI für TODOs und letzte Ereignisse folgt im nächsten Slice", "Kalender-Core folgt im nächsten Slice"],
       "regression_status": "passed-ci",
       "evidence": [
-        {"time": "2026-08-27T01:12:43+02:00", "kind": "github-actions", "reference": "run:33022404071", "note": "Core-Code-Gate erfolgreich."},
-        {"time": "2026-08-27T01:15:00+02:00", "kind": "github-actions", "reference": "run:33022569880", "note": "Merge-Kandidat mit Seed-, Integritäts- und direkten Regressionstests vollständig erfolgreich."}
+        {"time": "2026-08-27T01:15:00+02:00", "kind": "github-actions", "reference": "run:33022569880", "note": "Feature-Branch-Merge-Kandidat vollständig erfolgreich."},
+        {"time": "2026-08-27T01:44:10+02:00", "kind": "github-actions", "reference": "run:33024412128", "note": "Main-Gate nach Squash-Merge gestartet; Ergebnis wird separat dokumentiert."}
       ]
+    },
+    {
+      "version": "0.2.1-robustness",
+      "created_at": "2026-08-27T01:45:00+02:00",
+      "status": "development",
+      "release_status": "draft",
+      "commit_sha": null,
+      "summary": "Robustheitskern mit versionierten Musterdateien, Textkatalog, sicherer Fehlerhilfe und Entwicklungs-Lerngedächtnis.",
+      "changes": [
+        "geprüfte Config-/JSON-Mustervorlagen",
+        "gültige und absichtlich ungültige Testdateien",
+        "versionierter deutscher Textkatalog",
+        "regelbasierte Fehlerhilfe mit sicheren Handlungsempfehlungen",
+        "LEARNING_MEMORY.jsonl mit CI-validierten Entwicklungslektionen",
+        "Release-ZIP als GitHub-Actions-Artefakt"
+      ],
+      "known_issues": [
+        "Kalender-Core und Dashboard-V2 sind noch nicht Bestandteil dieses Slices",
+        "reale Kubuntu-/Browser-Zielsystemgates bleiben offen"
+      ],
+      "regression_status": "pending",
+      "evidence": []
     }
   ]
 }
