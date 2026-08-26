@@ -25,7 +25,7 @@ class AtomicJsonStore:
 
     def load(self) -> dict[str, Any]:
         if not self.path.exists():
-            return deepcopy(self.default)
+            return self.validator(deepcopy(self.default))
         try:
             return self.validator(self._read(self.path))
         except (OSError, json.JSONDecodeError, PersistenceError, ValueError, TypeError):
