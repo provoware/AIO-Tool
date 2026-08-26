@@ -23,6 +23,8 @@ Neue Funktionen werden nur in klar abgegrenzten Slices ergänzt. Sicherheits-, P
 ### VersionRegistry
 
 - [x] zentrales Registry-Schema implementiert.
+- [x] getrackte Projekt-Historie in `VERSION_REGISTRY.json` angelegt.
+- [x] lokale Runtime-Registry wird auf frischer Installation aus der Projekt-Historie initialisiert.
 - [x] aktuelle und bekannte Versionen persistent speichern.
 - [x] Statuswerte development / tested / release-candidate / released / deprecated.
 - [x] Release-Status und Regressionstatus speichern.
@@ -30,7 +32,7 @@ Neue Funktionen werden nur in klar abgegrenzten Slices ergänzt. Sicherheits-, P
 - [x] Änderungen und bekannte Probleme speichern.
 - [x] Evidenznachweise speichern.
 - [x] getestete/freigegebene Zustände ohne Evidenz blockieren.
-- [x] Drift zwischen `VERSION` und Registry erkennbar machen.
+- [x] Drift zwischen `VERSION` und getrackter Registry automatisch prüfen.
 - [x] Vorgängerversion abrufbar machen.
 - [ ] Drift zusätzlich gegen CHANGELOG/MANIFEST automatisch prüfen.
 
@@ -61,13 +63,17 @@ Neue Funktionen werden nur in klar abgegrenzten Slices ergänzt. Sicherheits-, P
 - [ ] Dashboard: nächste drei TODOs kompakt anzeigen und direkt abhaken.
 - [ ] Archivansicht für erledigte TODOs.
 
-### Core-Gates
+### Core-Integrität
 
 - [x] gemeinsamer `AtomicJsonStore` mit atomarem Replace und Backup-Fallback.
+- [x] Seed-/Default-Daten werden vor Verwendung validiert.
 - [x] API für Versionen, Ereignisse, TODOs, Archiv und Titelvorschläge.
+- [x] ungültige Abfrageparameter als 400/Nutzereingabe klassifizieren.
+- [x] beschädigte lokale Lesedaten als 500/Integritätsfehler klassifizieren.
+- [x] sekundärer Eventfehler darf bereits gespeicherte TODO-Aktion nicht als fehlgeschlagen darstellen.
 - [x] Unit-/Integrationstests im Branch ergänzt.
 - [x] Foundation-Validierung auf neue Persistenzmodelle erweitert.
-- [ ] GitHub-CI für `0.2.0-core` grün bestätigen.
+- [ ] GitHub-CI für finalen `0.2.0-core`-Head grün bestätigen.
 
 ## P1 — Kalender-Core / nächster Slice
 
@@ -142,4 +148,4 @@ Ein Slice gilt erst als abgeschlossen, wenn:
 
 ## Aktuell empfohlener nächster Schritt
 
-**Zuerst `0.2.0-core` durch CI abnehmen. Danach Kalender-Core auf denselben Persistenzvertrag aufsetzen; anschließend TODO/Kalender/Ereignisse ins responsive Dashboard integrieren.**
+**Zuerst den finalen `0.2.0-core`-Head durch CI abnehmen und mergen. Danach Kalender-Core auf denselben Persistenzvertrag aufsetzen; anschließend TODO/Kalender/Ereignisse ins responsive Dashboard integrieren.**
