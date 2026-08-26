@@ -17,12 +17,13 @@
 | `README.md` | Einstieg, Status, Start und Projektüberblick |
 | `TODO.md` | priorisierte Arbeit und Gates |
 | `AGENTS.md` | verbindliche Entwicklungs- und Sicherheitsregeln |
-| `CHANGELOG.md` | Versionshistorie |
+| `CHANGELOG.md` | Versionshistorie in menschenlesbarer Form |
 | `LAIEN-ANLEITUNG.md` | einfache Nutzererklärung |
 | `TOOLBESCHREIBUNG.md` | Produktvision und Funktionsrahmen |
 | `MANIFEST.md` | definierter Projekt-/Releasebestand |
 | `REGRESSIONSINFOS.md` | Regressionen, Tests und Evidenz |
-| `VERSION` | zentrale Versionsquelle |
+| `VERSION` | aktuelle Versionsquelle |
+| `VERSION_REGISTRY.json` | getrackte maschinenlesbare Projekt-Versionshistorie |
 | `start_tool.sh` | primärer Linux/Kubuntu-Launcher |
 | `start_tool.desktop` | Desktop-Starter-Vorlage |
 | `.gitignore` | lokale/releasefremde Ausschlüsse |
@@ -49,13 +50,13 @@
 | `tests/test_config.py` | bestehender Konfigurationsvertrag |
 | `tests/test_server.py` | Loopback-/Origin-Sicherheitsvertrag |
 | `tests/test_persistence.py` | atomarer JSON-Speicher + Backup-Fallback |
-| `tests/test_version_registry.py` | Versionsstatus, Evidenz und Drift |
+| `tests/test_version_registry.py` | Versionsstatus, Evidenz, Seed-Historie und Drift |
 | `tests/test_event_registry.py` | Ereignisvalidierung und newest-first-Abruf |
 | `tests/test_todo_store.py` | Titelgedächtnis, nächste TODOs und Erledigt-Archiv |
-| `tests/test_core_api.py` | integrierter Version/Event/TODO-API-Flow |
-| `scripts/validate.py` | Foundation-/Core-Vorprüfung |
+| `tests/test_core_api.py` | integrierter Version/Event/TODO-API- und Fehlerklassen-Flow |
+| `scripts/validate.py` | Foundation-/Core-Vorprüfung inkl. Registry-Driftcheck |
 | `scripts/release.py` | reproduzierbarer ZIP-Builder |
-| `.github/workflows/foundation-ci.yml` | automatisierte CI-Gates |
+| `.github/workflows/foundation-ci.yml` | automatisierte CI-Gates auf `main` und `feature/**` |
 | `runtime/.gitkeep` | Platzhalter; reale Runtime-Inhalte ausgeschlossen |
 
 ## Laufzeitvoraussetzungen
@@ -77,6 +78,18 @@
 - keine externen JavaScript-Bibliotheken,
 - keine CDN-Abhängigkeit,
 - keine Remote-Fonts.
+
+## Versionsverwaltung
+
+### Getrackte Projekthistorie
+
+`VERSION_REGISTRY.json` ist Teil des Repository- und Releasebestands. Sie enthält den bekannten offiziellen Versionsstamm und wird per CI gegen `VERSION` validiert.
+
+### Lokale Runtime-Registry
+
+`runtime/versions.json` wird bei frischer Runtime aus der getrackten Historie initialisiert und kann anschließend lokalen Laufzeitstatus führen. Sie ist kein Git-/Releasebestand.
+
+Diese Trennung verhindert, dass eine frische Installation die Projektgeschichte verliert oder lokale Zustände die offizielle Historie still überschreiben.
 
 ## Lokale Persistenz
 
@@ -103,7 +116,7 @@ runtime/server.pid
 - EventRegistry: `schema_version = 1`.
 - TODO-Core: `schema_version = 1`.
 
-Schemaänderungen benötigen künftig eine explizite Migration und Regressionstests.
+Schemaänderungen benötigen eine explizite Migration und Regressionstests.
 
 ## Datenvertrag
 
@@ -119,7 +132,7 @@ Persistiert kurze menschenlesbare Ereignisse mit Zeit, Art, Bereich, Statusstufe
 
 Persistiert aktive TODOs, Erledigt-Archiv und Titelgedächtnis. Ein Kalenderbezug ist optional vorbereitet und darf nicht Voraussetzung für normale TODOs werden.
 
-## Netzwerkvertrag
+## Netzwerk- und Fehlervertrag
 
 - Backend ausschließlich `127.0.0.1`.
 - Standardport `8765`.
@@ -127,6 +140,9 @@ Persistiert aktive TODOs, Erledigt-Archiv und Titelgedächtnis. Ein Kalenderbezu
 - keine Telemetrie.
 - Host-/Origin-Prüfung auf lokale Herkunft.
 - keine CORS-Freigabe.
+- ungültige Abfrageparameter: HTTP 400.
+- beschädigte lokale Lesepersistenz: HTTP 500 mit verständlicher Integritätsmeldung.
+- sekundäres Eventlogging darf eine bereits persistierte Hauptaktion nicht rückwirkend als fehlgeschlagen darstellen.
 
 ## Release-Ausschlüsse
 
@@ -152,7 +168,7 @@ python3 scripts/release.py --check
 
 ## Statusvertrag
 
-`0.2.0-core` ist zunächst **UMGESETZT**. Erst ein tatsächlich grüner CI-Lauf darf den Slice als **GEPRÜFT** markieren. Reale Kubuntu-/Browser-Gates bleiben separat offen.
+`0.2.0-core` bleibt bis zum finalen grünen CI-Head **UMGESETZT**. Reale Kubuntu-/Browser-Gates bleiben separat offen.
 
 ## Nächster Manifest-Schritt
 
