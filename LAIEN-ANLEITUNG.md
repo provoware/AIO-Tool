@@ -2,80 +2,132 @@
 
 ## Was ist AIO-Tool?
 
-AIO-Tool soll viele wiederkehrende Aufgaben in einer gemeinsamen Oberfläche bündeln. Die Bedienung soll einfach, sichtbar und sicher bleiben.
+AIO-Tool bündelt wiederkehrende Aufgaben in einer gemeinsamen Oberfläche. Die Bedienung soll einfach, sichtbar und sicher bleiben.
 
-## Was funktioniert in dieser Foundation-Version bereits?
+## Aktueller Entwicklungsstand
 
-Die Version `0.1.1-foundation` ist der erste startbare Grundkern.
+Die Version `0.2.0-core` erweitert den startbaren Grundkern um eine sichere lokale Datenbasis.
 
-Du kannst:
+Neu vorbereitet sind:
 
-- das Tool über `start_tool.sh` starten,
-- die lokale Browser-Oberfläche öffnen,
-- zwischen 4 Farbthemes wählen,
-- die Schriftgröße per Button ändern,
-- den Expertenbereich ein- oder ausblenden,
-- den Systemstatus erneut prüfen.
+- professionelle Versionsverwaltung,
+- verständliche Ereignishistorie,
+- persistente TODOs,
+- gemerkte TODO-Titel,
+- Erledigt-Archiv mit Zeitstempel.
 
-Noch nicht enthalten sind echte Dateiaktionen wie Kopieren, Verschieben, Umbenennen oder Löschen.
+Die sichtbare Kalender- und TODO-Oberfläche folgt im nächsten Entwicklungsschritt.
+
+## Was bedeutet „persistent“?
+
+Das bedeutet einfach:
+
+> Das Tool kann Informationen lokal speichern und nach einem Neustart wiederfinden.
+
+Die neuen Daten liegen nur im lokalen `runtime`-Bereich. Sie werden nicht ins Internet übertragen und nicht in ein Release-ZIP übernommen.
+
+## TODO-Grundprinzip
+
+Ein TODO kann später bequem über Buttons und Auswahldialoge angelegt werden.
+
+Gespeichert werden können:
+
+- Titel,
+- Kategorie optional,
+- Datum/Uhrzeit optional,
+- Priorität,
+- Notiz optional.
+
+Ein Kalender ist **nicht Pflicht**.
+
+### Bereits verwendete Titel
+
+Wenn du denselben oder einen ähnlichen TODO-Titel mehrfach nutzt, merkt das Tool den Titel lokal.
+
+Beispiel:
+
+`Backup prüfen`
+
+Beim nächsten Mal kann dieser Titel als Auswahl angeboten werden. Dadurch musst du weniger tippen.
+
+### TODO abhaken
+
+Ein erledigtes TODO wird nicht einfach gelöscht.
+
+Stattdessen:
+
+`Offen → abhaken → Archiv / Erledigt`
+
+Dabei bleibt erhalten:
+
+- ursprünglicher Titel,
+- Erstellungszeit,
+- weitere Angaben,
+- Zeitpunkt der Erledigung.
+
+## Ereignisse
+
+Wichtige Aktionen werden in einfacher Sprache vorbereitet.
+
+Beispiele:
+
+- „TODO „Backup prüfen“ wurde angelegt.“
+- „TODO „Backup prüfen“ wurde erledigt und ins Archiv verschoben.“
+- „Version 0.2.0-core wurde als neuer Entwicklungsstand registriert.“
+
+Technische Rohdaten sollen später nicht die normale Ereignisanzeige überladen. Das Dashboard wird standardmäßig nur die letzten fünf verständlichen Ereignisse zeigen.
+
+## Versionierung
+
+Das Tool besitzt jetzt eine eigene Versions-Registry.
+
+Sie unterscheidet unter anderem:
+
+- Entwicklung,
+- getestet,
+- Release Candidate,
+- freigegeben,
+- veraltet.
+
+Wichtig:
+
+> Eine Version darf nicht einfach als getestet oder freigegeben markiert werden, wenn kein Prüfnachweis vorhanden ist.
 
 ## Start unter Kubuntu/Linux
 
 1. Öffne den AIO-Tool-Ordner.
 2. Starte `start_tool.sh`.
-3. Beim ersten Start richtet das Tool automatisch eine lokale Python-Umgebung `.venv` ein.
+3. Beim ersten Start richtet das Tool automatisch `.venv` ein.
 4. Danach läuft eine kurze Vorprüfung.
-5. Das lokale Backend startet nur auf deinem Rechner.
+5. Das Backend startet nur lokal auf deinem Rechner.
 6. Die Oberfläche öffnet sich im Browser.
 
-Falls die Datei nicht startbar ist:
+Falls nötig:
 
 ```bash
 chmod +x start_tool.sh
 ./start_tool.sh
 ```
 
-Falls die virtuelle Umgebung nicht erstellt werden kann, fehlt auf Ubuntu/Kubuntu meist `python3-venv`. Der Launcher zeigt dafür eine verständliche Fehlermeldung.
-
-## Wichtig: Das Tool bleibt lokal
+## Datenschutz
 
 - Kernfunktionen brauchen kein Internet.
-- Das Backend bindet nur an `127.0.0.1`.
-- Es gibt keine Telemetrie als Standard.
-- Es werden keine externen Python-Pakete installiert.
+- Backend nur auf `127.0.0.1`.
+- keine Telemetrie als Standard.
+- keine externen Python-Pakete.
+- TODOs, Ereignisse und Registry-Daten bleiben lokal.
 
 ## Bedienprinzip
 
 Du sollst möglichst wenig technische Zeichen oder Pfade eintippen müssen.
 
-Bevorzugt werden:
+Reihenfolge:
 
 1. Buttons,
 2. Auswahldialoge,
-3. Presets und zuletzt verwendete sichere Optionen,
-4. Empfehlungen,
+3. zuletzt verwendete sichere Auswahl,
+4. Presets / Empfehlungen,
 5. Freitext nur wenn wirklich nötig.
-
-## Darstellung
-
-### Theme
-
-Wähle einfach einen Button:
-
-- Trash Neon
-- Steel Night
-- Clean Light
-- High Contrast
-
-### Schriftgröße
-
-Verfügbare Buttons:
-
-`90 % · 100 % · 110 % · 120 % · 130 % · 140 %`
-
-### Expertenbereich
-
-Der Expertenbereich ist standardmäßig verborgen. Er zeigt zusätzliche technische Informationen, ist aber für die normale Bedienung nicht nötig.
 
 ## Ampelsystem
 
@@ -84,23 +136,17 @@ Der Expertenbereich ist standardmäßig verborgen. Er zeigt zusätzliche technis
 - 🟠 **prüfen** – Entscheidung oder Prüfung offen.
 - 🔴 **Eingriff** – Fehler, Risiko oder Schutzmaßnahme nötig.
 
-Farbe wird immer zusätzlich mit Text/Symbol erklärt.
+Farbe wird immer zusätzlich mit Text oder Symbol erklärt.
 
-## Wenn das Tool schon läuft
+## Was kommt als Nächstes?
 
-Ein zweiter Start soll keine zweite Backend-Instanz erzeugen. Der Launcher versucht stattdessen, die bereits laufende lokale Oberfläche zu öffnen.
+Als nächster Slice wird das **Kalendermodul** auf dieselbe sichere Datenbasis gesetzt.
 
-## Wenn etwas nicht startet
+Danach werden im Dashboard integriert:
 
-1. Meldung im Terminal lesen.
-2. Bei Bedarf `runtime/launcher.log` ansehen.
-3. Nichts manuell aus Runtime-Dateien löschen, solange unklar ist, was passiert ist.
-4. Die Foundation-Vorprüfung kann technisch mit `python3 scripts/validate.py` gestartet werden.
+- die nächsten drei TODOs,
+- optionale Kalenderinformationen,
+- die letzten fünf Ereignisse,
+- direkter Zugang zum Debug-/Diagnosemodul.
 
-## Nächster Entwicklungsschritt
-
-Die erste echte Dateiaktion wird **Kopieren** sein. Dabei ist der geplante sichere Ablauf:
-
-`Quelle wählen → Ziel wählen → prüfen → Vorschau → bestätigen → kopieren → nachprüfen → Recovery-Datensatz`
-
-Verschieben, Umbenennen und Löschen werden erst danach ergänzt.
+Echte Dateioperationen folgen erst danach kontrolliert mit Copy als erstem SAFE-FILE-CORE-Schritt.
