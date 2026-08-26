@@ -2,84 +2,130 @@
 
 ## Status
 
-**CLEAN FOUNDATION / 0.1.1-foundation**
+**P1 PERSISTENT CORE / 0.2.0-core**
 
-Neue Funktionen werden nicht aufgenommen, solange höhere Sicherheits- oder Integritätsgates offen sind.
+Neue Funktionen werden nur in klar abgegrenzten Slices ergänzt. Sicherheits-, Persistenz- und Integritätsgates bleiben vorrangig.
 
-## P0 — Fundament festziehen
+## P0 — Foundation
 
-- [x] Projektstruktur für Anwendung, Tests, Dokumentation und Runtime definiert.
-- [x] Klick-&-Start-Launcher mit lokaler `.venv`, Vorprüfung und Mehrfachstartschutz implementiert.
-- [x] Persistenz-Grundvertrag umgesetzt: atomare Konfiguration + Backup-Fallback.
-- [x] lokales Sicherheitsmodell umgesetzt: Bindung an `127.0.0.1`, Host-/Origin-Prüfung, Security-Header.
-- [x] UI-Grundvertrag umgesetzt: Laienmodus, Expertenbereich, 4 Themes, Schriftgrößen-Presets, responsive Dashboard-Shell.
-- [x] Release-/Validierungsstruktur implementiert: Unit-Tests, `validate.py`, CI, reproduzierbarer ZIP-Builder.
-- [x] GitHub-CI für `0.1.1-foundation` grün bestätigt.
+- [x] Projektstruktur für Anwendung, Tests, Dokumentation und Runtime.
+- [x] Klick-&-Start mit lokaler `.venv`, Vorprüfung und Mehrfachstartschutz.
+- [x] atomare Konfigurationspersistenz + Backup-Fallback.
+- [x] Loopback-, Host-/Origin- und Security-Header-Vertrag.
+- [x] UI-Grundvertrag mit Laienmodus, Expertenbereich, 4 Themes und Schriftgrößen-Presets.
+- [x] Unit-Tests, Vorvalidierung, CI und reproduzierbarer ZIP-Builder.
 - [ ] frischen Klick-&-Start auf Kubuntu aus sauberem Checkout prüfen.
 - [ ] Firefox- und Chrome/Chromium-Grundgate auf Zielsystem prüfen.
+- [ ] 125–200 % Browserzoom auf Zielsystem prüfen.
 
-## P1 — SAFE-FILE-CORE / Copy zuerst
+## P1 — Gemeinsamer persistenter Kern
 
-- [ ] Quellenwahl über Auswahldialog statt Pfadeingabe definieren und implementieren.
+### VersionRegistry
+
+- [x] zentrales Registry-Schema implementiert.
+- [x] aktuelle und bekannte Versionen persistent speichern.
+- [x] Statuswerte development / tested / release-candidate / released / deprecated.
+- [x] Release-Status und Regressionstatus speichern.
+- [x] Commit-SHA optional vorsehen.
+- [x] Änderungen und bekannte Probleme speichern.
+- [x] Evidenznachweise speichern.
+- [x] getestete/freigegebene Zustände ohne Evidenz blockieren.
+- [x] Drift zwischen `VERSION` und Registry erkennbar machen.
+- [x] Vorgängerversion abrufbar machen.
+- [ ] Drift zusätzlich gegen CHANGELOG/MANIFEST automatisch prüfen.
+
+### EventRegistry
+
+- [x] persistentes Event-Schema implementiert.
+- [x] kurze menschenlesbare Ereignistexte als Pflichtfeld.
+- [x] Bereich und Ampel-/Statusstufe speichern.
+- [x] letzte Ereignisse newest-first abrufbar machen.
+- [x] Registry auf 500 Ereignisse begrenzen.
+- [x] TODO-Anlegen und TODO-Erledigen automatisch protokollieren.
+- [ ] Dashboard rechts unten: letzte fünf Ereignisse anzeigen.
+- [ ] Button „Alle Ereignisse“.
+- [ ] Button zum Debug-/Diagnosemodul.
+
+### TODO-Core
+
+- [x] persistentes TODO-Schema implementiert.
+- [x] Titel, Kategorie, Termin, Priorität und Notiz als Datenvertrag.
+- [x] Kalenderverknüpfung optional vorbereitet.
+- [x] Titel persistent merken.
+- [x] gleiche Titel ohne Groß-/Kleinschreibungs-Dubletten zusammenführen.
+- [x] Titel nach Nutzungshäufigkeit und letzter Verwendung wieder anbieten.
+- [x] Abhaken verschiebt ins Erledigt-Archiv statt zu löschen.
+- [x] Erledigt-Zeitstempel speichern und Erstellungszeit erhalten.
+- [x] nächste drei TODOs serverseitig ermitteln.
+- [ ] TODO-UI mit Auswahl vor Zeicheneingabe.
+- [ ] Dashboard: nächste drei TODOs kompakt anzeigen und direkt abhaken.
+- [ ] Archivansicht für erledigte TODOs.
+
+### Core-Gates
+
+- [x] gemeinsamer `AtomicJsonStore` mit atomarem Replace und Backup-Fallback.
+- [x] API für Versionen, Ereignisse, TODOs, Archiv und Titelvorschläge.
+- [x] Unit-/Integrationstests im Branch ergänzt.
+- [x] Foundation-Validierung auf neue Persistenzmodelle erweitert.
+- [ ] GitHub-CI für `0.2.0-core` grün bestätigen.
+
+## P1 — Kalender-Core / nächster Slice
+
+- [ ] persistentes Kalender-Schema mit Schema-Version und Recovery-Vertrag.
+- [ ] Termin: Titel, Datum, Uhrzeit optional, Ende optional, Kategorie, Beschreibung optional.
+- [ ] Monats-, Wochen- und Jahresansicht.
+- [ ] Termin-Titel merken und als Auswahl anbieten.
+- [ ] Erinnerungen: Terminzeit / 10 min / 30 min / 1 h / 1 Tag vorher.
+- [ ] TODO-Verknüpfung optional; TODO ohne Kalender muss vollständig funktionieren.
+- [ ] Kalender im Dashboard optional ein-/ausblendbar.
+
+## P1 — Dashboard & Debug danach
+
+- [ ] Dashboard kompakter und informativer strukturieren.
+- [ ] Tool-Version und Registry-Status sichtbar machen.
+- [ ] nächste drei TODOs anzeigen.
+- [ ] nächste Termine anzeigen, wenn Kalender aktiviert ist.
+- [ ] rechte Spalte: letzte fünf Ereignisse in einfacher Sprache.
+- [ ] Debug-Button dauerhaft erreichbar.
+- [ ] Bildschirm-/Fenstergröße beim Start erfassen und Dichte-Modus ableiten.
+- [ ] kleine Displays, Full-HD, große Displays und hohe DPI berücksichtigen.
+
+## P1 — SAFE-FILE-CORE / erst nach Daten-/Dashboardkern
+
+- [ ] Quellenwahl über Auswahldialog statt Pfadeingabe.
 - [ ] Zielwahl über Auswahldialog und zuletzt verwendete sichere Ziele.
 - [ ] Datei-/Ordnerauswahl vor Aktion validieren.
 - [ ] Copy-Vorschau: Quelle, Ziel, Anzahl, Größe, Konflikte.
 - [ ] freien Speicher vor Copy prüfen.
-- [ ] Namenskonflikte über Auswahl lösen: überspringen / umbenennen / ersetzen nur nach ausdrücklicher Freigabe.
-- [ ] Copy als persistente Job-Operation implementieren.
+- [ ] Konflikte über Auswahl lösen.
+- [ ] Copy als persistente Job-Operation.
 - [ ] Ergebnis nach Copy validieren.
-- [ ] zentralen Undo-/Recovery-Datensatz für Copy erzeugen.
-- [ ] Abbruch während Copy sicher behandeln.
-- [ ] große Datenmengen ohne UI-Blockade prüfen.
+- [ ] Undo-/Recovery-Datensatz.
+- [ ] Abbruch sicher behandeln.
 
 ### Erst nach belastbarer Copy-Evidenz
 
-- [ ] Move ergänzen.
-- [ ] Rename mit Konfliktvorschau und Undo ergänzen.
-- [ ] Löschaktionen ausschließlich über Papierkorb-/Recovery-Vertrag ergänzen.
+- [ ] Move.
+- [ ] Rename.
+- [ ] Löschaktionen über Papierkorb-/Recovery-Vertrag.
 
 ## P1 — Job & Recovery
 
-- [ ] persistente Job-Queue definieren.
-- [ ] Zustände: geplant / läuft / pausiert / abgebrochen / unterbrochen / fehlgeschlagen / fertig.
-- [ ] `DONE` erst nach erfolgreicher Persistenz melden.
-- [ ] Pause, Abbruch und Wiederaufnahme regressionssicher testen.
+- [ ] persistente Job-Queue.
+- [ ] Zustände geplant / läuft / pausiert / abgebrochen / unterbrochen / fehlgeschlagen / fertig.
+- [ ] `DONE` erst nach erfolgreicher Persistenz.
+- [ ] Pause, Abbruch und Wiederaufnahme regressionssicher.
 - [ ] Checkpoint vor kritischen Änderungen.
-- [ ] Recovery-Center mit verständlicher Auswahl statt Dateipfaden.
+- [ ] Recovery-Center über verständliche Auswahl.
 
 ## P1 — Laienführung
 
 - [ ] Jede reale Hauptaktion mit Zweck, Auswirkung und sicherer Alternative erklären.
-- [x] Nächsten Schritt in Foundation-UI sichtbar gemacht.
-- [x] Ampellogik als UI-Grundvertrag vorbereitet.
-- [ ] „Weiß ich nicht“ in zukünftigen Dialogen ohne Blockade umsetzen.
-- [ ] wiederkehrende sichere Eingaben als Auswahl merken.
+- [x] nächster Schritt im Foundation-Dashboard sichtbar.
+- [x] Ampellogik als UI-Grundvertrag.
+- [ ] „Weiß ich nicht“ ohne Workflow-Blockade.
+- [x] TODO-Titel als wiederkehrende sichere Eingaben persistent merken.
 - [ ] Entwicklerinfo-Titel als Presets + zuletzt verwendet anbieten.
-
-## P2 — Projekt & Dashboard
-
-- [x] Dashboard-Shell vorhanden.
-- [ ] Projektordner-Prüfung und -Erstellung.
-- [ ] Projektwechsel ohne stillen Statusverlust.
-- [ ] Notizen / Entwicklerinfos projektbezogen speichern.
-- [ ] Ergebnisberichte und Verlauf.
-
-## P2 — Accessibility & Darstellung
-
-- [x] 4 Themes einschließlich High Contrast vorbereitet.
-- [x] Schriftgrößen 90–140 % per Buttons.
-- [x] sichtbare Fokuszustände und native Tastaturbedienung im Foundation-Shell.
-- [ ] 125–200 % Browserzoom auf realem Zielsystem prüfen.
-- [x] Status nicht ausschließlich über Farbe dargestellt.
-
-## P3 — Erweiterungen
-
-- [ ] Kalender und Aufgaben.
-- [ ] Presets / wiederholbare Workflows.
-- [ ] Plugin-/Modul-Registry.
-- [ ] Suchmodul.
-- [ ] Import/Export.
-- [ ] optionale Automatisierungen.
 
 ## Quality Gates
 
@@ -96,4 +142,4 @@ Ein Slice gilt erst als abgeschlossen, wenn:
 
 ## Aktuell empfohlener nächster Schritt
 
-**Frischen Kubuntu-Start und Browser-Grundgate verifizieren. Parallel darf der P1 SAFE-FILE-CORE-Vertrag vorbereitet werden; die erste reale Operation bleibt ausschließlich Copy.**
+**Zuerst `0.2.0-core` durch CI abnehmen. Danach Kalender-Core auf denselben Persistenzvertrag aufsetzen; anschließend TODO/Kalender/Ereignisse ins responsive Dashboard integrieren.**
