@@ -32,6 +32,13 @@ def _text(value: Any, field: str, allow_empty: bool = False) -> str:
     return result
 
 
+def _optional_text(value: Any, field: str) -> str | None:
+    if value is None:
+        return None
+    result = _text(value, field, allow_empty=True)
+    return result or None
+
+
 def _string_list(value: Any, field: str) -> list[str]:
     if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
         raise VersionRegistryError(f"{field} muss eine Textliste sein.")
@@ -70,7 +77,7 @@ def validate_registry(value: dict[str, Any]) -> dict[str, Any]:
             "created_at": _text(raw.get("created_at"), "created_at"),
             "status": status,
             "release_status": release_status,
-            "commit_sha": _text(raw.get("commit_sha", ""), "commit_sha", allow_empty=True) or None,
+            "commit_sha": _optional_text(raw.get("commit_sha"), "commit_sha"),
             "summary": _text(raw.get("summary", ""), "summary", allow_empty=True),
             "changes": _string_list(raw.get("changes", []), "changes"),
             "known_issues": _string_list(raw.get("known_issues", []), "known_issues"),
@@ -111,6 +118,7 @@ class VersionRegistry:
         changes: list[str] | None = None,
     ) -> dict[str, Any]:
         version = _text(version, "version")
+        clean_commit_sha = _optional_text(commit_sha, "commit_sha")
 
         def mutate(data: dict[str, Any]) -> dict[str, Any]:
             existing = next((item for item in data["versions"] if item["version"] == version), None)
@@ -120,7 +128,7 @@ class VersionRegistry:
                     "created_at": utc_now(),
                     "status": "development",
                     "release_status": "draft",
-                    "commit_sha": commit_sha,
+                    "commit_sha": clean_commit_sha,
                     "summary": summary.strip(),
                     "changes": list(changes or []),
                     "known_issues": [],
@@ -128,8 +136,8 @@ class VersionRegistry:
                     "evidence": [],
                 })
             else:
-                if commit_sha and not existing.get("commit_sha"):
-                    existing["commit_sha"] = commit_sha
+                if clean_commit_sha and not existing.get("commit_sha"):
+                    existing["commit_sha"] = clean_commit_sha
                 if summary and not existing.get("summary"):
                     existing["summary"] = summary.strip()
                 if changes and not existing.get("changes"):
