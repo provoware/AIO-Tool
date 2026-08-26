@@ -102,14 +102,14 @@ class ErrorAdvisor:
                 raise ErrorAdvisorError(f"Vorlage in {rule['id']} fehlt: {rel}")
 
     def advise(self, error: Exception, *, area: str = "Allgemein") -> dict[str, Any]:
-        name = error.__class__.__name__
+        class_names = {cls.__name__ for cls in error.__class__.mro()}
         text = str(error)
         folded = text.casefold()
         selected: dict[str, Any] | None = None
         for rule in self._rules["rules"]:
             names = rule["match"]["exception_names"]
             tokens = rule["match"]["contains_any"]
-            class_match = not names or name in names
+            class_match = not names or bool(class_names.intersection(names))
             text_match = not tokens or any(token in folded for token in tokens)
             if class_match and text_match:
                 selected = rule
