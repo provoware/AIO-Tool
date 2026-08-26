@@ -103,8 +103,9 @@ def utc_now() -> str:
 
 
 class VersionRegistry:
-    def __init__(self, path: Path):
-        self.store = AtomicJsonStore(path, DEFAULT_REGISTRY, validate_registry)
+    def __init__(self, path: Path, default: dict[str, Any] | None = None):
+        seed = DEFAULT_REGISTRY if default is None else default
+        self.store = AtomicJsonStore(path, seed, validate_registry)
 
     def load(self) -> dict[str, Any]:
         return self.store.load()
