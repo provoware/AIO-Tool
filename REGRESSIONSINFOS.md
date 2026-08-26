@@ -36,13 +36,13 @@ Diese Datei hält bekannte Fehlerklassen und dauerhafte Schutzverträge fest.
 
 - **Vertrag:** reine Prüfungen bleiben seiteneffektfrei.
 - **Foundation-Schutz:** `scripts/validate.py` arbeitet mit temporärer Testkonfiguration und verändert `runtime/config.json` nicht.
-- **Status:** UMGESETZT; CI-/Zielsystemevidenz für 0.1.1 noch ausstehend.
+- **Status:** GEPRÜFT durch Foundation-CI 0.1.1.
 
 ### REG-005 — Mehrfachstart erzeugt mehrere Backends
 
 - **Vertrag:** Start ist idempotent; valide laufende Instanz öffnen statt zweite starten.
 - **Foundation-Schutz:** `start_tool.sh` prüft `/api/status` vor Backendstart.
-- **Status:** UMGESETZT; Zielsystemtest ausstehend.
+- **Status:** UMGESETZT; echter Zielsystem-/Mehrfachstarttest ausstehend.
 
 ### REG-006 — Einfache Bedienung wird durch Zusatzoptionen überladen
 
@@ -65,28 +65,28 @@ Diese Datei hält bekannte Fehlerklassen und dauerhafte Schutzverträge fest.
 - **Risiko:** Browser-/Netzwerkzugriff unter falschem Hostkontext erreicht lokale API.
 - **Vertrag:** nur `127.0.0.1`/`localhost` mit richtigem Port akzeptieren.
 - **Schutz:** `allowed_host()` und Unit-Test in `tests/test_server.py`.
-- **Status:** UMGESETZT; CI-Evidenz ausstehend.
+- **Status:** GEPRÜFT durch Foundation-CI 0.1.1.
 
 ### REG-010 — Fremde Origin schreibt lokale Konfiguration
 
 - **Risiko:** fremde Webseite versucht einen mutierenden API-Aufruf.
 - **Vertrag:** schreibende Endpunkte nur mit lokaler Origin oder ohne Browser-Origin im lokalen Werkzeugkontext.
 - **Schutz:** `allowed_origin()` + Host-Prüfung + keine CORS-Freigabe.
-- **Status:** UMGESETZT; CI-Evidenz ausstehend.
+- **Status:** GEPRÜFT durch Foundation-CI 0.1.1.
 
 ### REG-011 — Beschädigte Hauptkonfiguration macht Tool unbrauchbar
 
 - **Risiko:** abgebrochener Schreibvorgang oder Dateikorruption zerstört Einstellungen.
 - **Vertrag:** atomare Hauptdatei; gültiges Backup als Fallback.
 - **Schutz:** `ConfigStore.save/load` + `test_backup_fallback`.
-- **Status:** UMGESETZT; CI-Evidenz ausstehend.
+- **Status:** GEPRÜFT durch Foundation-CI 0.1.1.
 
 ### REG-012 — Release enthält lokale Nutzerdaten
 
 - **Risiko:** Runtime, `.venv`, Logs oder persönliche Daten gelangen ins ZIP.
 - **Vertrag:** Release-Builder schließt Runtime/venv/Caches/Builddaten aus und prüft Ausschlüsse.
 - **Schutz:** `scripts/release.py --check` und `.gitignore`.
-- **Status:** UMGESETZT; CI-Evidenz ausstehend.
+- **Status:** GEPRÜFT durch Foundation-CI 0.1.1.
 
 ## Testklassen für Releases
 
@@ -111,7 +111,7 @@ Je nach Slice mindestens prüfen:
 
 ## Foundation-Gates 0.1.1
 
-Automatisiert vorgesehen:
+Ausgeführt und grün in GitHub Actions:
 
 ```bash
 python3 -m unittest discover -s tests -v
@@ -121,7 +121,9 @@ node --check web/app.js
 python3 scripts/release.py --check
 ```
 
-**Wichtig:** Vor Ausführung gelten diese Gates nur als implementiert, nicht als bestanden.
+CI-Run `foundation-ci` für Commit `754f1e6a9534eb12503d5191aad0bebf45fa8a6d`: **SUCCESS**.
+
+Noch offen bleiben reale Zielsystem-Gates unter Kubuntu sowie Firefox/Chrome/Chromium.
 
 ## Release-Gate
 

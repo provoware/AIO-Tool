@@ -6,8 +6,8 @@ Alle wesentlichen Änderungen an AIO-Tool werden hier nachvollziehbar dokumentie
 
 ### Geplant
 
-- Foundation-CI auf `main` verifizieren.
 - frischen Zielsystemstart unter Kubuntu prüfen.
+- Firefox- und Chrome/Chromium-Grundgate auf Zielsystem prüfen.
 - danach SAFE-FILE-CORE mit Copy als erster realer Dateioperation beginnen.
 
 ## [0.1.1-foundation] — 2026-08-27
@@ -35,6 +35,7 @@ Alle wesentlichen Änderungen an AIO-Tool werden hier nachvollziehbar dokumentie
 
 - Status von reiner Dokumentationsbasis auf ausführbaren Foundation-Kern angehoben.
 - nächster Entwicklungs-Slice auf „Copy zuerst“ innerhalb SAFE-FILE-CORE präzisiert.
+- Bootstrap-/Release-Skripte importieren den Repository-Root nun explizit und funktionieren damit auch aus einem frischen Checkout-Aufrufpfad.
 
 ### Security
 
@@ -44,11 +45,20 @@ Alle wesentlichen Änderungen an AIO-Tool werden hier nachvollziehbar dokumentie
 - Anfragegröße für JSON-Schreibzugriffe begrenzt.
 - Konfigurationsfelder serverseitig auf erlaubte Schlüssel beschränkt.
 
+### Verified
+
+- GitHub-Actions `foundation-ci`: **SUCCESS**.
+- Python-Syntax: grün.
+- Unit-Tests: grün.
+- Foundation-Validierung: grün.
+- Launcher-Syntax: grün.
+- JavaScript-Syntax: grün.
+- reproduzierbarer Release-Builder: grün.
+
 ### Not yet verified
 
 - tatsächlicher frischer Start auf dem Kubuntu-Zielsystem.
 - Firefox- und Chrome/Chromium-Gate auf Zielsystem.
-- GitHub-CI-Ergebnis dieses Commits.
 
 ## [0.1.0-foundation] — 2026-08-27
 
