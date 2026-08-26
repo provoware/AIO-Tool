@@ -66,41 +66,64 @@ Wiederkehrende sichere Eingaben sollen gespeichert und später als Auswahl angeb
 - Backups/Recovery-Metadaten konsistent halten.
 - Konfigurationsänderungen dürfen nicht als Nebeneffekt einer reinen Prüfung entstehen.
 
-## 8. Tests und Regression
+## 8. Tests, Musterdateien und Regression
 
-Jeder bestätigte Fehler erhält möglichst:
+Jeder bestätigte Fehler erhält möglichst reproduzierbaren Test, erwartetes Verhalten, tatsächliches Fehlverhalten, Fix-Nachweis und dauerhaftes Gate.
 
-- reproduzierbaren Test,
-- erwartetes Verhalten,
-- tatsächliches Fehlverhalten,
-- Fix-Nachweis,
-- dauerhaftes Regression-Gate.
+Für jedes persistente JSON-/Config-Format gilt zusätzlich:
+
+- mindestens eine gültige versionierte Mustervorlage,
+- relevante absichtlich ungültige Testdaten,
+- dieselben Validatoren für Produktdaten, Vorlage und Tests,
+- Vorlagen niemals ungefragt über Nutzerdaten schreiben,
+- Schemaänderung → Validator + Vorlage + Testdaten + Regression gemeinsam aktualisieren.
 
 Keine Aussage „behoben“ ohne erneute Prüfung.
 
-## 9. Release-Regeln
+## 9. Versionierte Nutztexte und Fehlerhilfe
+
+Wiederkehrende sichtbare Systemtexte werden aus versionierten Textkatalogen geladen statt an vielen Stellen hart codiert.
+
+Fehlerhilfe muss unterscheiden:
+
+- ungültige Nutzereingabe,
+- Integritäts-/Persistenzfehler,
+- unbekannter Fehler.
+
+Eine Hilferegel darf eine geprüfte Mustervorlage empfehlen, aber keine Nutzerdaten automatisch ersetzen. `retry_safe=true` darf nur gesetzt werden, wenn ein erneuter Versuch ohne zusätzliche Datengefährdung vertretbar ist.
+
+## 10. Entwicklungs-Lerngedächtnis
+
+`LEARNING_MEMORY.jsonl` hält bestätigte Entwicklungslektionen dauerhaft fest.
+
+Ein Eintrag soll enthalten: Auslöser, Erkenntnis, neue Regel, Regression und Geltungsbereich. Wiederkehrende oder strukturelle Fehler müssen dort aufgenommen werden. CI validiert die Datei; widersprüchliche oder ungültige Lerndaten dürfen keinen Release passieren.
+
+## 11. Codesparendes Patchen
+
+Vor einem größeren Fix zuerst die kleinste verantwortliche Codezone bestimmen: **Datei → Funktion/Klasse → Zeilenbereich → zugehöriger Test**.
+
+Bevorzugt wird ein lokaler Patch mit passender Regression statt breitem Refactor. Größere Umbauten nur, wenn die lokale Reparatur strukturell unvertretbar wäre. Abschlussberichte nennen bei relevanten offenen Punkten konkrete Patchstellen mit Zeilenangaben.
+
+## 12. Release-Regeln
 
 Vor einem Release:
 
-- Tests grün.
-- Changelog aktualisiert.
-- TODO konsistent.
-- Manifest aktuell.
-- Regressionseinträge aktuell.
-- Laienanleitung auf tatsächliches Verhalten geprüft.
-- keine `.venv`, Caches, temporären Logs, Testprofile oder lokalen Nutzerdaten im Release.
-- erzeugtes Release erneut aus sauber entpacktem Zustand prüfen.
+- Tests grün,
+- Learning Guard grün,
+- Changelog/TODO/Manifest/Regressionen aktuell,
+- Laienanleitung auf tatsächliches Verhalten geprüft,
+- Muster-/Testdaten mit Validatoren konsistent,
+- keine `.venv`, Caches, temporären Logs, Testprofile oder lokalen Nutzerdaten im Release,
+- erzeugtes Release erneut prüfen.
 
-## 10. Statussprache
+## 13. Statussprache
 
-`UMGESETZT` bedeutet Code/Artefakt vorhanden.
-
-`GEPRÜFT` bedeutet Test tatsächlich ausgeführt.
-
-`BEWIESEN` bedeutet reproduzierbare Evidenz vorhanden.
+`UMGESETZT` = Code/Artefakt vorhanden.  
+`GEPRÜFT` = Test tatsächlich ausgeführt.  
+`BEWIESEN` = reproduzierbare Evidenz vorhanden.
 
 Nicht geprüfte Zielsysteme ausdrücklich als offen kennzeichnen.
 
-## 11. Dokumentationspflicht
+## 14. Dokumentationspflicht
 
 Änderungen mit Auswirkung auf Verhalten, Architektur, Sicherheit oder Bedienung müssen mindestens in den relevanten Dateien aus README, TODO, CHANGELOG, MANIFEST, REGRESSIONSINFOS und LAIEN-ANLEITUNG nachgezogen werden.
