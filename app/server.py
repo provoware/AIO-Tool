@@ -12,6 +12,7 @@ from urllib.parse import parse_qs, urlparse
 from . import ROOT_DIR, VERSION
 from .config import ConfigError, ConfigStore
 from .event_registry import EventRegistry, EventRegistryError
+from .persistence import PersistenceError
 from .todo_store import TodoStore, TodoStoreError
 from .version_registry import VersionRegistry, VersionRegistryError, validate_registry
 
@@ -67,7 +68,7 @@ def ensure_core_state() -> None:
                 message=f"Version {VERSION} wurde als neuer Entwicklungsstand registriert.",
                 details={"version": VERSION},
             )
-        except EventRegistryError:
+        except (EventRegistryError, PersistenceError):
             pass
 
 
@@ -75,7 +76,7 @@ def _safe_event(**kwargs: object) -> str | None:
     try:
         EVENT_REGISTRY.add(**kwargs)
         return None
-    except EventRegistryError:
+    except (EventRegistryError, PersistenceError):
         return "Aktion wurde gespeichert, das Ereignisprotokoll konnte aber nicht aktualisiert werden."
 
 
@@ -144,6 +145,13 @@ class AIORequestHandler(BaseHTTPRequestHandler):
             raise RequestError(f"limit muss zwischen 1 und {maximum} liegen.")
         return limit
 
+    def _integrity_error(self, exc: Exception) -> None:
+        self._json(HTTPStatus.INTERNAL_SERVER_ERROR, {
+            "ok": False,
+            "error": "Lokale Daten konnten nicht sicher gelesen oder gespeichert werden.",
+            "detail": str(exc),
+        })
+
     def do_GET(self) -> None:
         if self._reject_if_untrusted():
             return
@@ -205,12 +213,8 @@ class AIORequestHandler(BaseHTTPRequestHandler):
         except RequestError as exc:
             self._json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": str(exc)})
             return
-        except (ConfigError, VersionRegistryError, EventRegistryError, TodoStoreError) as exc:
-            self._json(HTTPStatus.INTERNAL_SERVER_ERROR, {
-                "ok": False,
-                "error": "Lokale Daten konnten nicht sicher gelesen werden.",
-                "detail": str(exc),
-            })
+        except (ConfigError, PersistenceError, VersionRegistryError, EventRegistryError, TodoStoreError) as exc:
+            self._integrity_error(exc)
             return
         self._serve_static(path)
 
@@ -270,8 +274,11 @@ class AIORequestHandler(BaseHTTPRequestHandler):
         except RequestError as exc:
             self._json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": str(exc)})
             return
-        except (ConfigError, VersionRegistryError, EventRegistryError, TodoStoreError) as exc:
+        except TodoStoreError as exc:
             self._json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": str(exc)})
+            return
+        except (ConfigError, PersistenceError, VersionRegistryError, EventRegistryError) as exc:
+            self._integrity_error(exc)
             return
 
         self._json(HTTPStatus.NOT_FOUND, {"ok": False, "error": "Unbekannter API-Pfad."})
