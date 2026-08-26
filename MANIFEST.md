@@ -4,8 +4,8 @@
 
 - **Name:** AIO-Tool
 - **Repository:** `provoware/AIO-Tool`
-- **Phase:** CLEAN FOUNDATION — ausführbarer Kern
-- **Version:** `0.1.1-foundation`
+- **Phase:** P1 — gemeinsamer persistenter Kern
+- **Version:** `0.2.0-core`
 - **Stand:** 2026-08-27
 
 ## Verbindlicher Projektbestand
@@ -32,8 +32,12 @@
 | Pfad | Rolle |
 |---|---|
 | `app/__init__.py` | Root-/Versionszugriff |
-| `app/config.py` | validierte atomare Konfigurationspersistenz |
-| `app/server.py` | lokaler HTTP/API-Server und statische Oberfläche |
+| `app/config.py` | bestehende validierte Konfigurationspersistenz |
+| `app/persistence.py` | gemeinsamer atomarer JSON-Speicher für neue Domänenmodelle |
+| `app/version_registry.py` | Versionshistorie, Status, Evidenz und Driftprüfung |
+| `app/event_registry.py` | menschenlesbare Ereignishistorie |
+| `app/todo_store.py` | persistente TODOs, Titelgedächtnis und Erledigt-Archiv |
+| `app/server.py` | lokaler HTTP/API-Server und Core-API |
 | `web/index.html` | Dashboard-Shell |
 | `web/app.js` | UI-Zustand und lokale API-Anbindung |
 | `web/styles.css` | Themes, Kontrast und responsive Darstellung |
@@ -42,9 +46,14 @@
 
 | Pfad | Rolle |
 |---|---|
-| `tests/test_config.py` | Persistenzvertrag |
+| `tests/test_config.py` | bestehender Konfigurationsvertrag |
 | `tests/test_server.py` | Loopback-/Origin-Sicherheitsvertrag |
-| `scripts/validate.py` | Foundation-Vorprüfung |
+| `tests/test_persistence.py` | atomarer JSON-Speicher + Backup-Fallback |
+| `tests/test_version_registry.py` | Versionsstatus, Evidenz und Drift |
+| `tests/test_event_registry.py` | Ereignisvalidierung und newest-first-Abruf |
+| `tests/test_todo_store.py` | Titelgedächtnis, nächste TODOs und Erledigt-Archiv |
+| `tests/test_core_api.py` | integrierter Version/Event/TODO-API-Flow |
+| `scripts/validate.py` | Foundation-/Core-Vorprüfung |
 | `scripts/release.py` | reproduzierbarer ZIP-Builder |
 | `.github/workflows/foundation-ci.yml` | automatisierte CI-Gates |
 | `runtime/.gitkeep` | Platzhalter; reale Runtime-Inhalte ausgeschlossen |
@@ -53,9 +62,9 @@
 
 - Linux/Kubuntu als primäres Zielsystem.
 - Python 3.12 angestrebt; Code nutzt nur Standardbibliothek.
-- `python3-venv` muss auf dem Zielsystem verfügbar sein, damit der Launcher `.venv` erstellen kann.
-- Browser mit lokalem HTTP-Zugriff; Firefox und Chrome/Chromium sind Zielbrowser.
-- `xdg-open` wird bevorzugt, Browser-Fallbacks sind vorgesehen.
+- `python3-venv` für die lokale `.venv`.
+- Firefox und Chrome/Chromium als Zielbrowser.
+- `xdg-open` bevorzugt; Browser-Fallbacks im Launcher.
 
 ## Abhängigkeiten
 
@@ -71,22 +80,49 @@
 
 ## Lokale Persistenz
 
-Zur Laufzeit vorgesehen:
+Zur Laufzeit:
 
 ```text
 runtime/config.json
 runtime/config.json.bak
+runtime/versions.json
+runtime/versions.json.bak
+runtime/events.json
+runtime/events.json.bak
+runtime/todos.json
+runtime/todos.json.bak
 runtime/server.log
 runtime/launcher.log
 runtime/server.pid
 ```
 
-Diese Dateien gehören nicht in Releases und nicht in Git.
+### Schemata
+
+- Config: bestehender Konfigurationsvertrag.
+- VersionRegistry: `schema_version = 1`.
+- EventRegistry: `schema_version = 1`.
+- TODO-Core: `schema_version = 1`.
+
+Schemaänderungen benötigen künftig eine explizite Migration und Regressionstests.
+
+## Datenvertrag
+
+### VersionRegistry
+
+Persistiert Versionsnummer, Zeit, Status, Release-Status, optional Commit-SHA, Zusammenfassung, Änderungen, bekannte Probleme, Regressionstatus und Evidenz.
+
+### EventRegistry
+
+Persistiert kurze menschenlesbare Ereignisse mit Zeit, Art, Bereich, Statusstufe und optionalen technischen Details. Die Eventliste wird auf 500 Einträge begrenzt.
+
+### TODO-Core
+
+Persistiert aktive TODOs, Erledigt-Archiv und Titelgedächtnis. Ein Kalenderbezug ist optional vorbereitet und darf nicht Voraussetzung für normale TODOs werden.
 
 ## Netzwerkvertrag
 
-- Backend bindet ausschließlich an `127.0.0.1`.
-- Standardport: `8765`.
+- Backend ausschließlich `127.0.0.1`.
+- Standardport `8765`.
 - kein Internetzwang.
 - keine Telemetrie.
 - Host-/Origin-Prüfung auf lokale Herkunft.
@@ -101,7 +137,7 @@ Diese Dateien gehören nicht in Releases und nicht in Git.
 - `dist/`, `build/`
 - lokale Logs
 - lokale Profile/Pfade
-- Recovery-Daten realer Nutzer
+- reale TODO-/Kalender-/Event-/Recovery-Daten
 - Secrets/PINs/Passwörter
 
 ## Testkommandos
@@ -116,15 +152,15 @@ python3 scripts/release.py --check
 
 ## Statusvertrag
 
-Der Codebestand ist **UMGESETZT**. Zielsystem- und CI-Prüfungen dürfen erst nach tatsächlicher Ausführung als **GEPRÜFT** oder **BEWIESEN** markiert werden.
+`0.2.0-core` ist zunächst **UMGESETZT**. Erst ein tatsächlich grüner CI-Lauf darf den Slice als **GEPRÜFT** markieren. Reale Kubuntu-/Browser-Gates bleiben separat offen.
 
 ## Nächster Manifest-Schritt
 
-Mit SAFE-FILE-CORE ergänzen:
+Mit Kalender-Core ergänzen:
 
-- Datei-/Ordnerauswahldialog-Vertrag,
-- Copy-Job-Datenmodell,
-- Vorschau-/Konfliktdaten,
-- Undo-/Recovery-Datensatz,
-- Job-Persistenz,
-- zusätzliche Regressionstests und Release-Gates.
+- `app/calendar_store.py`,
+- Kalender-Schema/Migration,
+- Reminder-Datenvertrag,
+- Kalender-API,
+- Tests für Monat/Woche/Jahr und Persistenz,
+- optionale TODO-Verknüpfung.
