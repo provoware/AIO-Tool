@@ -6,7 +6,7 @@ Alle wesentlichen Änderungen an AIO-Tool werden hier nachvollziehbar dokumentie
 
 ### Geplant
 
-- `0.2.0-core` per CI abnehmen.
+- `0.2.0-core` per finalem CI-Head abnehmen und mergen.
 - Kalender-Core auf dem neuen Persistenzvertrag aufbauen.
 - danach TODO/Kalender/Ereignisse ins kompaktere responsive Dashboard integrieren.
 - SAFE-FILE-CORE weiterhin erst nach stabilem Daten-/Dashboardkern beginnen.
@@ -16,9 +16,11 @@ Alle wesentlichen Änderungen an AIO-Tool werden hier nachvollziehbar dokumentie
 ### Added
 
 - gemeinsamer `AtomicJsonStore` für neue persistente Domänenmodelle.
+- getrackte `VERSION_REGISTRY.json` als projektweite Versionshistorie.
+- lokale `runtime/versions.json`, die bei frischer Installation aus der getrackten Historie initialisiert wird.
 - `VersionRegistry` mit Schema-Version, Versionshistorie, Status, Release-Status, Commit-SHA, Änderungen, bekannten Problemen, Regressionstatus und Evidenz.
 - Schutzregel: `tested`, `release-candidate` und `released` benötigen vorher Evidenz.
-- Erkennung von Drift zwischen `VERSION` und VersionRegistry.
+- Erkennung von Drift zwischen `VERSION` und getrackter VersionRegistry.
 - Abruf der letzten registrierten Vorgängerversion.
 - `EventRegistry` für kurze menschenlesbare Ereignisse mit Bereich und Ampel-/Statusstufe.
 - Event-Historie auf 500 Einträge begrenzt; letzte Ereignisse newest-first abrufbar.
@@ -27,27 +29,35 @@ Alle wesentlichen Änderungen an AIO-Tool werden hier nachvollziehbar dokumentie
 - Erledigt-Archiv: Abhaken verschiebt statt zu löschen und speichert `completed_at`.
 - serverseitige Ermittlung der nächsten drei TODOs.
 - APIs für Versionen, Ereignisse, TODOs, Archiv und Titelvorschläge.
-- Integrationstest für VersionRegistry → TODO anlegen → Titelvorschlag → abhaken → EventRegistry.
+- Integrationstests für VersionRegistry → TODO anlegen → Titelvorschlag → abhaken → EventRegistry.
 - zusätzliche Unit-Tests für Persistenz, VersionRegistry, EventRegistry und TODO-Core.
 
 ### Changed
 
 - `/api/status` liefert zusätzlich Registry-Konsistenz sowie Anzahl offener/archivierter TODOs und Ereignisse.
-- Foundation-Validierung prüft nun auch Versions-Registry, Ereignisspeicherung, TODO-Titelgedächtnis und Erledigt-Archiv.
+- Foundation-Validierung prüft nun auch die getrackte Versionshistorie, deren Übereinstimmung mit `VERSION`, Ereignisspeicherung, TODO-Titelgedächtnis und Erledigt-Archiv.
+- Feature-Branches unter `feature/**` werden bereits beim Push durch die vollständige CI geprüft.
+- ungültige GET-Abfrageparameter werden als 400/Nutzereingabe behandelt; beschädigte lokale Registry-/TODO-Lesedaten als 500/Integritätsfehler.
 - Entwicklungsreihenfolge auf Datenkern → Kalender-Core → Dashboard-Integration → SAFE-FILE-CORE präzisiert.
+
+### Fixed
+
+- optionales `commit_sha=null` wurde in der ersten Registry-Implementierung fälschlich abgelehnt; CI hat den Fehler entdeckt und ein direkter Regressionstest sichert ihn nun ab.
+- Seed-/Default-Persistenz wird jetzt ebenfalls validiert und nicht ungeprüft übernommen.
+- ein Fehler im sekundären Ereignisprotokoll darf eine bereits sicher gespeicherte TODO-Aktion nicht mehr fälschlich als fehlgeschlagen erscheinen lassen.
 
 ### Security / Integrity
 
 - neue Registry-/TODO-Dateien nutzen atomisches Replace mit Backup-Fallback.
-- schreibende TODO-Endpunkte bleiben an den bestehenden lokalen Host-/Origin-Vertrag gebunden.
+- schreibende TODO-Endpunkte bleiben an den lokalen Host-/Origin-Vertrag gebunden.
 - Versionen können nicht ohne Evidenz fälschlich als getestet/freigegeben markiert werden.
 - TODOs werden beim Erledigen nicht still gelöscht.
-- Event-Protokollierung ist sekundär: eine bereits sicher gespeicherte TODO-Aktion wird bei einem Event-Fehler nicht fälschlich als fehlgeschlagen gemeldet; stattdessen wird eine Warnung zurückgegeben.
+- offizielle Projekt-Historie und lokale Laufzeit-Registry sind getrennt, damit lokale Zustände nicht still die getrackte Historie überschreiben.
 
 ### Verification status
 
-- Code und Tests: **UMGESETZT**.
-- GitHub-CI für diesen Slice: **noch ausstehend**, bis der Pull Request gelaufen ist.
+- Zwischenlauf nach Fix des optionalen Commit-SHA: **SUCCESS**.
+- finaler CI-Head mit Registry-Seed und Integritätsklassifizierung: noch abzunehmen.
 - reale Kubuntu-/Browser-Gates: weiterhin offen.
 
 ## [0.1.1-foundation] — 2026-08-27
@@ -71,19 +81,6 @@ Alle wesentlichen Änderungen an AIO-Tool werden hier nachvollziehbar dokumentie
 - Standardbibliothek-Unit-Tests für Persistenz- und Loopback-Sicherheitsvertrag.
 - GitHub-Actions-Workflow `foundation-ci`.
 
-### Changed
-
-- Status von reiner Dokumentationsbasis auf ausführbaren Foundation-Kern angehoben.
-- Bootstrap-/Release-Skripte importieren den Repository-Root explizit.
-
-### Security
-
-- keine Bindung an externe Interfaces.
-- keine CORS-Freigabe.
-- mutierende API-Aufrufe nur mit gültigem lokalem Host/Origin-Vertrag.
-- Anfragegröße für JSON-Schreibzugriffe begrenzt.
-- Konfigurationsfelder serverseitig auf erlaubte Schlüssel beschränkt.
-
 ### Verified
 
 - GitHub-Actions `foundation-ci`: **SUCCESS**.
@@ -105,8 +102,3 @@ Alle wesentlichen Änderungen an AIO-Tool werden hier nachvollziehbar dokumentie
 
 - Repository inhaltlich vollständig auf CLEAN FOUNDATION zurückgesetzt.
 - Produktphilosophie auf „Auswahl vor Zeicheneingabe“, offline-first, Recovery und transparente Prozesse festgelegt.
-
-### Removed
-
-- alter Projektinhalt der vorherigen Repository-Struktur.
-- alte Platzhalterdateien und frühere Frontend-Dateinamen.
