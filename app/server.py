@@ -13,17 +13,23 @@ from . import ROOT_DIR, VERSION
 from .config import ConfigError, ConfigStore
 from .event_registry import EventRegistry, EventRegistryError
 from .todo_store import TodoStore, TodoStoreError
-from .version_registry import VersionRegistry, VersionRegistryError
+from .version_registry import VersionRegistry, VersionRegistryError, validate_registry
 
 WEB_DIR = ROOT_DIR / "web"
 RUNTIME_DIR = ROOT_DIR / "runtime"
+VERSION_SEED_PATH = ROOT_DIR / "VERSION_REGISTRY.json"
 CONFIG_STORE = ConfigStore(RUNTIME_DIR / "config.json")
-VERSION_REGISTRY = VersionRegistry(RUNTIME_DIR / "versions.json")
+VERSION_SEED = validate_registry(json.loads(VERSION_SEED_PATH.read_text(encoding="utf-8")))
+VERSION_REGISTRY = VersionRegistry(RUNTIME_DIR / "versions.json", default=VERSION_SEED)
 EVENT_REGISTRY = EventRegistry(RUNTIME_DIR / "events.json")
 TODO_STORE = TodoStore(RUNTIME_DIR / "todos.json")
 MAX_BODY_BYTES = 64 * 1024
 ALLOWED_CONFIG_KEYS = {"theme", "font_scale", "expert_visible", "setup_complete", "active_project", "favorites"}
 TODO_ALLOWED_KEYS = {"title", "category", "due_date", "due_time", "priority", "note", "calendar_event_id"}
+
+
+class RequestError(ValueError):
+    """Invalid HTTP input supplied by the local UI/client."""
 
 
 def allowed_host(host: str, port: int) -> bool:
@@ -115,17 +121,17 @@ class AIORequestHandler(BaseHTTPRequestHandler):
         try:
             length = int(self.headers.get("Content-Length", "0"))
         except ValueError as exc:
-            raise ConfigError("Ungültige Anfragegröße.") from exc
+            raise RequestError("Ungültige Anfragegröße.") from exc
         if length == 0 and not required:
             return {}
         if length <= 0 or length > MAX_BODY_BYTES:
-            raise ConfigError("Anfrage ist leer oder zu groß.")
+            raise RequestError("Anfrage ist leer oder zu groß.")
         try:
             value = json.loads(self.rfile.read(length).decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-            raise ConfigError("Ungültiges JSON.") from exc
+            raise RequestError("Ungültiges JSON.") from exc
         if not isinstance(value, dict):
-            raise ConfigError("JSON muss ein Objekt sein.")
+            raise RequestError("JSON muss ein Objekt sein.")
         return value
 
     def _query_limit(self, parsed, default: int, maximum: int) -> int:
@@ -133,9 +139,9 @@ class AIORequestHandler(BaseHTTPRequestHandler):
         try:
             limit = int(raw)
         except ValueError as exc:
-            raise ConfigError("limit muss eine Zahl sein.") from exc
+            raise RequestError("limit muss eine Zahl sein.") from exc
         if limit < 1 or limit > maximum:
-            raise ConfigError(f"limit muss zwischen 1 und {maximum} liegen.")
+            raise RequestError(f"limit muss zwischen 1 und {maximum} liegen.")
         return limit
 
     def do_GET(self) -> None:
@@ -196,8 +202,15 @@ class AIORequestHandler(BaseHTTPRequestHandler):
                 limit = self._query_limit(parsed, 12, 50)
                 self._json(HTTPStatus.OK, {"ok": True, "titles": TODO_STORE.title_suggestions(limit)})
                 return
-        except (ConfigError, VersionRegistryError, EventRegistryError, TodoStoreError) as exc:
+        except RequestError as exc:
             self._json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": str(exc)})
+            return
+        except (ConfigError, VersionRegistryError, EventRegistryError, TodoStoreError) as exc:
+            self._json(HTTPStatus.INTERNAL_SERVER_ERROR, {
+                "ok": False,
+                "error": "Lokale Daten konnten nicht sicher gelesen werden.",
+                "detail": str(exc),
+            })
             return
         self._serve_static(path)
 
@@ -210,7 +223,7 @@ class AIORequestHandler(BaseHTTPRequestHandler):
                 changes = self._read_json()
                 unknown = set(changes) - ALLOWED_CONFIG_KEYS
                 if unknown:
-                    raise ConfigError("Nicht erlaubte Einstellung: " + ", ".join(sorted(unknown)))
+                    raise RequestError("Nicht erlaubte Einstellung: " + ", ".join(sorted(unknown)))
                 config = CONFIG_STORE.update(changes)
                 self._json(HTTPStatus.OK, {"ok": True, "config": config})
                 return
@@ -219,9 +232,9 @@ class AIORequestHandler(BaseHTTPRequestHandler):
                 payload = self._read_json()
                 unknown = set(payload) - TODO_ALLOWED_KEYS
                 if unknown:
-                    raise TodoStoreError("Nicht erlaubtes TODO-Feld: " + ", ".join(sorted(unknown)))
+                    raise RequestError("Nicht erlaubtes TODO-Feld: " + ", ".join(sorted(unknown)))
                 if "title" not in payload:
-                    raise TodoStoreError("Titel fehlt.")
+                    raise RequestError("Titel fehlt.")
                 item = TODO_STORE.create(**payload)
                 warning = _safe_event(
                     kind="todo_created",
@@ -239,7 +252,7 @@ class AIORequestHandler(BaseHTTPRequestHandler):
             if path.startswith("/api/todos/") and path.endswith("/complete"):
                 todo_id = path.removeprefix("/api/todos/").removesuffix("/complete").strip("/")
                 if not todo_id:
-                    raise TodoStoreError("TODO-ID fehlt.")
+                    raise RequestError("TODO-ID fehlt.")
                 self._read_json(required=False)
                 item = TODO_STORE.complete(todo_id)
                 warning = _safe_event(
@@ -254,6 +267,9 @@ class AIORequestHandler(BaseHTTPRequestHandler):
                     response["warning"] = warning
                 self._json(HTTPStatus.OK, response)
                 return
+        except RequestError as exc:
+            self._json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": str(exc)})
+            return
         except (ConfigError, VersionRegistryError, EventRegistryError, TodoStoreError) as exc:
             self._json(HTTPStatus.BAD_REQUEST, {"ok": False, "error": str(exc)})
             return
