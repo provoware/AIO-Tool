@@ -4,8 +4,13 @@ from __future__ import annotations
 import argparse
 import hashlib
 import os
+import sys
 import zipfile
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from app import ROOT_DIR, VERSION
 
@@ -37,8 +42,7 @@ def build(output: Path) -> str:
             info.external_attr = mode << 16
             info.compress_type = zipfile.ZIP_DEFLATED
             zf.writestr(info, path.read_bytes())
-    digest = hashlib.sha256(output.read_bytes()).hexdigest()
-    return digest
+    return hashlib.sha256(output.read_bytes()).hexdigest()
 
 
 def main() -> None:
