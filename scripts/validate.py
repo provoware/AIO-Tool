@@ -13,12 +13,17 @@ if str(ROOT) not in sys.path:
 
 from app import ROOT_DIR, VERSION
 from app.config import ConfigStore, DEFAULT_CONFIG
+from app.event_registry import EventRegistry
 from app.server import WEB_DIR, allowed_host, allowed_origin
+from app.todo_store import TodoStore
+from app.version_registry import VersionRegistry, validate_registry
 
 REQUIRED = [
     "README.md", "TODO.md", "AGENTS.md", "CHANGELOG.md", "LAIEN-ANLEITUNG.md",
-    "TOOLBESCHREIBUNG.md", "MANIFEST.md", "REGRESSIONSINFOS.md", "VERSION",
-    "start_tool.sh", "app/config.py", "app/server.py", "web/index.html", "web/app.js", "web/styles.css",
+    "TOOLBESCHREIBUNG.md", "MANIFEST.md", "REGRESSIONSINFOS.md", "VERSION", "VERSION_REGISTRY.json",
+    "start_tool.sh", "app/config.py", "app/persistence.py", "app/version_registry.py",
+    "app/event_registry.py", "app/todo_store.py", "app/server.py",
+    "web/index.html", "web/app.js", "web/styles.css",
 ]
 
 
@@ -42,12 +47,32 @@ def main() -> None:
     check(allowed_origin("http://127.0.0.1:8765", 8765), "lokale Origin erlaubt")
     check(not allowed_origin("https://example.com", 8765), "fremde Origin blockiert")
 
+    tracked_registry = validate_registry(
+        json.loads((ROOT_DIR / "VERSION_REGISTRY.json").read_text(encoding="utf-8"))
+    )
+    check(tracked_registry["current_version"] == VERSION, "VERSION und getrackte Registry stimmen überein")
+
     with tempfile.TemporaryDirectory() as tmp:
-        store = ConfigStore(Path(tmp) / "config.json")
-        saved = store.save(DEFAULT_CONFIG)
-        loaded = store.load()
+        root = Path(tmp)
+        config = ConfigStore(root / "config.json")
+        saved = config.save(DEFAULT_CONFIG)
+        loaded = config.load()
         check(saved == loaded, "Konfiguration atomar speichern/laden")
-        json.loads((Path(tmp) / "config.json").read_text(encoding="utf-8"))
+        json.loads((root / "config.json").read_text(encoding="utf-8"))
+
+        versions = VersionRegistry(root / "versions.json", default=tracked_registry)
+        check(versions.consistency(VERSION)["ok"], "Versions-Registry konsistent")
+        check(len(versions.load()["versions"]) >= 3, "Versionshistorie auf frischer Runtime vorhanden")
+
+        events = EventRegistry(root / "events.json")
+        events.add(kind="validation", area="System", message="Validierung wurde ausgeführt.")
+        check(len(events.latest(1)) == 1, "EventRegistry speichern/lesen")
+
+        todos = TodoStore(root / "todos.json")
+        item = todos.create(title="Validierung prüfen")
+        check(todos.title_suggestions(1)[0]["title"] == "Validierung prüfen", "TODO-Titel merken")
+        todos.complete(item["id"])
+        check(len(todos.list_archive()) == 1, "TODO ins Erledigt-Archiv verschieben")
 
     if not args.quick:
         check((ROOT_DIR / "tests").is_dir(), "Test-Verzeichnis vorhanden")

@@ -4,8 +4,8 @@
 
 ## Status
 
-- **Phase:** CLEAN FOUNDATION — ausführbarer Kern
-- **Version:** `0.1.1-foundation`
+- **Phase:** P1 — gemeinsamer persistenter Kern
+- **Version:** `0.2.0-core`
 - **Datum:** 2026-08-27
 - **Zielsystem:** primär Linux/Kubuntu
 - **Oberfläche:** Browser-UI
@@ -14,22 +14,93 @@
 
 ## Was ist bereits vorhanden?
 
-Der erste ausführbare Foundation-Slice enthält bewusst noch keine verändernden Dateioperationen. Vorhanden sind:
+Die Clean Foundation bleibt erhalten und wurde um den ersten gemeinsamen Datenkern erweitert:
 
-- `start_tool.sh` als Klick-&-Start-Launcher,
+- Klick-&-Start über `start_tool.sh`,
 - lokale `.venv` ohne Fremdpakete,
-- idempotenter Start: vorhandene Instanz öffnen statt zweites Backend starten,
-- lokales Python-Backend auf `127.0.0.1`,
-- Host-/Origin-Prüfung für API-Schreibzugriffe,
-- atomare JSON-Konfiguration mit Backup-Fallback,
-- responsive Dashboard-Shell,
-- 4 Themes,
-- Schriftgrößen 90–140 % über Buttons,
-- standardmäßig verborgener Expertenbereich,
-- automatische Foundation-Validierung,
-- Standardbibliothek-Unit-Tests,
-- reproduzierbarer Release-Builder,
-- GitHub-Actions-CI.
+- idempotenter Mehrfachstartschutz,
+- lokales Backend auf `127.0.0.1`,
+- Host-/Origin-Prüfung und Security-Header,
+- atomare Konfiguration mit Backup-Fallback,
+- responsive Dashboard-Shell mit 4 Themes und Schriftgrößen-Presets,
+- **VersionRegistry** mit Status-, Release- und Evidenzvertrag,
+- **EventRegistry** für kurze menschenlesbare Ereignisse,
+- **TODO-Datenmodell** mit aktiven Einträgen, Titelgedächtnis und Erledigt-Archiv,
+- API für Versionen, Ereignisse, TODOs, Titelvorschläge und Abhaken,
+- automatische Tests, Vorvalidierung und reproduzierbarer Release-Builder.
+
+## Professionelle Versionsverwaltung
+
+Die Versionierung ist zweigeteilt:
+
+### `VERSION_REGISTRY.json` — Projekt-Historie
+
+Diese Datei gehört ins Repository und enthält den bekannten offiziellen Versionsstamm. Dadurch kennt auch eine frisch heruntergeladene Installation frühere Projektversionen.
+
+Enthalten sind je Version unter anderem:
+
+- Versionsnummer,
+- Zeit/Stand,
+- Entwicklungs-/Test-/Release-Status,
+- Commit-SHA optional,
+- Zusammenfassung und Änderungen,
+- bekannte Probleme,
+- Regressionstatus,
+- Evidenznachweise.
+
+### `runtime/versions.json` — lokale Laufzeit-Registry
+
+Beim ersten Start wird die getrackte Projekt-Historie als sichere Ausgangsbasis verwendet. Die lokale Runtime kann danach zusätzliche lokale Zustände aufnehmen, ohne die getrackte Historie still umzuschreiben.
+
+`VERSION` und `VERSION_REGISTRY.json` werden in der Vorvalidierung gegeneinander geprüft. Weitere automatische Driftprüfungen gegen CHANGELOG und MANIFEST sind als nächster Verwaltungsschritt vorgesehen.
+
+Wichtig: Ein Stand darf nicht auf `tested`, `release-candidate` oder `released` gesetzt werden, solange kein Evidenznachweis hinterlegt ist.
+
+## EventRegistry
+
+`runtime/events.json` speichert wichtige Ereignisse in einfacher Sprache, z. B.:
+
+> TODO „Dashboard prüfen“ wurde erledigt und ins Archiv verschoben.
+
+Die Registry ist auf die letzten 500 Ereignisse begrenzt. Das Dashboard wird später standardmäßig die letzten fünf anzeigen. Technische Details bleiben getrennt von der normalen menschenlesbaren Meldung.
+
+## TODO-Core
+
+`runtime/todos.json` verwaltet:
+
+- aktive TODOs,
+- Erledigt-Archiv,
+- gemerkte TODO-Titel.
+
+Ein TODO kann enthalten:
+
+- Titel,
+- Kategorie optional,
+- Datum/Uhrzeit optional,
+- Priorität,
+- Notiz optional,
+- optionale spätere Kalenderverknüpfung.
+
+Beim Erledigen wird ein TODO **nicht gelöscht**, sondern mit Zeitstempel ins Archiv verschoben. Bereits verwendete Titel werden lokal gemerkt, case-insensitive zusammengeführt und können später wieder als Buttons/Auswahl angeboten werden.
+
+## API-Grundvertrag
+
+Lesend:
+
+- `GET /api/status`
+- `GET /api/versions`
+- `GET /api/events?limit=5`
+- `GET /api/todos`
+- `GET /api/todos/archive`
+- `GET /api/todos/suggestions`
+
+Schreibend:
+
+- `POST /api/config`
+- `POST /api/todos`
+- `POST /api/todos/<id>/complete`
+
+Schreibende Aufrufe bleiben an den lokalen Host-/Origin-Vertrag gebunden. Ungültige Anfrageparameter werden als Nutzerfehler behandelt; beschädigte lokale Lesedaten werden getrennt als Integritätsfehler gemeldet.
 
 ## Schnellstart unter Kubuntu/Linux
 
@@ -54,20 +125,6 @@ Es werden keine externen Python-Pakete installiert.
 9. **Regression vor Wiederholung** – bestätigte Fehler als dauerhaftes Gate.
 10. **Beweisbarer Status** – `UMGESETZT`, `GEPRÜFT`, `BEWIESEN` werden getrennt verwendet.
 
-## Projektstruktur
-
-```text
-app/                    # Backend und Persistenz
-web/                    # Browser-Oberfläche
-scripts/                # Validierung und Release-Builder
-tests/                  # automatisierte Regression-/Vertragstests
-runtime/                # lokale Laufzeitdaten; nicht im Release
-.github/workflows/      # CI-Gates
-start_tool.sh           # Klick-&-Start
-start_tool.desktop      # Desktop-Starter-Vorlage
-VERSION                 # Versionsquelle
-```
-
 ## Entwicklung / Prüfung
 
 ```bash
@@ -78,22 +135,21 @@ node --check web/app.js
 python3 scripts/release.py --check
 ```
 
-Die CI führt diese Gates bei Push und Pull Request aus.
+## Noch nicht enthalten
 
-## Was ist ausdrücklich noch nicht enthalten?
+- Kalenderdatenmodell und Kalender-UI,
+- Dashboard-Anzeige der letzten fünf Ereignisse,
+- sichtbare TODO-Verwaltung im Dashboard,
+- persistente Job-Queue,
+- Copy-/Move-/Rename-/Delete-Operationen,
+- Undo-/Recovery-Datensatz für reale Dateiaktionen.
 
-- keine Copy-/Move-/Rename-/Delete-Operation,
-- noch keine persistente Job-Queue,
-- noch kein Undo-Datensatz für Dateiaktionen,
-- noch kein Recovery-Center für reale Dateioperationen,
-- noch keine produktive Projektverwaltung.
-
-Diese Trennung ist Absicht: SAFE-FILE-CORE beginnt erst nach grünem Foundation-Gate.
+Diese Trennung ist Absicht: Erst ein stabiler gemeinsamer Datenkern, dann Kalender/Dashboard und anschließend SAFE-FILE-CORE.
 
 ## Nächster Slice
 
-**P1 — SAFE-FILE-CORE: Copy zuerst**
+Nach grünem Registry-/TODO-Core-Gate:
 
-`Quelle wählen → Ziel wählen → Vorprüfung → Vorschau → bestätigen → kopieren → nachprüfen → Undo-Datensatz`
+**Kalender-Core + Dashboard-Integration auf Basis der vorhandenen Registries.**
 
-Move, Rename und Löschen folgen erst nach belastbarer Copy-Evidenz.
+Danach folgt SAFE-FILE-CORE mit Copy als erster realer Dateioperation.

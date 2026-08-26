@@ -1,78 +1,96 @@
 # CHANGELOG
 
-Alle wesentlichen Änderungen an AIO-Tool werden hier nachvollziehbar dokumentiert.
+Alle wesentlichen Änderungen an AIO-Tool werden nachvollziehbar dokumentiert.
 
 ## [Unreleased]
 
 ### Geplant
 
-- frischen Zielsystemstart unter Kubuntu prüfen.
-- Firefox- und Chrome/Chromium-Grundgate auf Zielsystem prüfen.
-- danach SAFE-FILE-CORE mit Copy als erster realer Dateioperation beginnen.
+- Kalender-Core auf dem gemeinsamen Persistenzvertrag aufbauen.
+- danach TODO/Kalender/Ereignisse ins kompaktere responsive Dashboard integrieren.
+- SAFE-FILE-CORE erst nach stabilem Daten-/Dashboardkern beginnen.
+
+## [0.2.0-core] — 2026-08-27
+
+### Added
+
+- gemeinsamer `AtomicJsonStore` für persistente Domänenmodelle.
+- getrackte `VERSION_REGISTRY.json` als offizielle Projekt-Versionshistorie.
+- lokale `runtime/versions.json`, die bei frischer Installation aus dieser Historie initialisiert wird.
+- `VersionRegistry` mit Status, Release-Status, Commit-SHA, Änderungen, Problemen, Regressionstatus und Evidenz.
+- Evidenzpflicht für `tested`, `release-candidate` und `released`.
+- Driftprüfung `VERSION` ↔ getrackte Registry und Abruf der Vorgängerversion.
+- `EventRegistry` für kurze menschenlesbare Ereignisse; maximal 500, newest-first.
+- persistenter TODO-Core mit Titel, Kategorie, optionalem Termin, Priorität, Notiz und optionaler Kalenderverknüpfung.
+- TODO-Titelgedächtnis mit Häufigkeit und letzter Verwendung.
+- Erledigt-Archiv mit `completed_at` statt Löschen.
+- serverseitige Ermittlung der nächsten drei TODOs.
+- APIs für Versionen, Ereignisse, TODOs, Archiv und Titelvorschläge.
+- Unit- und Integrationstests für Persistenz, Registry, Events, TODOs und HTTP-Fehlerklassen.
+
+### Changed
+
+- `/api/status` enthält Registry-Konsistenz sowie TODO-/Event-Zähler.
+- `scripts/validate.py` prüft getrackte Versionshistorie, `VERSION`-Übereinstimmung und frische Runtime-Initialisierung.
+- `feature/**`-Branches laufen bereits beim Push durch die vollständige CI.
+- ungültige Anfrageparameter/Einstellungen → HTTP 400; beschädigte lokale Persistenz → HTTP 500 mit Integritätsmeldung.
+- Entwicklungsreihenfolge: Datenkern → Kalender-Core → Dashboard-Integration → SAFE-FILE-CORE.
+
+### Fixed
+
+- optionales `commit_sha=null` wurde in der ersten Registry-Implementierung fälschlich abgelehnt; CI entdeckte den Fehler, direkter Regressionstest ergänzt.
+- Seed-/Default-Persistenz wird vor Verwendung validiert.
+- sekundärer Eventfehler kann eine bereits gespeicherte TODO-Aktion nicht rückwirkend als fehlgeschlagen darstellen.
+- Config-Eingabefehler und beschädigte Config werden im API-Vertrag getrennt klassifiziert.
+
+### Integrity
+
+- atomisches Replace + Backup-Fallback für neue Registry-/TODO-Dateien.
+- TODOs werden beim Erledigen archiviert, nicht still gelöscht.
+- offizielle Projekt-Historie und lokale Runtime-Registry sind getrennt.
+- schreibende TODO-Endpunkte bleiben an Host-/Origin-Guard gebunden.
+
+### Verified
+
+GitHub Actions Run `33022569880`: **SUCCESS**.
+
+Erfolgreich:
+- Python-Syntax,
+- Unit-/Integrationstests,
+- Core-/Foundation-Validierung,
+- Launcher-Syntax,
+- JavaScript-Syntax,
+- Release-Builder.
+
+### Not yet verified
+
+- frischer realer Kubuntu-Klick-&-Start,
+- Firefox und Chrome/Chromium auf Zielsystem,
+- 125–200 % Browserzoom auf Zielsystem.
+
+Der Stand ist deshalb **tested / draft**, nicht `released`.
 
 ## [0.1.1-foundation] — 2026-08-27
 
 ### Added
 
-- ausführbare Clean-Foundation-Projektstruktur mit `app/`, `web/`, `scripts/`, `tests/` und `runtime/`.
-- `start_tool.sh` als Klick-&-Start-Launcher.
-- lokale `.venv` ohne externe Python-Pakete.
-- Mehrfachstartschutz: vorhandene valide Instanz wird wieder geöffnet.
-- Python-Backend auf `127.0.0.1`.
-- Host-/Origin-Prüfung für lokale API-Zugriffe.
-- Security-Header für die Browser-Oberfläche.
-- atomare JSON-Konfiguration mit Backup-Fallback.
-- responsive Dashboard-Shell mit sichtbarem nächsten Schritt.
-- vier Themes: Trash Neon, Steel Night, Clean Light und High Contrast.
-- Schriftgrößen-Presets 90–140 % über Buttons.
-- standardmäßig verborgener Expertenbereich.
-- `scripts/validate.py` für Foundation-Vorprüfung.
-- `scripts/release.py` für reproduzierbares, bereinigtes ZIP.
-- Standardbibliothek-Unit-Tests für Persistenz- und Loopback-Sicherheitsvertrag.
-- GitHub-Actions-Workflow `foundation-ci`.
-
-### Changed
-
-- Status von reiner Dokumentationsbasis auf ausführbaren Foundation-Kern angehoben.
-- nächster Entwicklungs-Slice auf „Copy zuerst“ innerhalb SAFE-FILE-CORE präzisiert.
-- Bootstrap-/Release-Skripte importieren den Repository-Root nun explizit und funktionieren damit auch aus einem frischen Checkout-Aufrufpfad.
-
-### Security
-
-- keine Bindung an externe Interfaces.
-- keine CORS-Freigabe.
-- mutierende API-Aufrufe nur mit gültigem lokalem Host/Origin-Vertrag.
-- Anfragegröße für JSON-Schreibzugriffe begrenzt.
-- Konfigurationsfelder serverseitig auf erlaubte Schlüssel beschränkt.
+- ausführbarer Foundation-Kern mit Klick-&-Start, Loopback-Backend, atomarer Config, Dashboard-Shell, Themes, Schriftgrößen-Presets, Tests, CI und Release-Builder.
 
 ### Verified
 
-- GitHub-Actions `foundation-ci`: **SUCCESS**.
-- Python-Syntax: grün.
-- Unit-Tests: grün.
-- Foundation-Validierung: grün.
-- Launcher-Syntax: grün.
-- JavaScript-Syntax: grün.
-- reproduzierbarer Release-Builder: grün.
+GitHub Actions Run `33020484403`: **SUCCESS**.
 
 ### Not yet verified
 
-- tatsächlicher frischer Start auf dem Kubuntu-Zielsystem.
-- Firefox- und Chrome/Chromium-Gate auf Zielsystem.
+- reale Kubuntu-/Browser-Zielsystemgates.
 
 ## [0.1.0-foundation] — 2026-08-27
 
 ### Added
 
-- vollständige saubere Projektgrundlage ohne Altcode.
-- `README.md`, `TODO.md`, `AGENTS.md`, `LAIEN-ANLEITUNG.md`, `TOOLBESCHREIBUNG.md`, `MANIFEST.md`, `REGRESSIONSINFOS.md`.
+- saubere Projektgrundlage ohne Altcode.
+- README, TODO, AGENTS, LAIEN-ANLEITUNG, TOOLBESCHREIBUNG, MANIFEST und REGRESSIONSINFOS.
 
 ### Changed
 
-- Repository inhaltlich vollständig auf CLEAN FOUNDATION zurückgesetzt.
-- Produktphilosophie auf „Auswahl vor Zeicheneingabe“, offline-first, Recovery und transparente Prozesse festgelegt.
-
-### Removed
-
-- alter Projektinhalt der vorherigen Repository-Struktur.
-- alte Platzhalterdateien und frühere Frontend-Dateinamen.
+- Repository inhaltlich auf CLEAN FOUNDATION zurückgesetzt.

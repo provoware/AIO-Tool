@@ -2,98 +2,115 @@
 
 ## Status
 
-**CLEAN FOUNDATION / 0.1.1-foundation**
+**P1 PERSISTENT CORE / 0.2.0-core — AUTOMATISIERT GEPRÜFT**
 
-Neue Funktionen werden nicht aufgenommen, solange höhere Sicherheits- oder Integritätsgates offen sind.
+Neue Funktionen werden nur in klar abgegrenzten Slices ergänzt. Sicherheits-, Persistenz- und Integritätsgates bleiben vorrangig.
 
-## P0 — Fundament festziehen
+## P0 — Foundation
 
-- [x] Projektstruktur für Anwendung, Tests, Dokumentation und Runtime definiert.
-- [x] Klick-&-Start-Launcher mit lokaler `.venv`, Vorprüfung und Mehrfachstartschutz implementiert.
-- [x] Persistenz-Grundvertrag umgesetzt: atomare Konfiguration + Backup-Fallback.
-- [x] lokales Sicherheitsmodell umgesetzt: Bindung an `127.0.0.1`, Host-/Origin-Prüfung, Security-Header.
-- [x] UI-Grundvertrag umgesetzt: Laienmodus, Expertenbereich, 4 Themes, Schriftgrößen-Presets, responsive Dashboard-Shell.
-- [x] Release-/Validierungsstruktur implementiert: Unit-Tests, `validate.py`, CI, reproduzierbarer ZIP-Builder.
-- [x] GitHub-CI für `0.1.1-foundation` grün bestätigt.
+- [x] Projektstruktur für Anwendung, Tests, Dokumentation und Runtime.
+- [x] Klick-&-Start mit lokaler `.venv`, Vorprüfung und Mehrfachstartschutz.
+- [x] atomare Konfigurationspersistenz + Backup-Fallback.
+- [x] Loopback-, Host-/Origin- und Security-Header-Vertrag.
+- [x] UI-Grundvertrag mit Laienmodus, Expertenbereich, 4 Themes und Schriftgrößen-Presets.
+- [x] Unit-Tests, Vorvalidierung, CI und reproduzierbarer ZIP-Builder.
 - [ ] frischen Klick-&-Start auf Kubuntu aus sauberem Checkout prüfen.
 - [ ] Firefox- und Chrome/Chromium-Grundgate auf Zielsystem prüfen.
+- [ ] 125–200 % Browserzoom auf Zielsystem prüfen.
 
-## P1 — SAFE-FILE-CORE / Copy zuerst
+## P1 — Gemeinsamer persistenter Kern
 
-- [ ] Quellenwahl über Auswahldialog statt Pfadeingabe definieren und implementieren.
-- [ ] Zielwahl über Auswahldialog und zuletzt verwendete sichere Ziele.
-- [ ] Datei-/Ordnerauswahl vor Aktion validieren.
-- [ ] Copy-Vorschau: Quelle, Ziel, Anzahl, Größe, Konflikte.
-- [ ] freien Speicher vor Copy prüfen.
-- [ ] Namenskonflikte über Auswahl lösen: überspringen / umbenennen / ersetzen nur nach ausdrücklicher Freigabe.
-- [ ] Copy als persistente Job-Operation implementieren.
-- [ ] Ergebnis nach Copy validieren.
-- [ ] zentralen Undo-/Recovery-Datensatz für Copy erzeugen.
-- [ ] Abbruch während Copy sicher behandeln.
-- [ ] große Datenmengen ohne UI-Blockade prüfen.
+### VersionRegistry
+- [x] zentrales Registry-Schema.
+- [x] getrackte Projekt-Historie in `VERSION_REGISTRY.json`.
+- [x] frische Runtime wird aus Projekt-Historie initialisiert.
+- [x] Versions-, Release- und Regressionstatus.
+- [x] Commit-SHA optional.
+- [x] Änderungen, bekannte Probleme und Evidenz.
+- [x] tested/release-candidate/released ohne Evidenz blockiert.
+- [x] Drift `VERSION` ↔ getrackte Registry geprüft.
+- [x] Vorgängerversion abrufbar.
+- [ ] Drift zusätzlich gegen CHANGELOG/MANIFEST automatisieren.
 
-### Erst nach belastbarer Copy-Evidenz
+### EventRegistry
+- [x] persistentes Event-Schema.
+- [x] menschenlesbarer Meldungstext Pflicht.
+- [x] Bereich und Ampel-/Statusstufe.
+- [x] newest-first-Abruf.
+- [x] maximal 500 Ereignisse.
+- [x] TODO-Anlegen und -Erledigen protokollieren.
+- [ ] Dashboard rechts unten: letzte fünf Ereignisse.
+- [ ] „Alle Ereignisse“.
+- [ ] Debug-/Diagnose-Button.
 
-- [ ] Move ergänzen.
-- [ ] Rename mit Konfliktvorschau und Undo ergänzen.
-- [ ] Löschaktionen ausschließlich über Papierkorb-/Recovery-Vertrag ergänzen.
+### TODO-Core
+- [x] persistentes TODO-Schema.
+- [x] Titel, Kategorie, optionaler Termin, Priorität, Notiz.
+- [x] Kalenderverknüpfung optional vorbereitet.
+- [x] Titel persistent merken.
+- [x] case-insensitive Dubletten verhindern.
+- [x] Titel nach Häufigkeit/letzter Nutzung anbieten.
+- [x] Abhaken → Erledigt-Archiv.
+- [x] `completed_at` plus ursprüngliches `created_at`.
+- [x] nächste drei TODOs serverseitig.
+- [ ] TODO-UI mit Auswahl vor Zeicheneingabe.
+- [ ] Dashboard: nächste drei TODOs anzeigen und abhaken.
+- [ ] Archivansicht.
+
+### Core-Integrität
+- [x] gemeinsamer `AtomicJsonStore`.
+- [x] Seed-/Default-Daten validieren.
+- [x] API für Versionen, Ereignisse, TODOs, Archiv und Titelvorschläge.
+- [x] ungültige Parameter/Eingaben → HTTP 400.
+- [x] beschädigte lokale Persistenz → HTTP 500/Integritätsmeldung.
+- [x] sekundärer Eventfehler zerstört Erfolg einer bereits gespeicherten TODO-Aktion nicht.
+- [x] Unit-/Integrationstests.
+- [x] Foundation-/Core-Validierung erweitert.
+- [x] finaler Merge-Kandidat durch GitHub-CI grün: Run `33022569880`.
+
+## P1 — Kalender-Core / nächster Slice
+
+- [ ] persistentes Kalender-Schema mit Schema-Version und Recovery-Vertrag.
+- [ ] Termin: Titel, Datum, Uhrzeit optional, Ende optional, Kategorie, Beschreibung optional.
+- [ ] Monats-, Wochen- und Jahresansicht.
+- [ ] Termin-Titel merken und als Auswahl anbieten.
+- [ ] Erinnerungen: Terminzeit / 10 min / 30 min / 1 h / 1 Tag vorher.
+- [ ] TODO-Verknüpfung optional; TODO ohne Kalender vollständig funktionsfähig.
+- [ ] Kalender im Dashboard optional ein-/ausblendbar.
+
+## P1 — Dashboard & Debug danach
+
+- [ ] Dashboard kompakter und informativer strukturieren.
+- [ ] Tool-Version und Registry-Status sichtbar machen.
+- [ ] nächste drei TODOs anzeigen.
+- [ ] nächste Termine anzeigen, wenn Kalender aktiviert ist.
+- [ ] rechte Spalte: letzte fünf Ereignisse in einfacher Sprache.
+- [ ] Debug-Button dauerhaft erreichbar.
+- [ ] Bildschirm-/Fenstergröße beim Start erfassen und Dichte-Modus ableiten.
+- [ ] kleine Displays, Full-HD, große Displays und hohe DPI berücksichtigen.
+
+## P1 — SAFE-FILE-CORE / später
+
+- [ ] Quellen- und Zielwahl über Auswahldialog.
+- [ ] Copy-Vorschau mit Quelle, Ziel, Anzahl, Größe, Konflikten.
+- [ ] Speicher-/Konfliktprüfung.
+- [ ] Copy als persistente Job-Operation.
+- [ ] Nachprüfung und Undo-/Recovery-Datensatz.
+- [ ] Abbruch sicher behandeln.
+- [ ] erst danach Move, Rename und Papierkorb-/Delete-Vertrag.
 
 ## P1 — Job & Recovery
 
-- [ ] persistente Job-Queue definieren.
-- [ ] Zustände: geplant / läuft / pausiert / abgebrochen / unterbrochen / fehlgeschlagen / fertig.
-- [ ] `DONE` erst nach erfolgreicher Persistenz melden.
-- [ ] Pause, Abbruch und Wiederaufnahme regressionssicher testen.
-- [ ] Checkpoint vor kritischen Änderungen.
-- [ ] Recovery-Center mit verständlicher Auswahl statt Dateipfaden.
-
-## P1 — Laienführung
-
-- [ ] Jede reale Hauptaktion mit Zweck, Auswirkung und sicherer Alternative erklären.
-- [x] Nächsten Schritt in Foundation-UI sichtbar gemacht.
-- [x] Ampellogik als UI-Grundvertrag vorbereitet.
-- [ ] „Weiß ich nicht“ in zukünftigen Dialogen ohne Blockade umsetzen.
-- [ ] wiederkehrende sichere Eingaben als Auswahl merken.
-- [ ] Entwicklerinfo-Titel als Presets + zuletzt verwendet anbieten.
-
-## P2 — Projekt & Dashboard
-
-- [x] Dashboard-Shell vorhanden.
-- [ ] Projektordner-Prüfung und -Erstellung.
-- [ ] Projektwechsel ohne stillen Statusverlust.
-- [ ] Notizen / Entwicklerinfos projektbezogen speichern.
-- [ ] Ergebnisberichte und Verlauf.
-
-## P2 — Accessibility & Darstellung
-
-- [x] 4 Themes einschließlich High Contrast vorbereitet.
-- [x] Schriftgrößen 90–140 % per Buttons.
-- [x] sichtbare Fokuszustände und native Tastaturbedienung im Foundation-Shell.
-- [ ] 125–200 % Browserzoom auf realem Zielsystem prüfen.
-- [x] Status nicht ausschließlich über Farbe dargestellt.
-
-## P3 — Erweiterungen
-
-- [ ] Kalender und Aufgaben.
-- [ ] Presets / wiederholbare Workflows.
-- [ ] Plugin-/Modul-Registry.
-- [ ] Suchmodul.
-- [ ] Import/Export.
-- [ ] optionale Automatisierungen.
+- [ ] persistente Job-Queue.
+- [ ] Zustände geplant / läuft / pausiert / abgebrochen / unterbrochen / fehlgeschlagen / fertig.
+- [ ] `DONE` erst nach erfolgreicher Persistenz.
+- [ ] Pause, Abbruch und Wiederaufnahme regressionssicher.
+- [ ] Checkpoint und Recovery-Center.
 
 ## Quality Gates
 
-Ein Slice gilt erst als abgeschlossen, wenn:
-
-1. Vorbedingungen dokumentiert sind.
-2. relevante Tests vorliegen.
-3. Fehlerpfade geprüft sind.
-4. Dokumentation angepasst ist.
-5. Regressionen aktualisiert sind.
-6. Manifest und Changelog stimmen.
-7. keine temporären Entwicklungsartefakte im Release verbleiben.
-8. Zielsystem-Gates nicht als bestanden behauptet werden, solange sie nicht tatsächlich ausgeführt wurden.
+Ein Slice gilt erst als abgeschlossen, wenn Tests, Fehlerpfade, Dokumentation, Regressionen, Manifest und Changelog konsistent sind. Zielsystem-Gates dürfen nicht aus CI-Erfolg abgeleitet werden.
 
 ## Aktuell empfohlener nächster Schritt
 
-**Frischen Kubuntu-Start und Browser-Grundgate verifizieren. Parallel darf der P1 SAFE-FILE-CORE-Vertrag vorbereitet werden; die erste reale Operation bleibt ausschließlich Copy.**
+**Kalender-Core auf denselben Persistenzvertrag aufsetzen. Danach TODO/Kalender/EventRegistry in das responsive Dashboard integrieren.**
