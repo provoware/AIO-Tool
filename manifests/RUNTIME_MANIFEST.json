@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "manifest_version": "1.0.0",
+  "name": "AIO-Tool Runtime-Basis",
+  "purpose": "Explizite Allowlist aller Dateien, die ein lauffähiges Transport-/Release-ZIP enthalten darf und muss.",
+  "files": [
+    "VERSION", "VERSION_REGISTRY.json", "start_tool.sh", "start_tool.desktop",
+    "app/__init__.py", "app/calendar_store.py", "app/config.py", "app/error_advisor.py", "app/event_registry.py", "app/persistence.py", "app/server.py", "app/text_catalog.py", "app/todo_store.py", "app/version_registry.py",
+    "scripts/runtime_preflight.py",
+    "web/index.html", "web/app.js", "web/styles.css", "web/dashboard-texts.de.v1.json",
+    "resources/error_rules/v1.json", "resources/texts/de/v1.json",
+    "resources/templates/calendar/calendar.v1.example.json", "resources/templates/config/config.v1.example.json", "resources/templates/events/events.v1.example.json", "resources/templates/todos/todos.v1.example.json", "resources/templates/version_registry/version_registry.v1.example.json",
+    "manifests/RUNTIME_MANIFEST.json"
+  ],
+  "generated_files": ["MANIFEST_RELEASE.json"],
+  "forbidden_prefixes": [".git/", ".github/", ".venv/", "artifacts/", "build/", "dist/", "docs/", "runtime/", "testdata/", "tests/"],
+  "repo_only_root_files": ["AGENTS.md", "CHANGELOG.md", "LAIEN-ANLEITUNG.md", "LEARNING_MEMORY.jsonl", "MANIFEST.md", "README.md", "REGRESSIONSINFOS.md", "TODO.md", "TOOLBESCHREIBUNG.md", "requirements-ui.txt"]
+}
