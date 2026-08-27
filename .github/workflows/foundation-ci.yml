@@ -33,6 +33,8 @@ jobs:
         run: python scripts/validate.py
       - name: Development learning guard
         run: python scripts/learning_guard.py
+      - name: Documentation version/status guard
+        run: python scripts/documentation_guard.py
       - name: Launcher syntax
         run: bash -n start_tool.sh
       - name: JavaScript syntax
