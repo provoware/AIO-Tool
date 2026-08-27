@@ -1,91 +1,184 @@
 <!doctype html>
-<html lang="de" data-theme="steel-night">
+<html lang="de" data-theme="steel-night" data-density="normal">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AIO-Tool</title>
+<meta name="color-scheme" content="dark light">
+<title>AIO-Tool Dashboard</title>
 <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
+<a class="skip-link" href="#mainContent" data-i18n="a11y.skip">Zum Hauptinhalt</a>
 <div class="app-shell">
-  <aside class="sidebar" aria-label="Hauptbereiche">
-    <div class="brand">AIO</div>
-    <button class="nav-item active" type="button">🏠<span>Start</span></button>
-    <button class="nav-item" type="button">🗂<span>Projekte</span></button>
-    <button class="nav-item" type="button">⭐<span>Favoriten</span></button>
-    <button class="nav-item" type="button">🧩<span>Module</span></button>
+  <aside class="sidebar" aria-label="Hauptnavigation">
+    <div class="brand" aria-label="AIO-Tool">AIO</div>
+    <nav class="nav-stack">
+      <a class="nav-item active" href="#overviewPanel"><span aria-hidden="true">🏠</span><span data-i18n="nav.overview">Übersicht</span></a>
+      <a class="nav-item" href="#calendarPanel"><span aria-hidden="true">📅</span><span data-i18n="nav.calendar">Kalender</span></a>
+      <a class="nav-item" href="#todoPanel"><span aria-hidden="true">✓</span><span data-i18n="nav.todos">Aufgaben</span></a>
+      <a class="nav-item" href="#eventPanel"><span aria-hidden="true">🕘</span><span data-i18n="nav.events">Verlauf</span></a>
+    </nav>
+    <div class="sidebar-spacer"></div>
+    <button class="nav-button" id="settingsToggle" type="button" aria-expanded="false" aria-controls="settingsPanel"><span aria-hidden="true">⚙</span><span data-i18n="nav.settings">Darstellung</span></button>
   </aside>
 
-  <main class="workspace">
-    <header class="topbar">
-      <div>
-        <div class="eyebrow">CLEAN FOUNDATION</div>
-        <h1>AIO-Tool</h1>
-        <p id="statusText">Lokales System wird geprüft …</p>
+  <main class="workspace" id="mainContent">
+    <header class="topbar" id="overviewPanel">
+      <div class="title-block">
+        <div class="eyebrow" data-i18n="header.eyebrow">PROVOWARE · LOKALER ARBEITSPLATZ</div>
+        <div class="title-line">
+          <h1>AIO-Tool</h1>
+          <span class="version-chip" id="versionChip">—</span>
+        </div>
+        <p id="statusText" aria-live="polite" data-i18n="status.checking">Lokales System wird geprüft …</p>
       </div>
-      <div class="status-pill" id="readyPill">🟠 prüfen</div>
+      <div class="header-actions">
+        <span class="density-chip" id="densityChip" title="Wird automatisch aus Fenstergröße und Schriftgröße abgeleitet">Ansicht: —</span>
+        <span class="status-pill" id="readyPill" aria-live="polite">🟠 prüfen</span>
+        <button class="primary compact" id="refreshBtn" type="button" data-i18n="action.refresh">Neu prüfen</button>
+      </div>
     </header>
 
-    <section class="next-step" aria-labelledby="next-title">
+    <section class="focus-strip" aria-labelledby="nextTitle">
       <div>
-        <div class="eyebrow">➜ NÄCHSTER SCHRITT</div>
-        <h2 id="next-title">Foundation prüfen</h2>
-        <p>Diese Version enthält bewusst noch keine verändernden Dateioperationen.</p>
+        <div class="eyebrow" data-i18n="next.eyebrow">➜ NÄCHSTER SINNVOLLER SCHRITT</div>
+        <h2 id="nextTitle" data-i18n="next.title">Tagesüberblick prüfen</h2>
+        <p id="nextText" data-i18n="next.text">Kalender, Aufgaben und Hinweise sind an einer Stelle gebündelt.</p>
       </div>
-      <button class="primary" id="refreshBtn" type="button">System neu prüfen</button>
+      <div class="focus-metrics" aria-label="Kurzübersicht">
+        <span><strong id="openTodoMetric">—</strong><small data-i18n="metric.todos">offene TODOs</small></span>
+        <span><strong id="calendarMetric">—</strong><small data-i18n="metric.events">Termine</small></span>
+        <span><strong id="historyMetric">—</strong><small data-i18n="metric.history">Ereignisse</small></span>
+      </div>
     </section>
 
-    <section class="grid" aria-label="Dashboard">
-      <article class="card">
-        <div class="card-head"><span>🗂</span><strong>Projekte</strong></div>
-        <p>Projektverwaltung wird im nächsten sicheren Slice aufgebaut.</p>
-        <button type="button" disabled title="Noch nicht Teil dieses Foundation-Slices">Noch nicht verfügbar</button>
-      </article>
-      <article class="card">
-        <div class="card-head"><span>⭐</span><strong>Favoriten</strong></div>
-        <p>Favoriten sind im Persistenzvertrag vorbereitet.</p>
-        <div id="favoriteCount" class="metric">—</div>
-      </article>
-      <article class="card">
-        <div class="card-head"><span>🛡</span><strong>Sicherheit</strong></div>
-        <p>Backend nur lokal, keine Telemetrie, keine externen Python-Pakete.</p>
-        <div class="traffic"><span>🟢 lokal</span><span>🟢 offline</span></div>
-      </article>
-      <article class="card">
-        <div class="card-head"><span>🧩</span><strong>Module</strong></div>
-        <p>Die Architektur trennt UI, Backend und Persistenz bereits voneinander.</p>
-        <div class="metric">Foundation</div>
-      </article>
+    <section class="reminder-region" id="reminderRegion" aria-live="assertive" aria-atomic="false" aria-label="Fällige Erinnerungen"></section>
+
+    <div class="dashboard-layout">
+      <aside class="module-column" aria-label="Schnellfunktionen und Module">
+        <section class="panel module-panel">
+          <div class="panel-head">
+            <div>
+              <div class="eyebrow" data-i18n="modules.eyebrow">SCHNELLZUGRIFF</div>
+              <h2 data-i18n="modules.title">Module</h2>
+            </div>
+          </div>
+          <div class="segmented" id="moduleMode" role="group" aria-label="Module filtern">
+            <button type="button" class="selected" data-module-mode="frequent" data-i18n="modules.frequent">Häufig</button>
+            <button type="button" data-module-mode="all" data-i18n="modules.all">Alle</button>
+          </div>
+          <div class="module-grid" id="moduleGrid">
+            <a class="module-tile frequent" href="#calendarPanel"><span>📅</span><strong data-i18n="module.calendar">Kalender</strong><small data-i18n="module.calendar.help">Monat & Termine</small></a>
+            <a class="module-tile frequent" href="#todoPanel"><span>✓</span><strong data-i18n="module.todos">TODOs</strong><small data-i18n="module.todos.help">Nächste Aufgaben</small></a>
+            <a class="module-tile frequent" href="#eventPanel"><span>🕘</span><strong data-i18n="module.events">Verlauf</strong><small data-i18n="module.events.help">Letzte Änderungen</small></a>
+            <a class="module-tile all-only" href="#systemPanel"><span>🛡</span><strong data-i18n="module.system">System</strong><small data-i18n="module.system.help">Status & Schutz</small></a>
+            <button class="module-tile all-only" id="developerToggle" type="button" aria-expanded="false" aria-controls="developerPanel"><span>🧪</span><strong data-i18n="module.dev">Entwickler</strong><small data-i18n="module.dev.help">Diagnose kompakt</small></button>
+            <button class="module-tile all-only disabled-tile" type="button" disabled><span>🗂</span><strong data-i18n="module.files">Dateien</strong><small data-i18n="module.files.help">folgt sicher später</small></button>
+          </div>
+        </section>
+
+        <section class="panel developer-panel" id="developerPanel" hidden>
+          <div class="panel-head compact-head">
+            <div><div class="eyebrow">ENTWICKLER</div><h2 data-i18n="dev.title">Diagnose</h2></div>
+            <span class="mini-badge" id="registryBadge">—</span>
+          </div>
+          <pre id="developerInfo" class="diagnostic-box" tabindex="0">—</pre>
+          <button id="copyDiagnosticBtn" type="button" class="secondary full" data-i18n="dev.copy">Diagnose kopieren</button>
+        </section>
+      </aside>
+
+      <section class="calendar-column">
+        <article class="panel calendar-panel" id="calendarPanel">
+          <div class="panel-head calendar-head">
+            <div>
+              <div class="eyebrow" data-i18n="calendar.eyebrow">MONATSÜBERSICHT</div>
+              <h2 id="monthTitle">—</h2>
+            </div>
+            <div class="calendar-controls" role="group" aria-label="Monat wechseln">
+              <button type="button" id="prevMonthBtn" aria-label="Vorheriger Monat">‹</button>
+              <button type="button" id="todayBtn" data-i18n="calendar.today">Heute</button>
+              <button type="button" id="nextMonthBtn" aria-label="Nächster Monat">›</button>
+            </div>
+          </div>
+          <div class="weekday-row" aria-hidden="true">
+            <span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span>
+          </div>
+          <div class="month-grid" id="monthGrid" role="grid" aria-label="Monatskalender"></div>
+          <p class="empty-state" id="calendarEmpty" hidden data-i18n="calendar.empty">In diesem Monat sind noch keine Termine gespeichert.</p>
+        </article>
+
+        <article class="panel upcoming-panel" id="upcomingPanel">
+          <div class="panel-head compact-head">
+            <div><div class="eyebrow" data-i18n="upcoming.eyebrow">DEM NÄCHSTEN FOLGEN</div><h2 data-i18n="upcoming.title">Nächste Termine</h2></div>
+            <span class="mini-badge" id="upcomingCount">—</span>
+          </div>
+          <div class="stack-list" id="upcomingList" aria-live="polite"></div>
+        </article>
+      </section>
+
+      <aside class="status-column">
+        <article class="panel" id="todoPanel">
+          <div class="panel-head compact-head">
+            <div><div class="eyebrow" data-i18n="todo.eyebrow">NÄCHSTE SCHRITTE</div><h2 data-i18n="todo.title">3 TODOs</h2></div>
+            <span class="mini-badge" id="todoCountBadge">—</span>
+          </div>
+          <div class="stack-list" id="todoList" aria-live="polite"></div>
+        </article>
+
+        <article class="panel" id="eventPanel">
+          <div class="panel-head compact-head">
+            <div><div class="eyebrow" data-i18n="events.eyebrow">WAS PASSIERT IST</div><h2 data-i18n="events.title">Letzte 5 Ereignisse</h2></div>
+          </div>
+          <div class="timeline" id="eventList" aria-live="polite"></div>
+        </article>
+
+        <article class="panel system-panel" id="systemPanel">
+          <div class="panel-head compact-head">
+            <div><div class="eyebrow" data-i18n="system.eyebrow">SYSTEM</div><h2 data-i18n="system.title">Gesundheit</h2></div>
+            <span class="mini-badge good" id="offlineBadge">offline</span>
+          </div>
+          <dl class="system-grid" id="systemSummary">
+            <div><dt data-i18n="system.version">Version</dt><dd id="systemVersion">—</dd></div>
+            <div><dt data-i18n="system.registry">Registry</dt><dd id="systemRegistry">—</dd></div>
+            <div><dt data-i18n="system.bind">Backend</dt><dd id="systemBind">—</dd></div>
+            <div><dt data-i18n="system.packages">Fremdpakete</dt><dd id="systemPackages">—</dd></div>
+          </dl>
+        </article>
+      </aside>
+    </div>
+
+    <section class="panel settings-panel" id="settingsPanel" hidden aria-labelledby="settingsTitle">
+      <div class="panel-head">
+        <div><div class="eyebrow" data-i18n="settings.eyebrow">DARSTELLUNG</div><h2 id="settingsTitle" data-i18n="settings.title">Einfach per Auswahl</h2></div>
+        <button type="button" id="settingsClose" class="secondary compact" data-i18n="action.close">Schließen</button>
+      </div>
+      <div class="settings-grid">
+        <div class="setting-group">
+          <strong data-i18n="settings.theme">Theme</strong>
+          <div class="button-row" id="themeButtons">
+            <button type="button" data-theme="trash-neon">Trash Neon</button>
+            <button type="button" data-theme="steel-night">Steel Night</button>
+            <button type="button" data-theme="clean-light">Clean Light</button>
+            <button type="button" data-theme="high-contrast">High Contrast</button>
+          </div>
+        </div>
+        <div class="setting-group">
+          <strong data-i18n="settings.font">Schriftgröße</strong>
+          <div class="button-row" id="fontButtons">
+            <button type="button" data-font="90">90 %</button><button type="button" data-font="100">100 %</button>
+            <button type="button" data-font="110">110 %</button><button type="button" data-font="120">120 %</button>
+            <button type="button" data-font="130">130 %</button><button type="button" data-font="140">140 %</button>
+          </div>
+        </div>
+        <label class="switch-row"><input id="expertToggle" type="checkbox"><span data-i18n="settings.expert">Entwicklerbereich verfügbar machen</span></label>
+      </div>
     </section>
 
-    <section class="settings">
-      <div>
-        <div class="eyebrow">DARSTELLUNG</div>
-        <h2>Einfach per Auswahl</h2>
-      </div>
-      <div class="setting-group">
-        <span>Theme</span>
-        <div class="button-row" id="themeButtons">
-          <button type="button" data-theme="trash-neon">Trash Neon</button>
-          <button type="button" data-theme="steel-night">Steel Night</button>
-          <button type="button" data-theme="clean-light">Clean Light</button>
-          <button type="button" data-theme="high-contrast">High Contrast</button>
-        </div>
-      </div>
-      <div class="setting-group">
-        <span>Schriftgröße</span>
-        <div class="button-row" id="fontButtons">
-          <button type="button" data-font="90">90 %</button><button type="button" data-font="100">100 %</button>
-          <button type="button" data-font="110">110 %</button><button type="button" data-font="120">120 %</button>
-          <button type="button" data-font="130">130 %</button><button type="button" data-font="140">140 %</button>
-        </div>
-      </div>
-      <label class="switch-row"><input id="expertToggle" type="checkbox"><span>Expertenbereich anzeigen</span></label>
-      <div id="expertBox" class="expert" hidden>
-        <strong>Experteninfo</strong>
-        <p id="expertInfo">Backenddaten werden geladen …</p>
-      </div>
-    </section>
+    <footer class="footer-status">
+      <span id="lastRefresh">Noch nicht aktualisiert</span>
+      <span>•</span>
+      <span data-i18n="footer.local">Daten bleiben lokal</span>
+    </footer>
   </main>
 </div>
 <script src="/app.js" defer></script>
