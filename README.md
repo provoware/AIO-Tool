@@ -6,38 +6,38 @@
 
 | Bereich | Zustand | Bedeutung |
 |---|---|---|
-| Letzter vollständig bewiesener Stand | 🟢 `0.4.3-integrity-hardening-TESTED` | Core/Release + Chromium + Firefox + Main-CI grün |
-| Aktuelle Entwicklung | 🟠 `0.5.0-native-acceptance-safe-file-sim-DEV` | Native Abnahme, Evidenzindex und SAFE-FILE-Simulation werden neu geprüft |
+| Aktueller automatisiert bewiesener Stand | 🟢 `0.5.0-native-acceptance-safe-file-sim-TESTED` | L0–L3: Core/Release + Chromium + Firefox erfolgreich |
+| Native Kubuntu-Abnahme | 🟡 offen | L4 muss real über den neuen Prüfassistenten bestätigt werden |
 | Internet für Kernfunktionen | 🟢 nicht nötig | offline-first |
 | Telemetrie | 🟢 keine | keine automatische Nutzungsübertragung |
-| SAFE-FILE-Ausführung | 🔒 gesperrt | aktuelle Version simuliert nur; keine Copy-/Move-/Delete-Funktion vorhanden |
+| SAFE-FILE-Ausführung | 🔒 gesperrt | getestet wurde die Simulation; echte Copy/Move/Delete existiert nicht |
 
-### Fortschritt des aktuellen Slices
+### Fortschritt
 
 ```text
-Native-Acceptance-Datenmodell      ████████████████████ 100 %  🟢 umgesetzt
-Native-Acceptance-UI/Runner        ████████████████████ 100 %  🟢 umgesetzt
-Release-Evidenzdateien             ████████████████████ 100 %  🟢 umgesetzt
-Evidence Guard                     ████████████████████ 100 %  🟢 umgesetzt
-SAFE-FILE-Vorprüfung               ████████████████████ 100 %  🟢 umgesetzt
-Failure-Matrix                     ████████████████████ 100 %  🟢 umgesetzt
-Recovery-Vertrag                   ████████████████████ 100 %  🟢 umgesetzt
-Echte Datei-Ausführung             ░░░░░░░░░░░░░░░░░░░░   0 %  🔒 absichtlich gesperrt
-Finale CI / Browser-Evidenz        ░░░░░░░░░░░░░░░░░░░░   0 %  🟠 noch auszuführen
-Native L4-Ergebnisse auf Kubuntu   ░░░░░░░░░░░░░░░░░░░░   0 %  🟡 müssen real bestätigt werden
+Native-Acceptance-Datenmodell      ████████████████████ 100 %  🟢
+Native-Acceptance-UI/Runner        ████████████████████ 100 %  🟢
+Release-Evidenzdateien             ████████████████████ 100 %  🟢
+Evidence Guard                     ████████████████████ 100 %  🟢
+SAFE-FILE-Vorprüfung               ████████████████████ 100 %  🟢
+Failure-Matrix SF-001..010         ████████████████████ 100 %  🟢
+Recovery-Vorvertrag                ████████████████████ 100 %  🟢
+Automatisierte L0–L3-Gates         ████████████████████ 100 %  🟢
+Native L4 auf echtem Kubuntu       ░░░░░░░░░░░░░░░░░░░░   0 %  🟡
+Echte Copy-Ausführung              ░░░░░░░░░░░░░░░░░░░░   0 %  🔒
 ```
 
-> Prozentwerte zeigen Arbeitsfortschritt. **TESTED** entsteht ausschließlich durch den definierten Evidenzvertrag.
+> **TESTED bedeutet hier:** Der implementierte Funktionsumfang wurde automatisiert bis L3 bewiesen. Es bedeutet **nicht**, dass die noch offene reale Kubuntu-L4-Abnahme automatisch bestanden wäre.
 
 ---
 
-## ▶️ Die drei Startdateien
+## ▶️ Drei Startwege
 
-### 1. Normales AIO-Tool
+### 1. AIO-Tool normal
 
 `start_tool.desktop` oder `start_tool.sh`
 
-Die bekannte 9-Checkpoint-Startroutine prüft Runtime, Instanzidentität, Backend und Browserstart.
+Die 9-Checkpoint-Startroutine prüft Runtime, Instanzidentität, Backend und Browserstart.
 
 ### 2. Native Acceptance Runner
 
@@ -47,31 +47,21 @@ Der Assistent führt durch **18 reale L4-Prüfschritte**:
 
 - Kubuntu Desktop-Starter,
 - Shell-Starter,
-- Wiederverwendung einer passenden Instanz,
-- fremd belegter Standardport,
+- passende Instanz wiederverwenden,
+- fremd belegten Standardport behandeln,
 - kleines / Full-HD / großes Fenster,
 - reiner Tastaturdurchlauf,
 - Firefox bei 100 / 125 / 150 / 175 / 200 %,
 - Chrome/Chromium bei 100 / 125 / 150 / 175 / 200 %.
 
-### Ganz wichtig
+Jeder Schritt startet **🟡 OFFEN**. Nur du kannst ihn als 🟢 PASS, 🔴 FAIL oder ⚪ SKIP markieren. Es gibt kein Auto-PASS.
 
-Der Runner setzt **nichts automatisch auf PASS**.
-
-Jeder Schritt startet als **🟡 OFFEN** und wird nur durch eine ausdrückliche Auswahl:
-
-- 🟢 PASS,
-- 🔴 FAIL,
-- ⚪ SKIP
-
-bewertet.
-
-Die gemeinsame Sitzung liegt lokal in `runtime/native_acceptance.json`. Dadurch können Firefox und Chromium dieselbe Abnahme fortsetzen. Nach jeder Bewertung werden automatisch aktualisiert:
+Die gemeinsame Sitzung liegt lokal in `runtime/native_acceptance.json`. Automatisch entstehen:
 
 - `runtime/reports/native-acceptance-latest.json`
 - `runtime/reports/native-acceptance-latest.txt`
 
-Der Bericht enthält auch gemessene Browserdaten wie Viewport, Bildschirmgröße und Device-Pixel-Ratio. Er behauptet aber **nicht**, einen Zoomwert automatisch sicher erkannt zu haben; der Zielzoom muss real eingestellt und bestätigt werden.
+Browserdaten wie Viewport, Bildschirmgröße und Device-Pixel-Ratio werden zur Diagnose gespeichert. Der Zielzoom wird dokumentiert, aber nicht fälschlich als automatisch sicher erkannt ausgegeben.
 
 ### 3. SAFE-FILE Simulation
 
@@ -79,125 +69,97 @@ Der Bericht enthält auch gemessene Browserdaten wie Viewport, Bildschirmgröße
 
 Ablauf:
 
-1. **Quelldatei auswählen** – auf Kubuntu bevorzugt über `kdialog`.
-2. **Zielordner auswählen**.
-3. Konfliktverhalten nur für die Vorschau wählen:
-   - sicher überspringen,
-   - neuen Namen vorschlagen,
-   - Ersetzen nur simulieren.
-4. **Sichere Vorschau erstellen**.
+**Quelldatei auswählen → Zielordner auswählen → Konfliktoption → sichere Vorschau**
 
-Geprüft werden unter anderem:
+Geprüft werden Quelle, Symlinks, Dateityp, Lesbarkeit, Zielordner, Schreibbarkeit, freier Speicher + Reserve, Quelle/Ziel-Gleichheit und bestehende Zieldatei.
 
-- Quelle vorhanden/lesbar/normale Datei,
-- Symlinks gesperrt,
-- Ziel vorhanden/Ordner/beschreibbar,
-- freier Speicher plus Reserve,
-- Quelle und Ziel verschieden,
-- bestehende Zieldatei / Konflikt.
+Der Sicherheitsvertrag ist technisch hart:
 
-### 🔒 Warum wirklich nichts kopiert werden kann
-
-Der aktuelle SAFE-FILE-Slice besitzt absichtlich:
-
-- `simulation_only = true`,
-- `execution_enabled = false`,
-- **keinen `/api/execute`-Endpunkt**,
-- keine Copy-/Move-/Delete-Primitive im Simulator,
-- `mutation_performed = false` im Vorschauvertrag.
+- `SIMULATION_ONLY=True`
+- `EXECUTION_ENABLED=False`
+- kein `/api/execute`
+- keine Copy-/Move-/Delete-Primitive im Simulator
+- `mutation_performed=false`
 
 Damit hängt die Sperre nicht nur an einem deaktivierten Button.
 
 ---
 
-## 🧯 Failure-Matrix SAFE-FILE
+## 🧯 SAFE-FILE Failure-Matrix
 
-Der erste Sicherheitsvertrag enthält zehn definierte Fehlerklassen:
+- `SF-001` Quelle fehlt
+- `SF-002` Quelle ist keine normale Datei
+- `SF-003` Quelle ist Symlink
+- `SF-004` Ziel fehlt
+- `SF-005` Ziel ist kein Ordner
+- `SF-006` Ziel ist Symlink
+- `SF-007` Ziel nicht beschreibbar
+- `SF-008` zu wenig freier Speicher
+- `SF-009` Zieldatei existiert
+- `SF-010` Quelle entspricht dem Ziel
 
-`SF-001` Quelle fehlt · `SF-002` Quelle keine Datei · `SF-003` Source-Symlink · `SF-004` Ziel fehlt · `SF-005` Ziel kein Ordner · `SF-006` Target-Symlink · `SF-007` Ziel nicht beschreibbar · `SF-008` zu wenig Speicher · `SF-009` Zielkonflikt · `SF-010` Quelle = Ziel.
-
-Eine spätere echte Copy-Funktion darf erst entstehen, wenn diese Matrix und der Recovery-Vertrag vollständig grün sind.
-
----
-
-## ↩️ Recovery-Vertrag für die spätere Copy-Stufe
-
-Da die aktuelle Simulation **nichts verändert**, ist heute kein Rollback notwendig. Sie definiert aber bereits verbindlich, was vor einer echten Copy-Freigabe vorhanden sein muss:
-
-- persistentes Journal/Jobprotokoll **vor** der ersten Mutation,
-- `DONE` erst nach Nachvalidierung,
-- Undo darf ein Ziel nur entfernen, wenn verifiziert wurde, dass es seit der Copy nicht verändert wurde,
-- unterbrochene `.part`-/Staging-Zustände müssen als Recovery-Fall sichtbar werden.
+Alle zehn Fälle sind automatisiert getestet. Eine spätere echte Copy benötigt trotzdem einen **neuen Versionsslice** mit Jobjournal, Staging, Postvalidation, Crash-/Recoverytests und geschütztem Undo.
 
 ---
 
-## 🧾 Release-Evidenzindex
+## 🧾 Release-Evidenz
 
-Repository-only:
+Masterindex:
 
 `evidence/RELEASE_EVIDENCE_INDEX.json`
 
-Dieser verweist auf **genau eine Datei je bewiesener Version**, zum Beispiel:
+Für jede TESTED-/höhere Version existiert genau eine Datei:
 
-`evidence/releases/0.4.3-integrity-hardening.json`
+`evidence/releases/<version>.json`
 
-Jede Datei enthält maschinenlesbar:
-
-- Registry-Commit,
-- Promotion-/Main-Commit soweit vorhanden,
-- CI-Run-IDs,
-- Artefakt-SHA256 bzw. ausdrücklich `not-recorded`,
-- Chromium-/Firefox-Matrix,
-- weiterhin offene L4-Gates.
-
-`scripts/evidence_guard.py` vergleicht den Index mit `VERSION_REGISTRY.json`. Eine TESTED-Version ohne Evidenzdatei macht CI rot.
-
-Historische Lücken werden **nicht erfunden**. Ein nicht mehr belegbarer alter Artefakthash wird als `not-recorded` dokumentiert.
+Sie enthält Commit(s), CI-Runs, Artefakthashstatus, Browsermatrix und offene L4-Gates. `scripts/evidence_guard.py` blockiert Registry-/Evidenzdrift. Historisch nicht aufgezeichnete Werte bleiben ausdrücklich `not-recorded`; sie werden nicht erfunden.
 
 ---
 
-## 🛡️ Datenschutz und Sicherheit
+## 🧪 Automatischer Nachweis für 0.5.0
 
-- Kernbackend nur `127.0.0.1` / `localhost`.
-- Native Runner und SAFE-FILE-Simulator verlangen zusätzlich **denselben lokalen Port** für Host/Origin.
+Der DEV-Head `6cf6754dcf5da88edb13ee34f2e99b4e22bca593` bestand GitHub Actions Run `33038051967`:
+
+- **113/113** Unit-/Contracttests,
+- Foundation Validation,
+- **18/18** Learning-Memory-Regeln,
+- Release Evidence Guard,
+- Documentation Guard,
+- Bash-/JavaScript-Syntax,
+- Runtime-ZIP + frischer Runtime-Preflight,
+- Hauptdashboard in Chromium + Firefox,
+- Native Acceptance Runner in Chromium + Firefox,
+- SAFE-FILE-Simulation in Chromium + Firefox,
+- Reflow-/Bedienzielprüfung der neuen Hilfsoberflächen bei 1280 und 360 CSS-px.
+
+Die anschließende TESTED-Promotion wird erneut durch dieselbe komplette CI geprüft.
+
+---
+
+## 🛡️ Datenschutz / lokale Sicherheit
+
 - Keine Telemetrie.
-- Native Abnahmeberichte bleiben lokal unter `runtime/`.
-- Release-Evidenz bleibt im Repository und wird nicht ins Runtime-ZIP gepackt.
-- SAFE-FILE liest nur Metadaten/Dateigröße und führt keine Mutation aus.
+- Hauptbackend und beide Hilfsserver nur Loopback.
+- Hilfsserver verlangen Host und Origin auf **demselben lokalen Port**.
+- Native Berichte bleiben unter `runtime/` lokal.
+- `evidence/` bleibt Repository-only und wird nicht ins Runtime-ZIP transportiert.
+- SAFE-FILE liest nur für die Vorschau notwendige Metadaten und verändert keine Datei.
 
 ---
 
-## 🧪 Qualitätsebenen
+## Qualitätsebenen
 
 - **L0:** Syntax / Schema
-- **L1:** Unit / Contract / Failure-Matrix
-- **L2:** vollständiges Runtime-ZIP frisch entpacken und Preflight daraus starten
-- **L3:** echte Chromium-/Firefox-Render-/Interaktionsmatrix
-- **L4:** reale Kubuntu-/Zoom-/DPI-/Tastaturabnahme über den neuen Runner
+- **L1:** Unit / Contract / Failure-Matrix / Evidence Guard
+- **L2:** echtes Runtime-ZIP frisch entpacken + Runtime-Preflight
+- **L3:** echte Chromium-/Firefox-Render-/Interaktionstests
+- **L4:** reales Kubuntu / Zoom / DPI / Tastatur über Native Acceptance Runner
 
-Eine niedrigere Ebene darf niemals eine höhere als bestanden darstellen.
+Eine niedrigere Ebene darf keine höhere als bestanden behaupten.
 
----
+## ➜ Nächste Reihenfolge
 
-## 📦 Runtime vs. Repository
-
-Im Nutzer-ZIP liegen nur Dateien aus `manifests/RUNTIME_MANIFEST.json` plus `MANIFEST_RELEASE.json`.
-
-Der Runtime-Bestand enthält jetzt zusätzlich die beiden lokalen Assistenten und ihre benötigten Module/Webseiten. Nicht transportiert werden weiterhin:
-
-- README / AGENTS / TODO / Changelog,
-- Tests/Testdaten,
-- `evidence/`,
-- Learning Memory,
-- CI-Dateien,
-- Screenshots/Reports,
-- lokale Runtime-/Nutzerdaten.
-
----
-
-## ➜ Nächste logische Reihenfolge
-
-1. `0.5.0-native-acceptance-safe-file-sim` vollständig durch Unit/Failure-/Evidence-/Release-/Cross-Browser-Gates prüfen.
-2. Danach Native Acceptance Runner **real auf Kubuntu** ausführen und L4-Bericht erzeugen.
-3. Nur wenn SAFE-FILE Failure-Matrix + Recovery + reale Basisgates grün sind, einen neuen Versionsslice für echte **Copy-only**-Ausführung beginnen.
-4. Move, Rename und Delete bleiben weiterhin später.
+1. TESTED-Promotion-Commit erneut vollständig durch L0–L3 prüfen.
+2. Danach Native Acceptance Runner **real auf Kubuntu** durchführen und den L4-Bericht sichern.
+3. Nur bei ausgewerteter Failure-/Recovery-Matrix einen **neuen** Slice für echte Copy einer einzelnen normalen Datei planen.
+4. Move, Rename und Delete bleiben weiterhin gesperrt.
