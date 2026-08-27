@@ -73,7 +73,7 @@ jobs:
       - name: Install pinned Playwright browsers
         run: python -m playwright install --with-deps chromium firefox
       - name: Browser render, raster and interaction gate
-        run: python scripts/ui_acceptance.py --browser chromium --browser firefox --strict
+        run: python scripts/ui_acceptance_ci.py --browser chromium --browser firefox --strict
       - name: Upload UI screenshots and report
         if: always()
         uses: actions/upload-artifact@v4
