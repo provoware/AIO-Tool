@@ -2,9 +2,9 @@
 
 ## Aktueller Stand
 
-**🟠 `0.4.3-integrity-hardening` — DEVELOPMENT**
+**🟢 `0.4.3-integrity-hardening` — TESTED / DRAFT**
 
-Letzter vollständig bewiesener Vorgänger: **🟢 `0.4.2-ui-acceptance-TESTED`** mit Core-/Release-Gate und Chromium+Firefox-Acceptance in GitHub Actions Run `33032999752`.
+Finaler Entwicklungshead: GitHub Actions Run `33034359454` — **Core/Release + Chromium + Firefox SUCCESS**.
 
 ### Fortschritt 0.4.3
 
@@ -15,27 +15,28 @@ Runtime-Transportvertrag        ████████████████
 Statusmodell                    ████████████████████ 100 %
 Regressionstests                ████████████████████ 100 %
 Dokumentationssynchronisierung  ████████████████████ 100 %
-Finale CI / Browser-Evidenz     ░░░░░░░░░░░░░░░░░░░░   0 %
-TESTED-Promotion                ░░░░░░░░░░░░░░░░░░░░   0 %
+Finale CI / Browser-Evidenz     ████████████████████ 100 %
+TESTED-Promotion                ████████████████░░░░  80 %  Promotion-Revalidierung läuft
 ```
 
-## P0/P1 — vor jeder neuen Funktion
+## P0/P1 — Integritätshärtung
 
-- [x] `0.4.2-TESTED` als historischen evidenzgebundenen Stand einfrieren.
-- [x] neuen Patchstand als `0.4.3-integrity-hardening / development` registrieren.
-- [x] Launcher darf nicht mehr jedes HTTP 200 als eigene Instanz übernehmen.
-- [x] konkrete Installationskennung + Version + Ready/Loopback prüfen.
+- [x] `0.4.2-TESTED` als historischen Evidenzstand einfrieren.
+- [x] neuen Patchstand als `0.4.3-integrity-hardening` führen.
+- [x] Launcher übernimmt nicht mehr jedes HTTP 200 als eigene Instanz.
+- [x] Version + Ready/Loopback + konkrete Installationskennung prüfen.
 - [x] fremd belegten Standardport transparent auf freien Loopback-Port umleiten.
+- [x] ungültigen Port / unbekannten Probe-Status fail-closed behandeln.
 - [x] normaler Runtime-Start nutzt `runtime_preflight.py`, nicht Repo-`validate.py`.
 - [x] Launcher-/Eventlogs lokal begrenzen/rotieren.
-- [x] Status- und Releasevokabular vereinheitlichen und widersprüchliche Paare ablehnen.
-- [x] gebautes Runtime-ZIP als End-to-End-Test entpacken und darin Preflight starten.
-- [x] README/AGENTS auf aktuellen Vertrag umbauen.
-- [x] TODO/CHANGELOG/MANIFEST/REGRESSIONS/LAIEN-ANLEITUNG/TOOLBESCHREIBUNG synchronisiert.
-- [ ] komplette GitHub-CI auf finalem 0.4.3-Head grün.
-- [ ] Chromium + Firefox auf finalem 0.4.3-Head grün.
-- [ ] erst danach Evidenz in Registry eintragen und auf `tested / draft` setzen.
-- [ ] Promotion-Commit erneut komplett grün prüfen.
+- [x] Status-/Releasevokabular vereinheitlichen und widersprüchliche Paare ablehnen.
+- [x] Runtime-ZIP bauen → entpacken → Preflight aus dem ZIP ausführen.
+- [x] Documentation Guard gegen Versions-/Statusdrift.
+- [x] README/AGENTS/TODO/CHANGELOG/MANIFEST/REGRESSIONS/LAIEN-ANLEITUNG/TOOLBESCHREIBUNG synchronisieren.
+- [x] Core-/Release-Gate auf finalem Entwicklungshead grün.
+- [x] Chromium + Firefox auf finalem Entwicklungshead grün.
+- [x] Evidenz Run `33034359454` in Registry eintragen und auf `tested / draft` setzen.
+- [ ] Promotion-Commit erneut vollständig grün prüfen.
 
 ## Bereits bewiesene Basis
 
@@ -54,11 +55,11 @@ TESTED-Promotion                ░░░░░░░░░░░░░░░░
 - [x] versionierte Texte/Fehlerregeln und Mustervorlagen.
 - [x] `LEARNING_MEMORY.jsonl` + Guard.
 
-## Native Zielsystemabnahme — danach
+## Native Zielsystemabnahme — nächster Slice
 
-- [ ] TESTED-ZIP in frischen Ordner auf Kubuntu entpacken.
+- [ ] `AIO-Tool-0.4.3-integrity-hardening-TESTED.zip` in frischen Ordner auf Kubuntu entpacken.
 - [ ] `start_tool.desktop` und `start_tool.sh` real prüfen.
-- [ ] vorhandene passende Instanz wiederverwenden.
+- [ ] passende laufende Instanz wiederverwenden.
 - [ ] fremd belegten Port / sicheren Ausweichport real prüfen.
 - [ ] Firefox + Chrome/Chromium: Start, Kalender, TODO, Reminder, Einstellungen.
 - [ ] 100 / 125 / 150 / 175 / 200 % Browserzoom.
@@ -66,7 +67,7 @@ TESTED-Promotion                ░░░░░░░░░░░░░░░░
 - [ ] reiner Tastaturdurchlauf und Fokusreihenfolge.
 - [ ] reale Befunde als Regression + Learning Memory aufnehmen.
 
-## SAFE-FILE-CORE — erst nach Zielsystemgate
+## SAFE-FILE-CORE — erst danach
 
 - [ ] Copy als erste reale Dateioperation.
 - [ ] Quelle/Ziel möglichst über Auswahl statt Pfadeingabe.
@@ -78,13 +79,6 @@ TESTED-Promotion                ░░░░░░░░░░░░░░░░
 - [ ] Abbruch/Neustart robust behandeln.
 - [ ] erst danach Move, Rename und Papierkorb/Delete.
 
-## Job & Recovery — später
-
-- [ ] persistente Job-Queue.
-- [ ] `DONE` erst nach Persistenz + Nachprüfung.
-- [ ] Pause / Abbruch / Wiederaufnahme.
-- [ ] Recovery Center mit Checkpoints.
-
 ## Empfohlener nächster Schritt
 
-**Keine neue Nutzfunktion. Jetzt den vollständigen Core-/Release-/Browser-Gate auf dem finalen 0.4.3-Entwicklungshead ausführen und nur bei grünem Ergebnis zu TESTED promovieren.**
+**Promotion-Commit vollständig durch Core/Release + Chromium/Firefox laufen lassen. Danach ohne neue Funktion direkt die native Kubuntu-/Zoom-/Tastaturabnahme aus dem TESTED-ZIP durchführen.**
