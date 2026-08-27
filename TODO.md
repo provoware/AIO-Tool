@@ -2,77 +2,63 @@
 
 ## Aktueller Stand
 
-**🟠 `0.5.0-native-acceptance-safe-file-sim` — DEVELOPMENT / DEV**
+**🟢 `0.5.0-native-acceptance-safe-file-sim` — TESTED / draft (L0–L3)**
 
-Letzter vollständig bewiesener Stand: **🟢 `0.4.3-integrity-hardening-TESTED`**.
-
-### Fortschritt
+Automatisierte DEV-Evidenz: GitHub Actions Run `33038051967`, DEV-Head `6cf6754dcf5da88edb13ee34f2e99b4e22bca593`.
 
 ```text
-Native Acceptance Runner       ████████████████████ 100 % umgesetzt
-Release Evidence Index         ████████████████████ 100 % umgesetzt
-Evidence Guard                 ████████████████████ 100 % umgesetzt
-SAFE-FILE Simulation           ████████████████████ 100 % umgesetzt
-Failure-Matrix SF-001..010      ████████████████████ 100 % umgesetzt
-Recovery-Vorvertrag            ████████████████████ 100 % umgesetzt
-Automatisierte Tests/CI        ░░░░░░░░░░░░░░░░░░░░   0 % final offen
-Native Kubuntu L4              ░░░░░░░░░░░░░░░░░░░░   0 % real offen
-Copy-Ausführung                ░░░░░░░░░░░░░░░░░░░░   0 % gesperrt
+Native Acceptance Runner       ████████████████████ 100 % 🟢
+Release Evidence Index         ████████████████████ 100 % 🟢
+Evidence Guard                 ████████████████████ 100 % 🟢
+SAFE-FILE Simulation           ████████████████████ 100 % 🟢
+Failure-Matrix SF-001..010     ████████████████████ 100 % 🟢
+Recovery-Vorvertrag            ████████████████████ 100 % 🟢
+DEV L0–L3 CI                   ████████████████████ 100 % 🟢
+TESTED-Promotion-CI            ░░░░░░░░░░░░░░░░░░░░   0 % 🟠 läuft als nächster Gate
+Native Kubuntu L4              ░░░░░░░░░░░░░░░░░░░░   0 % 🟡 real offen
+Copy-Ausführung                ░░░░░░░░░░░░░░░░░░░░   0 % 🔒 gesperrt
 ```
 
-## P0/P1 — aktueller Slice
+## Automatisiert umgesetzt und DEV-geprüft
 
-- [x] neue Version nach eingefrorenem `0.4.3-TESTED` angelegt.
-- [x] Native Acceptance Runner mit 18 Prüfschritten.
-- [x] PASS/FAIL/SKIP nur durch explizite Nutzerentscheidung.
-- [x] gemeinsame persistente Sitzung für Firefox/Chromium.
-- [x] automatische JSON-/TXT-Abnahmeberichte.
-- [x] browserbezogene Umgebungsdaten erfassen, ohne Zoom automatisch vorzutäuschen.
-- [x] lokale Host-/Origin-Prüfung inklusive exaktem Port.
-- [x] Evidence Masterindex + Einzeldatei pro TESTED-Version.
-- [x] historische Evidenzlücken als `not-recorded`, nicht erfunden.
-- [x] Evidence Guard gegen Versionsregistry.
-- [x] SAFE-FILE Quelle/Ziel über Dialogadapter.
-- [x] Copy-Vorschau mit Speicherplatz, Konflikt, Symlink- und Same-Target-Prüfung.
-- [x] Failure-Matrix SF-001 bis SF-010.
+- [x] 18 Native-Acceptance-Schritte ohne Auto-PASS.
+- [x] persistente gemeinsame Sitzung für Firefox/Chromium.
+- [x] JSON-/TXT-Berichte.
+- [x] exakter Loopback-Host-/Origin-/Portvertrag.
+- [x] eine Evidenzdatei je bewiesener Version + Masterindex.
+- [x] historische Evidenzlücken explizit `not-recorded`.
+- [x] SAFE-FILE Quelle/Ziel über kdialog/zenity.
+- [x] Speicherplatz-/Symlink-/Konflikt-/Same-Target-Vorprüfung.
+- [x] Failure-Matrix SF-001..010.
 - [x] Recovery-Vorvertrag.
-- [x] `execution_enabled=false` und kein Execute-Endpunkt.
-- [ ] finale Unit-/Contract-/Failure-/Evidence-Tests grün.
-- [ ] Runtime-ZIP End-to-End-Preflight grün.
-- [ ] Chromium + Firefox L3 auf finalem Head grün.
-- [ ] erst dann `0.5.0` zu TESTED promoten, falls der Slice vollständig bewiesen ist.
+- [x] `execution_enabled=false`, kein Execute-Endpunkt, keine Copy-/Move-/Delete-Primitive.
+- [x] 113 Unit-/Contracttests im DEV-Gate.
+- [x] Native-/SAFE-FILE-UI in Chromium + Firefox auf 1280/360 CSS-px.
+- [ ] TESTED-Promotion-Commit erneut L0–L3 vollständig grün.
 
-## L4 — reale Native-Abnahme
+## L4 — danach real auf Kubuntu
 
-Nach grünem DEV-/TESTED-Build mit `native_acceptance.desktop`:
-
-- [ ] Kubuntu Desktop-Starter.
-- [ ] Shell-Starter.
+- [ ] Desktop-Starter und Shell-Starter.
 - [ ] passende Instanz wiederverwenden.
-- [ ] Fremdport/Fallback.
-- [ ] kleine Anzeige.
-- [ ] Full-HD.
-- [ ] große Anzeige.
+- [ ] fremd belegter Port / Fallback.
+- [ ] kleine / Full-HD / große Anzeige.
 - [ ] Tastatur-only.
 - [ ] Firefox 100/125/150/175/200 %.
 - [ ] Chrome/Chromium 100/125/150/175/200 %.
 - [ ] JSON-/TXT-Bericht sichern.
-- [ ] reale FAIL-Befunde jeweils als Regression + Learning Memory übernehmen.
+- [ ] jeden realen FAIL-Befund als Regression + Learning Memory behandeln.
 
-## SAFE-FILE — Freigabebedingungen für echte Copy
+## Vor echter Copy zwingend
 
-Vor einem späteren `execution_enabled=true` müssen in **neuem Versionsslice** bewiesen sein:
-
-- [ ] alle SF-001..010 Tests grün auf finalem Head.
+- [ ] L4-Befunde ausgewertet.
 - [ ] persistentes Jobjournal vor Mutation.
-- [ ] Staging-/Partial-Copy-Konzept.
-- [ ] Nachvalidierung Größe + optional Hash.
-- [ ] `DONE` erst nach persistierter Nachvalidierung.
-- [ ] Crash-/Abbruch-/Neustarttests.
-- [ ] Undo nur wenn Ziel seit Copy unverändert.
-- [ ] echte Copy zunächst nur einzelne normale Datei.
+- [ ] Staging-/Partial-Copy-Vertrag.
+- [ ] Postvalidation vor `DONE`.
+- [ ] Crash/Abbruch/Neustart-Recovery.
+- [ ] Undo nur bei unverändertem erzeugtem Ziel.
+- [ ] neuer Versionsslice für Copy-only.
 - [ ] Move/Rename/Delete weiterhin gesperrt.
 
 ## Nächster Schritt
 
-**Jetzt keine echte Dateioperation hinzufügen. Zuerst den vollständigen `0.5.0`-DEV-Slice automatisiert prüfen und jeden roten Befund minimal beheben.**
+**TESTED-Promotion vollständig erneut prüfen. Danach reale L4-Abnahme mit dem Native Acceptance Runner; noch keine echte Dateioperation implementieren.**
