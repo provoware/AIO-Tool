@@ -15,40 +15,47 @@ class LauncherContractTests(unittest.TestCase):
     def test_launcher_is_fail_fast_and_has_unexpected_error_trap(self) -> None:
         self.assertIn("set -Eeuo pipefail", self.launcher)
         self.assertIn("trap on_unexpected_error ERR", self.launcher)
-        self.assertIn('LAUNCH-E900', self.launcher)
+        self.assertIn("LAUNCH-E900", self.launcher)
 
     def test_nine_visible_checkpoints_are_stable(self) -> None:
-        self.assertIn('TOTAL=9', self.launcher)
+        self.assertIn("TOTAL=9", self.launcher)
         for number in range(1, 10):
             self.assertIn(f"LAUNCH-CP{number:02d}", self.launcher)
-        self.assertIn("🟢", self.launcher)
-        self.assertIn("🟡", self.launcher)
-        self.assertIn("🔴", self.launcher)
-        self.assertIn("🔵", self.launcher)
+        for icon in ("🟢", "🟡", "🔴", "🔵"):
+            self.assertIn(icon, self.launcher)
 
     def test_actionable_error_ids_cover_start_phases(self) -> None:
         for event_id in (
-            "LAUNCH-E102",  # Python
-            "LAUNCH-E205",  # venv
-            "LAUNCH-E306",  # validation
-            "LAUNCH-E407",  # backend process
-            "LAUNCH-E508",  # readiness
-            "LAUNCH-E900",  # unexpected shell error
+            "LAUNCH-E102", "LAUNCH-E205", "LAUNCH-E303", "LAUNCH-E306",
+            "LAUNCH-E404", "LAUNCH-E407", "LAUNCH-E508", "LAUNCH-E900",
         ):
             self.assertIn(event_id, self.launcher)
 
     def test_launcher_keeps_console_backend_events_and_report_separate(self) -> None:
         for filename in (
-            "launcher-console.log",
-            "launcher-backend.log",
-            "launcher-events.jsonl",
-            "launcher-report.txt",
+            "launcher-console.log", "launcher-backend.log",
+            "launcher-events.jsonl", "launcher-report.txt",
         ):
             self.assertIn(filename, self.launcher)
         self.assertIn("Letzte Backend-Ereignisse", self.launcher)
         self.assertIn("Debug-Befehle", self.launcher)
         self.assertIn("tail -n 30", self.launcher)
         self.assertIn("curl -fsS", self.launcher)
+        self.assertIn("MAX_LOG_BYTES", self.launcher)
+        self.assertIn("rotate_log", self.launcher)
+
+    def test_runtime_start_does_not_require_repository_validator(self) -> None:
+        self.assertIn("scripts/runtime_preflight.py --quick", self.launcher)
+        self.assertNotIn("scripts/validate.py --quick", self.launcher)
+        self.assertIn('if [[ -f "$ROOT/scripts/validate.py" ]]', self.launcher)
+
+    def test_launcher_verifies_instance_and_uses_safe_fallback_port(self) -> None:
+        self.assertIn("scripts/launcher_probe.py ensure-marker", self.launcher)
+        self.assertIn("scripts/launcher_probe.py inspect", self.launcher)
+        self.assertIn("scripts/launcher_probe.py find-free", self.launcher)
+        self.assertIn('PROBE_STATE" == "own-ready"', self.launcher)
+        self.assertIn('PROBE_STATE" == "occupied"', self.launcher)
+        self.assertIn("LAUNCH-D404", self.launcher)
 
     def test_backend_remains_loopback_only(self) -> None:
         self.assertIn("http://127.0.0.1:${PORT}", self.launcher)
