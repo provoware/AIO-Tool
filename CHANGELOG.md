@@ -1,6 +1,6 @@
 # CHANGELOG — AIO-Tool
 
-## [Unreleased / 0.5.1-audit-modern-ui] — DEVELOPMENT — 2026-08-27
+## [0.5.1-audit-modern-ui] — TESTED (L0–L3) — 2026-08-27
 
 ### Fixed
 
@@ -9,10 +9,11 @@
 - `ConfigStore` von eigener doppelter Persistenzlogik auf den gemeinsamen Persistence-Core umgestellt.
 - Hauptbackend auf denselben exakten Loopback-Host-/Port-Vertrag wie die Hilfsserver gebracht.
 - Threaded Serverlog-Schreibzugriffe serialisiert.
-- veralteten Kalender-/Termininhalt nach fehlgeschlagenem Reload entfernt.
+- veralteten oder scheinbar leeren Kalender-/Termin-/TODO-/Ereignisinhalt nach fehlgeschlagenem Reload verhindert.
 - gespeicherten TODO-Aktionsfehler nach erfolgreichem Retry zurückgesetzt.
-- sichtbaren Boot-Guard für READY und Startfehler verdrahtet.
+- sichtbaren Boot-Guard für READY, READY mit Hinweisen und Startfehler verdrahtet.
 - veraltete Kalender-Core-Beschreibung aus generischer Versionsregistrierung entfernt.
+- Browser-Acceptance von doppelter, fest versionsgebundener CI-Implementierung auf einen kanonischen Harness reduziert.
 
 ### Improved
 
@@ -24,10 +25,31 @@
 - dynamische Dashboard-/Helper-Inhalte ohne `innerHTML` aufgebaut.
 - Native Runner und SAFE-FILE Simulator teilen nun `web/helper-ui.css`.
 - Helper-CSP benötigt kein `unsafe-inline` für Styles mehr.
+- Refresh und Config-Speichern laufen single-flight mit sichtbarem `aria-busy`-Feedback.
+- lokale Backendanfragen besitzen einen begrenzten 8-Sekunden-Timeout mit verständlicher Fehlerhilfe.
+- Theme-Vorschau wird bei Speicherfehler auf den letzten bestätigten Stand zurückgerollt.
+- UI unterscheidet erfolgreich leer geladene Daten von technisch nicht verfügbaren Bereichen.
+- Learning Memory auf 21 aktive strukturelle Regeln erweitert.
 
-### Verification status
+### Verification
 
-Aktuell **DEVELOPMENT / DEV**. Finale Unit-/Release-/Chromium-/Firefox-Gates für `0.5.1-audit-modern-ui` stehen aus.
+DEV-Head `e9803086da790f30f8155946539569dd33c395b5`, Run `33045348341`:
+
+- Core-/Release-Gate PASS,
+- Chromium + Firefox Dashboard PASS,
+- Native Runner + SAFE-FILE Helper-UI PASS.
+
+TESTED-Promotion-Head `5641efb5ec0ba945f8ca94d08c1b20d430dd384a`, Run `33045669222`:
+
+- **138/138 Unit-/Contracttests PASS**,
+- Foundation/Learning/Evidence/Documentation Guards PASS,
+- Runtime-ZIP + frischer Runtime-Preflight PASS,
+- Chromium + Firefox Dashboard PASS,
+- Native Runner + SAFE-FILE Helper-UI PASS.
+
+TESTED Runtime ZIP SHA256: `a7ab6d64e978e27c1fa550c549e12dc7ee21e24a17a55fd9c160c19cd3001b72`.
+
+Native Kubuntu L4 bleibt separat offen; echte SAFE-FILE-Dateimutation bleibt technisch gesperrt.
 
 ## [0.5.0-native-acceptance-safe-file-sim] — TESTED (L0–L3) — 2026-08-27
 
