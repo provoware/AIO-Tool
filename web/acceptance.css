@@ -13,6 +13,7 @@
 .reminder-ack{
   min-height:44px;
 }
+.nav-button{min-width:44px}
 .segmented button{padding:8px 10px}
 .icon-action{min-width:44px;width:44px;height:44px}
 
@@ -56,7 +57,8 @@ html[data-density="wide"] .dashboard-layout{grid-template-columns:repeat(12,minm
   .workspace{padding-left:6px;padding-right:6px}
   .sidebar{padding-left:5px;padding-right:5px;gap:4px}
   .nav-stack{min-width:0;gap:2px}
-  .nav-item,.nav-button{min-width:0;padding:7px 5px}
+  .nav-item{min-width:0;padding:7px 5px}
+  .nav-button{min-width:44px;padding:7px 5px}
   .module-grid{grid-template-columns:1fr}
   .focus-metrics{grid-template-columns:repeat(3,minmax(0,1fr));min-width:0}
   .focus-metrics span{min-width:0;padding:6px 3px}
