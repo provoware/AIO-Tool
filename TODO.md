@@ -1,63 +1,77 @@
 # TODO — AIO-Tool
 
-## Aktueller Stand
+## Aktueller Qualitätsstand
 
-**🟢 `0.5.1-audit-modern-ui` — BEWIESEN / TESTED / draft für L0–L3 auf `main`**
+**Runtime-Baseline:** 🟢 `0.5.1-audit-modern-ui` — `tested / draft`, **L0–L3 BEWIESEN**  
+**Runtime-Baseline-Commit:** `ee6adcfd3427e8328920edaceb804e7b6655cdb8`  
+**Runtime-ZIP SHA256:** `f8ffd88e2f3e40416f0d76b20786aa168cebb4e11fe3ef9d0eefa6dcf93b19ee`  
+**Native L4:** 🟡 **OFFEN · 0/18 real bestätigt**  
+**SAFE-FILE-Ausführung:** 🔒 **GESPERRT**
 
-Main-Commit: `ee6adcfd3427e8328920edaceb804e7b6655cdb8`  
-Main-CI: `33048070879` — vollständig grün.
+Die vollständige Release-Beweiskette liegt kanonisch unter `evidence/releases/0.5.1-audit-modern-ui.json`. Repository-only Dokumentation darf nach der Runtime-Baseline fortgeschrieben werden, ohne den Produktstand umzudeuten.
 
 ## Fortschritt
 
 ```text
-Projektweiter Audit              ████████████████████ 100 % 🟢
-Persistenz-/Thread-Härtung       ████████████████████ 100 % 🟢
-Loopback-Vertragskonsolidierung  ████████████████████ 100 % 🟢
-Dashboard-Zustand/Feedback       ████████████████████ 100 % 🟢
-Moderne Theme-Architektur        ████████████████████ 100 % 🟢
-Helper-UI Modernisierung         ████████████████████ 100 % 🟢
-Code-/Harness-Konsolidierung     ████████████████████ 100 % 🟢
-138 Unit-/Contracttests          ████████████████████ 100 % 🟢
-Chromium + Firefox               ████████████████████ 100 % 🟢
-Evidence-Sync                    ████████████████████ 100 % 🟢
-PR / Squash-Merge                ████████████████████ 100 % 🟢
-Main-CI / Runtime-Reproduktion   ████████████████████ 100 % 🟢
-Native Kubuntu L4                ░░░░░░░░░░░░░░░░░░░░ real offen 🟡
-SAFE-FILE echte Copy             ░░░░░░░░░░░░░░░░░░░░ gesperrt 🔒
+0.5.1 Runtime-/Main-Baseline      ████████████████████ 100 % 🟢
+138 Unit-/Contracttests           ████████████████████ 100 % 🟢
+Runtime-ZIP / Preflight           ████████████████████ 100 % 🟢
+Chromium + Firefox L3             ████████████████████ 100 % 🟢
+Release-Evidenz                   ████████████████████ 100 % 🟢
+Manifest-/Info-Konsistenz         ████████████████████ 100 % 🟢 strukturell gehärtet
+Native Kubuntu L4                 ░░░░░░░░░░░░░░░░░░░░   0 % 🟡 0/18 bestätigt
+SAFE-FILE Ausführung              ░░░░░░░░░░░░░░░░░░░░   0 % 🔒
 ```
 
-## Erledigt in 0.5.1
+## Erledigt — Runtime-Baseline 0.5.1
 
-- [x] AtomicJsonStore gegen parallele Thread-Updates gehärtet.
-- [x] ConfigStore auf gemeinsamen Persistence-Core konsolidiert.
-- [x] Hauptbackend auf kanonischen exakten Loopback-Port-Vertrag umgestellt.
-- [x] Serverlog im Threading-Backend serialisiert.
-- [x] stale/uneindeutige Kalender-, Termin-, TODO- und Ereigniszustände verhindert.
-- [x] Refresh/Config single-flight + `aria-busy` + 8-s-Timeout umgesetzt.
-- [x] Theme-Vorschau mit Rollback bei Speicherfehler umgesetzt.
-- [x] Boot-Guard mit READY-/Hinweis-/ERROR-Pfad umgesetzt.
-- [x] Theme-/Font-/Modulauswahl mit `aria-pressed` ergänzt.
-- [x] Aurora Glass + vier überarbeitete Themes umgesetzt.
-- [x] Native Runner und SAFE-FILE Simulator auf gemeinsames modernes Helper-UI umgestellt.
-- [x] `unsafe-inline` aus Helper-CSP entfernt.
+- [x] Persistenz-/Thread-Härtung.
+- [x] gemeinsamer Config-Persistence-Core.
+- [x] kanonischer Loopback-Host-/Port-Vertrag.
+- [x] Dashboard-Zustands-, Timeout-, Single-Flight- und ARIA-Härtung.
+- [x] fünf modernisierte Themes inklusive Aurora Glass.
+- [x] Native Runner und SAFE-FILE Simulator auf gemeinsames Helper-UI gebracht.
 - [x] Browser-Harness auf eine kanonische Implementierung reduziert.
-- [x] 21 strukturelle Learning-Regeln aktiv.
-- [x] kompletter DEV-Gate grün (`33045348341`).
-- [x] TESTED-Promotion grün (`33045669222`).
-- [x] finaler Evidence-Sync grün (`33047743876`).
-- [x] PR-Integrationsgate grün (`33047885115`).
-- [x] PR #9 per Squash nach `main` gemergt.
-- [x] Main-CI vollständig grün (`33048070879`).
-- [x] finaler Runtime-ZIP reproduzierbar: Feature-Head und Main jeweils SHA256 `f8ffd88e2f3e40416f0d76b20786aa168cebb4e11fe3ef9d0eefa6dcf93b19ee`.
+- [x] 138/138 Tests, Guards, Runtime-Preflight und Chromium/Firefox erfolgreich.
+- [x] PR #9 per Squash integriert.
+- [x] Runtime-Reproduzierbarkeit bewiesen: Feature-Runtime-Head und Main erzeugen identischen SHA256 `f8ffd88e2f3e40416f0d76b20786aa168cebb4e11fe3ef9d0eefa6dcf93b19ee`.
+
+## Erledigt — Repository-/Manifest-Härtung
+
+- [x] Begriffe **Runtime-Baseline**, **Repository-Head**, **Registry-Commit** und **Release-Evidenz** getrennt.
+- [x] Development-Manifest auf Version `1.2.0` erweitert.
+- [x] Manifest-Policy unter `manifests/README.md` dokumentiert.
+- [x] `scripts/manifest_guard.py` ergänzt.
+- [x] Release-Evidenz um Main-CI, Reproduzierbarkeitsnachweis und abgelösten Vorartefakt-Hash präzisiert.
+- [x] Dokumentations-Guard auf evidenzgetriebene Commit-/Hashprüfung umgestellt.
+- [x] L4-Fortschritt von einer irreführenden Prozentannahme auf **0/18 real bestätigt** korrigiert.
 
 ## Jetzt — Native L4
 
-1. **Native Acceptance Runner auf echtem Kubuntu starten.**
-2. Firefox und Chromium/Chrome real prüfen.
-3. Browserzoom 100–200 %, Display-/KDE-Skalierung und Tastaturbedienung nach Runner-Schritten bestätigen.
-4. Jeden Schritt ausschließlich nach echter Beobachtung als `pass`, `fail` oder `skip` markieren.
-5. FAIL-Befunde erhalten und vor einer Statusverbesserung analysieren.
+1. `./start_native_acceptance.sh` auf echtem Kubuntu starten.
+2. `KUB-01` bis `KUB-04` real ausführen.
+3. Anzeige klein / Full-HD / groß prüfen.
+4. Hauptfunktionen ausschließlich mit Tastatur durchlaufen.
+5. Firefox bei 100 / 125 / 150 / 175 / 200 % prüfen.
+6. Chrome/Chromium bei 100 / 125 / 150 / 175 / 200 % prüfen.
+7. KDE-Skalierung in den Prüfernotizen dokumentieren.
+8. Nur nach echter Beobachtung `pass`, `fail` oder `skip` setzen.
+
+### Gate-Regel
+
+- `pass` = real geprüft und korrekt.
+- `fail` = Fehler beobachtet; Befund bleibt erhalten und wird analysiert.
+- `skip` = nicht geprüft; bleibt fachlich offen.
+- Kein L4-Schritt wird aus CI automatisch aufgewertet.
+
+## Danach
+
+Erst nach Auswertung der realen L4-Ergebnisse wird entschieden:
+
+- **bei PASS:** nächsten sicherheitsgebundenen Slice planen,
+- **bei FAIL:** kleinsten verantwortlichen Patch-Slice mit Regression anlegen,
+- **bei SKIP/OFFEN:** keine Statusverbesserung behaupten.
 
 ## Sicherheitsgrenze
 
-SAFE-FILE bleibt unverändert Simulation. **Keine echte Copy/Move/Delete-Ausführung freischalten**, bevor ein eigener evidenzgebundener Recovery-/Execution-Slice dafür angelegt wurde.
+SAFE-FILE bleibt unverändert simulationsgebunden. Keine reale Ausführung freischalten, bevor dafür eine neue Version mit eigenem Recovery-/Execution-Nachweis angelegt wurde.

@@ -1,15 +1,90 @@
 {
   "schema_version": 1,
-  "manifest_version": "1.1.1",
+  "manifest_version": "1.2.0",
   "name": "AIO-Tool Entwicklungsbestand",
-  "purpose": "Kennzeichnet Inhalte, die für Entwicklung, Nachweis und Dokumentation im Repository/lokal bleiben und nicht in das Runtime-ZIP transportiert werden.",
-  "categories": {
-    "documentation": ["README.md", "AGENTS.md", "TODO.md", "CHANGELOG.md", "LAIEN-ANLEITUNG.md", "TOOLBESCHREIBUNG.md", "MANIFEST.md", "REGRESSIONSINFOS.md", "docs/"],
-    "development_learning": ["LEARNING_MEMORY.jsonl"],
-    "release_evidence": ["evidence/RELEASE_EVIDENCE_INDEX.json", "evidence/releases/", "artifacts/"],
-    "tests_and_fixtures": ["tests/", "testdata/", "ui/layout-contract.v1.json"],
-    "ci_and_build": [".github/", "requirements-ui.txt", "scripts/validate.py", "scripts/learning_guard.py", "scripts/documentation_guard.py", "scripts/evidence_guard.py", "scripts/ui_acceptance.py", "scripts/ui_acceptance_ci.py", "scripts/aux_ui_acceptance.py", "scripts/release.py"],
-    "local_evidence_and_logs": ["runtime/", "dist/", "build/"]
+  "scope": "repository-only",
+  "purpose": "Klassifiziert Inhalte für Entwicklung, Nachweis und Dokumentation, die nicht Bestandteil der eingefrorenen Runtime-Allowlist sind.",
+  "authority": {
+    "runtime_status": ["VERSION", "VERSION_REGISTRY.json"],
+    "runtime_transport": "manifests/RUNTIME_MANIFEST.json",
+    "release_evidence": "evidence/RELEASE_EVIDENCE_INDEX.json",
+    "repository_inventory": "manifests/DEVELOPMENT_MANIFEST.json",
+    "human_status_summary": "MANIFEST.md"
   },
-  "transport_rule": "Release-/Transport-ZIPs werden ausschließlich aus manifests/RUNTIME_MANIFEST.json erzeugt. Repository-Dokumentation, Tests, Logs und Evidenz werden nicht mittransportiert."
+  "status_documents": [
+    "README.md",
+    "TODO.md",
+    "CHANGELOG.md",
+    "LAIEN-ANLEITUNG.md",
+    "TOOLBESCHREIBUNG.md",
+    "MANIFEST.md",
+    "REGRESSIONSINFOS.md"
+  ],
+  "evidence_summary_documents": [
+    "README.md",
+    "CHANGELOG.md",
+    "TOOLBESCHREIBUNG.md",
+    "MANIFEST.md",
+    "REGRESSIONSINFOS.md"
+  ],
+  "policy_documents": [
+    "AGENTS.md",
+    "manifests/README.md"
+  ],
+  "categories": {
+    "documentation": [
+      "README.md",
+      "AGENTS.md",
+      "TODO.md",
+      "CHANGELOG.md",
+      "LAIEN-ANLEITUNG.md",
+      "TOOLBESCHREIBUNG.md",
+      "MANIFEST.md",
+      "REGRESSIONSINFOS.md",
+      "docs/",
+      "manifests/README.md"
+    ],
+    "manifest_policy": [
+      "manifests/DEVELOPMENT_MANIFEST.json"
+    ],
+    "development_learning": [
+      "LEARNING_MEMORY.jsonl"
+    ],
+    "release_evidence": [
+      "evidence/RELEASE_EVIDENCE_INDEX.json",
+      "evidence/releases/",
+      "artifacts/"
+    ],
+    "tests_and_fixtures": [
+      "tests/",
+      "testdata/",
+      "ui/layout-contract.v1.json"
+    ],
+    "ci_and_build": [
+      ".github/",
+      "requirements-ui.txt",
+      "scripts/validate.py",
+      "scripts/learning_guard.py",
+      "scripts/manifest_guard.py",
+      "scripts/documentation_guard.py",
+      "scripts/evidence_guard.py",
+      "scripts/ui_acceptance.py",
+      "scripts/ui_acceptance_ci.py",
+      "scripts/aux_ui_acceptance.py",
+      "scripts/release.py"
+    ],
+    "local_evidence_and_logs": [
+      "runtime/",
+      "dist/",
+      "build/"
+    ]
+  },
+  "invariants": [
+    "Runtime-Dateien werden ausschließlich durch manifests/RUNTIME_MANIFEST.json bestimmt.",
+    "Repository-only Inhalte dürfen nicht in der Runtime-Allowlist auftauchen.",
+    "Ein reiner Repository-Metadaten-Sync darf den Runtime-ZIP-SHA256 nicht verändern.",
+    "Runtime-Baseline, Registry-Commit und Repository-Head werden sprachlich getrennt.",
+    "Bewiesene Status- und Artefaktangaben werden aus Release-Evidenz abgeleitet statt als neue Parallelwahrheit erfunden."
+  ],
+  "transport_rule": "Release-/Transport-ZIPs werden ausschließlich aus manifests/RUNTIME_MANIFEST.json plus dem reproduzierbar erzeugten MANIFEST_RELEASE.json aufgebaut. Repository-Dokumentation, Tests, Logs und Evidenz werden nicht mittransportiert."
 }
