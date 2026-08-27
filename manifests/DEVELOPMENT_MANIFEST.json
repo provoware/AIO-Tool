@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "manifest_version": "1.0.0",
+  "name": "AIO-Tool Entwicklungsbestand",
+  "purpose": "Kennzeichnet Inhalte, die für Entwicklung, Nachweis und Dokumentation im Repository/lokal bleiben und nicht in das Runtime-ZIP transportiert werden.",
+  "categories": {
+    "documentation": ["README.md", "AGENTS.md", "TODO.md", "CHANGELOG.md", "LAIEN-ANLEITUNG.md", "TOOLBESCHREIBUNG.md", "MANIFEST.md", "REGRESSIONSINFOS.md", "docs/"],
+    "development_learning": ["LEARNING_MEMORY.jsonl"],
+    "tests_and_fixtures": ["tests/", "testdata/", "ui/layout-contract.v1.json"],
+    "ci_and_build": [".github/", "requirements-ui.txt", "scripts/validate.py", "scripts/learning_guard.py", "scripts/ui_acceptance.py", "scripts/release.py"],
+    "local_evidence_and_logs": ["artifacts/", "runtime/", "dist/", "build/"]
+  },
+  "transport_rule": "Release-/Transport-ZIPs werden ausschließlich aus manifests/RUNTIME_MANIFEST.json erzeugt. Repository-Dokumentation, Tests, Logs und Evidenz werden nicht mittransportiert."
+}
