@@ -1,7 +1,8 @@
 {
   "schema_version": 1,
-  "index_version": "1.2.0",
-  "purpose": "Index auf genau eine maschinenlesbare Evidenzdatei je TESTED-/höherer Version.",
+  "index_version": "1.3.0",
+  "scope": "repository-only",
+  "purpose": "Kanonischer Index auf genau eine maschinenlesbare Release-Evidenzdatei je TESTED-/höherer Registry-Version. Belegt Runtime-/Release-Provenienz, ohne den neuesten Repository-Head als Produktstand umzudeuten.",
   "entries": [
     {"version":"0.1.1-foundation","file":"evidence/releases/0.1.1-foundation.json"},
     {"version":"0.2.0-core","file":"evidence/releases/0.2.0-core.json"},
