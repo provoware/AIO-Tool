@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="dark light">
 <title>AIO-Tool Dashboard</title>
-<meta name="aio-ui-contract" content="dashboard-v2.2">
-<link rel="stylesheet" href="/styles.css?contract=dashboard-v2.2">
-<link rel="stylesheet" href="/acceptance.css?contract=dashboard-v2.2">
+<meta name="aio-ui-contract" content="dashboard-v2.3">
+<link rel="stylesheet" href="/styles.css?contract=dashboard-v2.3">
+<link rel="stylesheet" href="/acceptance.css?contract=dashboard-v2.3">
 </head>
 <body>
 <a class="skip-link" href="#mainContent" data-i18n="a11y.skip">Zum Hauptinhalt</a>
@@ -50,14 +50,14 @@
       <aside class="module-column" aria-label="Schnellfunktionen und Module" data-ui-region="modules">
         <section class="panel module-panel">
           <div class="panel-head"><div><div class="eyebrow" data-i18n="modules.eyebrow">SCHNELLZUGRIFF</div><h2 data-i18n="modules.title">Module</h2></div></div>
-          <div class="segmented" id="moduleMode" role="group" aria-label="Module filtern"><button type="button" class="selected" data-module-mode="frequent" data-i18n="modules.frequent">Häufig</button><button type="button" data-module-mode="all" data-i18n="modules.all">Alle</button></div>
+          <div class="segmented" id="moduleMode" role="group" aria-label="Module filtern"><button type="button" class="selected" data-module-mode="frequent" aria-pressed="true" data-i18n="modules.frequent">Häufig</button><button type="button" data-module-mode="all" aria-pressed="false" data-i18n="modules.all">Alle</button></div>
           <div class="module-grid" id="moduleGrid" data-mode="frequent">
-            <a class="module-tile frequent" href="#calendarPanel"><span>📅</span><strong data-i18n="module.calendar">Kalender</strong><small data-i18n="module.calendar.help">Monat & Termine</small></a>
-            <a class="module-tile frequent" href="#todoPanel"><span>✓</span><strong data-i18n="module.todos">TODOs</strong><small data-i18n="module.todos.help">Nächste Aufgaben</small></a>
-            <a class="module-tile frequent" href="#eventPanel"><span>🕘</span><strong data-i18n="module.events">Verlauf</strong><small data-i18n="module.events.help">Letzte Änderungen</small></a>
-            <a class="module-tile all-only" href="#systemPanel"><span>🛡</span><strong data-i18n="module.system">System</strong><small data-i18n="module.system.help">Status & Schutz</small></a>
-            <button class="module-tile all-only" id="developerToggle" type="button" aria-expanded="false" aria-controls="developerPanel"><span>🧪</span><strong data-i18n="module.dev">Entwickler</strong><small data-i18n="module.dev.help">Diagnose kompakt</small></button>
-            <button class="module-tile all-only disabled-tile" type="button" disabled><span>🗂</span><strong data-i18n="module.files">Dateien</strong><small data-i18n="module.files.help">folgt sicher später</small></button>
+            <a class="module-tile frequent" href="#calendarPanel"><span aria-hidden="true">📅</span><strong data-i18n="module.calendar">Kalender</strong><small data-i18n="module.calendar.help">Monat & Termine</small></a>
+            <a class="module-tile frequent" href="#todoPanel"><span aria-hidden="true">✓</span><strong data-i18n="module.todos">TODOs</strong><small data-i18n="module.todos.help">Nächste Aufgaben</small></a>
+            <a class="module-tile frequent" href="#eventPanel"><span aria-hidden="true">🕘</span><strong data-i18n="module.events">Verlauf</strong><small data-i18n="module.events.help">Letzte Änderungen</small></a>
+            <a class="module-tile all-only" href="#systemPanel"><span aria-hidden="true">🛡</span><strong data-i18n="module.system">System</strong><small data-i18n="module.system.help">Status & Schutz</small></a>
+            <button class="module-tile all-only" id="developerToggle" type="button" aria-expanded="false" aria-controls="developerPanel"><span aria-hidden="true">🧪</span><strong data-i18n="module.dev">Entwickler</strong><small data-i18n="module.dev.help">Diagnose kompakt</small></button>
+            <button class="module-tile all-only disabled-tile" type="button" disabled><span aria-hidden="true">🗂</span><strong data-i18n="module.files">Dateien</strong><small data-i18n="module.files.help">folgt sicher später</small></button>
           </div>
         </section>
         <section class="panel developer-panel" id="developerPanel" data-ui-region="developer" hidden><div class="panel-head compact-head"><div><div class="eyebrow">ENTWICKLER</div><h2 data-i18n="dev.title">Diagnose</h2></div><span class="mini-badge" id="registryBadge">—</span></div><pre id="developerInfo" class="diagnostic-box" tabindex="0">—</pre><button id="copyDiagnosticBtn" type="button" class="secondary full" data-i18n="dev.copy">Diagnose kopieren</button></section>
@@ -79,11 +79,24 @@
       </aside>
     </div>
 
-    <section class="panel settings-panel" id="settingsPanel" data-ui-region="settings" hidden aria-labelledby="settingsTitle"><div class="panel-head"><div><div class="eyebrow" data-i18n="settings.eyebrow">DARSTELLUNG</div><h2 id="settingsTitle" data-i18n="settings.title">Einfach per Auswahl</h2></div><button type="button" id="settingsClose" class="secondary compact" data-i18n="action.close">Schließen</button></div><div class="settings-grid"><div class="setting-group"><strong data-i18n="settings.theme">Theme</strong><div class="button-row" id="themeButtons"><button type="button" data-theme="trash-neon">Trash Neon</button><button type="button" data-theme="steel-night">Steel Night</button><button type="button" data-theme="clean-light">Clean Light</button><button type="button" data-theme="high-contrast">High Contrast</button></div></div><div class="setting-group"><strong data-i18n="settings.font">Schriftgröße</strong><div class="button-row" id="fontButtons"><button type="button" data-font="90">90 %</button><button type="button" data-font="100">100 %</button><button type="button" data-font="110">110 %</button><button type="button" data-font="120">120 %</button><button type="button" data-font="130">130 %</button><button type="button" data-font="140">140 %</button></div></div><label class="switch-row"><input id="expertToggle" type="checkbox"><span data-i18n="settings.expert">Entwicklerbereich verfügbar machen</span></label></div></section>
+    <section class="panel settings-panel" id="settingsPanel" data-ui-region="settings" hidden aria-labelledby="settingsTitle">
+      <div class="panel-head"><div><div class="eyebrow" data-i18n="settings.eyebrow">DARSTELLUNG</div><h2 id="settingsTitle" tabindex="-1" data-i18n="settings.title">Einfach per Auswahl</h2></div><button type="button" id="settingsClose" class="secondary compact" data-i18n="action.close">Schließen</button></div>
+      <div class="settings-grid">
+        <div class="setting-group"><strong data-i18n="settings.theme">Theme</strong><div class="theme-picker" id="themeButtons">
+          <button class="theme-option" type="button" data-theme="aurora-glass" aria-pressed="false"><span class="theme-swatch swatch-aurora" aria-hidden="true"></span><span><strong>Aurora Glass</strong><small>modern · ruhig · violett/cyan</small></span></button>
+          <button class="theme-option" type="button" data-theme="steel-night" aria-pressed="false"><span class="theme-swatch swatch-steel" aria-hidden="true"></span><span><strong>Steel Night</strong><small>klar · technisch · dunkelblau</small></span></button>
+          <button class="theme-option" type="button" data-theme="trash-neon" aria-pressed="false"><span class="theme-swatch swatch-trash" aria-hidden="true"></span><span><strong>Trash Neon</strong><small>kräftig · subkulturell · neon</small></span></button>
+          <button class="theme-option" type="button" data-theme="clean-light" aria-pressed="false"><span class="theme-swatch swatch-light" aria-hidden="true"></span><span><strong>Clean Light</strong><small>hell · sachlich · luftig</small></span></button>
+          <button class="theme-option" type="button" data-theme="high-contrast" aria-pressed="false"><span class="theme-swatch swatch-contrast" aria-hidden="true"></span><span><strong>High Contrast</strong><small>maximaler Kontrast · ohne Schatten</small></span></button>
+        </div></div>
+        <div class="setting-group"><strong data-i18n="settings.font">Schriftgröße</strong><div class="button-row" id="fontButtons"><button type="button" data-font="90" aria-pressed="false">90 %</button><button type="button" data-font="100" aria-pressed="false">100 %</button><button type="button" data-font="110" aria-pressed="false">110 %</button><button type="button" data-font="120" aria-pressed="false">120 %</button><button type="button" data-font="130" aria-pressed="false">130 %</button><button type="button" data-font="140" aria-pressed="false">140 %</button></div></div>
+        <label class="switch-row"><input id="expertToggle" type="checkbox"><span data-i18n="settings.expert">Entwicklerbereich verfügbar machen</span></label>
+      </div>
+    </section>
     <footer class="footer-status"><span id="lastRefresh">Noch nicht aktualisiert</span><span>•</span><span data-i18n="footer.local">Daten bleiben lokal</span></footer>
   </main>
 </div>
 <noscript><div class="noscript-warning">🔴 JavaScript ist deaktiviert. Kalender, Aufgaben und Einstellungen können so nicht funktionieren.</div></noscript>
-<script src="/app.js?contract=dashboard-v2.2" defer></script>
+<script src="/app.js?contract=dashboard-v2.3" defer></script>
 </body>
 </html>
