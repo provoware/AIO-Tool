@@ -1,21 +1,22 @@
 # AIO-Tool
 
-> **Aktueller Kandidat:** 🟢 `0.5.1-audit-modern-ui-TESTED` — Registry `tested / draft`; Promotion-CI noch offen  
+> **Aktueller Kandidat:** 🟢 `0.5.1-audit-modern-ui-TESTED` — Registry `tested / draft`, L0–L3 vollständig grün  
 > **Letzter auf `main` vollständig bewiesener Stand:** 🟢 `0.5.0-native-acceptance-safe-file-sim-TESTED`  
 > **Betrieb:** lokal · offline-first · keine Telemetrie · Loopback-only
 
 AIO-Tool bündelt Kalender, TODOs, Erinnerungen, Ereignisse, Diagnose, Zielsystemabnahme und die weiterhin **nur simulierte** SAFE-FILE-Vorprüfung in einer laienfreundlichen lokalen Oberfläche.
 
-## 🚦 Was bedeutet der aktuelle Zustand?
+## 🚦 Aktueller Zustand
 
 | Bereich | Status | Bedeutung |
 |---|---|---|
 | 0.5.0 Main-Baseline | 🟢 BEWIESEN | L0–L3 auf `main` vollständig grün |
-| 0.5.1 Audit | 🟢 TESTED-Kandidat | DEV-Gate `33045348341` vollständig grün; Promotion-Commit muss nochmals dieselben Gates bestehen |
+| 0.5.1 Audit | 🟢 TESTED | DEV-Run `33045348341` und Promotion-Run `33045669222` vollständig grün |
+| Evidence-Sync / Main-Merge | 🟡 OFFEN | letzter Metadaten-Gate, PR, Squash-Merge und Main-CI fehlen noch |
 | Native Kubuntu L4 | 🟡 OFFEN | muss real auf dem Zielsystem bestätigt werden |
-| SAFE-FILE echte Copy | 🔒 GESPERRT | Simulation kann keine Dateien verändern |
+| SAFE-FILE echte Copy | 🔒 GESPERRT | Simulation besitzt weiterhin keine Dateimutation |
 
-**Wichtig:** TESTED bedeutet nicht automatisch „auf jeder realen Kubuntu-/DPI-/Zoom-Kombination manuell abgenommen“. Diese L4-Evidenz bleibt getrennt.
+**Wichtig:** TESTED bedeutet hier L0–L3. Es ersetzt keine reale Kubuntu-/DPI-/Browserzoom-/Tastaturabnahme L4.
 
 ## 📊 Entwicklungsfortschritt
 
@@ -26,8 +27,9 @@ Dashboard / Browser-Gates       ████████████████
 Native Acceptance Runner        ████████████████████ 100 % 🟢
 Release-Evidenzsystem           ████████████████████ 100 % 🟢
 SAFE-FILE Simulation            ████████████████████ 100 % 🟢
-0.5.1 Code-/Robustheitsaudit    ████████████████████ 100 % 🟢 DEV-Gate
-0.5.1 Promotion                 ████████████████░░░░  80 % 🟡 Promotion-CI offen
+0.5.1 Code-/Robustheitsaudit    ████████████████████ 100 % 🟢
+0.5.1 TESTED-Promotion          ████████████████████ 100 % 🟢
+Evidence-Sync / Main-Merge      ████████████████░░░░  80 % 🟡
 Native Kubuntu L4               ██████░░░░░░░░░░░░░░  30 % 🟡 real offen
 SAFE-FILE Copy-Ausführung       ░░░░░░░░░░░░░░░░░░░░   0 % 🔒
 ```
@@ -43,32 +45,38 @@ SAFE-FILE Copy-Ausführung       ░░░░░░░░░░░░░░░�
 - Serverlog-Schreibvorgänge sind im Threading-Backend serialisiert.
 - Browser-Acceptance besitzt **nur noch eine** kanonische Implementierung; der CI-Einstieg ist ein dünner Wrapper.
 - UI-Testassets werden aus dem aktuellen `index.html` abgeleitet statt Contract-Versionen doppelt zu hardcodieren.
-- Entwicklungs-Lerngedächtnis umfasst nun 21 aktive strukturelle Regeln.
+- Entwicklungs-Lerngedächtnis umfasst 21 aktive strukturelle Regeln.
 
 ### Nutzerfreundlichkeit und Feedback
 
 - Backend-Anfragen haben einen klaren 8-Sekunden-Timeout mit Hinweis auf die Startkonsole.
 - „Neu prüfen“ läuft single-flight, zeigt `Prüfe …`, sperrt parallele Wiederholungen und setzt `aria-busy`.
 - Theme-/Schriftänderungen zeigen sofort eine Vorschau, werden serialisiert gespeichert und bei Fehler auf den letzten bestätigten Stand zurückgesetzt.
-- **Leer** und **nicht verfügbar** sind getrennte Zustände: Ladefehler werden nicht mehr als „keine TODOs/Termine/Ereignisse“ ausgegeben.
+- **Leer** und **nicht verfügbar** sind getrennte Zustände.
 - Fehlerhafte Kalender-/Terminabfragen zeigen keine veralteten Daten unter einer neuen Überschrift.
 - Ein später erfolgreicher TODO-Versuch entfernt einen zuvor gespeicherten Aktionsfehler.
-- Der sichtbare Boot-Guard unterscheidet Start, READY, READY mit Hinweisen und Startfehler.
-- Theme-, Schrift- und Modulwahl verwenden zusätzlich `aria-pressed`.
-- Einstellungen erhalten zuverlässigen Tastaturfokus und geben ihn beim Schließen zurück.
-- Kalenderzellen erzeugen nicht mehr Dutzende unnötige Tabstopps.
+- Der Boot-Guard unterscheidet Start, READY, READY mit Hinweisen und Startfehler.
+- Theme-, Schrift- und Modulwahl verwenden `aria-pressed`.
+- Einstellungen besitzen zuverlässige Tastaturfokusführung; Kalenderzellen erzeugen keine unnötigen Tabstopps.
 
 ### Moderneres Erscheinungsbild
 
-Fünf klar getrennte Themes verwenden denselben semantischen Komponentenvertrag:
+Fünf Themes verwenden denselben semantischen Komponentenvertrag:
 
-- **Aurora Glass** — modernes Cyan/Violett mit ruhigen Glasflächen.
-- **Steel Night** — sachlich-technisch, dunkel und klar.
-- **Trash Neon** — kräftige Subkultur-/Neonwirkung.
-- **Clean Light** — helle, ruhige Arbeitsoberfläche.
-- **High Contrast** — maximaler Kontrast, ohne dekorative Schatten.
+- **Aurora Glass** — Cyan/Violett, ruhig und modern.
+- **Steel Night** — technisch, dunkel und klar.
+- **Trash Neon** — kräftiger Subkultur-/Neonstil.
+- **Clean Light** — helle, sachliche Arbeitsansicht.
+- **High Contrast** — maximaler Kontrast ohne dekorative Schatten.
 
-Farbe ist nie die einzige Statusinformation; Status bleibt zusätzlich durch Text/Icon erkennbar. `prefers-reduced-motion` bleibt verbindlich.
+Farbe ist nie die einzige Statusinformation; Text/Icon bleiben zusätzlich erhalten. `prefers-reduced-motion` wird respektiert.
+
+## 🧪 TESTED-Evidenz 0.5.1
+
+- DEV-Gate: `33045348341` — Core/Release + Chromium + Firefox + Helper-UIs PASS.
+- TESTED-Promotion: `33045669222` — **138/138 Tests**, Guards, Runtime-ZIP/Preflight, Chromium + Firefox + Helper-UIs PASS.
+- Runtime-ZIP SHA256: `a7ab6d64e978e27c1fa550c549e12dc7ee21e24a17a55fd9c160c19cd3001b72`.
+- GitHub-Artefakt-Digest: `62cc0787280328c1bfe5ff08628ea87ed1ec251bf718bf82178e2cfca88a85e0`.
 
 ## ▶️ Start
 
@@ -94,7 +102,7 @@ Der Assistent führt durch 18 echte L4-Schritte. Kein Schritt wird automatisch a
 ./start_safe_file_simulation.sh
 ```
 
-Die Oberfläche darf nur lesen/prüfen/vorschlagen. Der Vertrag bleibt:
+Der Sicherheitsvertrag bleibt:
 
 ```text
 simulation_only=true
@@ -110,7 +118,7 @@ mutation_performed=false
 4. Persistente JSON-Zustände werden validiert, atomar und thread-sicher geschrieben und mit Backup-Fallback gelesen.
 5. Runtime-ZIP enthält nur die positive Allowlist aus `manifests/RUNTIME_MANIFEST.json`.
 6. Dokumentation, Tests, Logs und Evidenz bleiben im Repository bzw. lokal.
-7. Eine TESTED-Version wird nach ihrer Evidenz nicht weiter verändert; Produktpatches beginnen als neue DEV-Version.
+7. Eine TESTED-Version wird nach ihrer Evidenz nicht mehr durch Produktpatches verändert; neue Produktänderungen beginnen in einer neuen DEV-Version.
 
 ## 🧪 Qualitätspyramide
 
@@ -134,4 +142,4 @@ Ein niedrigeres Level darf niemals als Beweis für ein höheres ausgegeben werde
 
 ## ➜ Nächster Gate
 
-Der aktuelle Promotion-Commit muss erneut **Core/Release + Chromium + Firefox + Native Runner + SAFE-FILE-Hilfsoberfläche** vollständig grün durchlaufen. Erst danach wird der echte TESTED-Artefakthash in die Evidenzdatei eingetragen und der Merge nach `main` vorbereitet.
+Keine neue Produktfunktion. Zuerst: **reinen Evidence-/Dokumentations-Sync vollständig prüfen → PR → Squash-Merge nach `main` → Main-CI → Main-Runtime-ZIP gegen den bewiesenen TESTED-Hash vergleichen.** Danach folgt Native L4 auf echtem Kubuntu.
