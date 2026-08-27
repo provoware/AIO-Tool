@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "contract_version": "dashboard-v2.2",
+  "purpose": "Maschinenlesbarer Raster- und Reflow-Vertrag für das AIO-Tool Dashboard.",
+  "grid": {
+    "columns": 12,
+    "gap_css_px": 11,
+    "desktop_spans": {"modules": 3, "calendar": 6, "status": 3},
+    "medium_spans": {"modules": 4, "calendar": 8, "status": 12},
+    "single_column_span": 12
+  },
+  "rules": {
+    "max_horizontal_overflow_css_px": 2,
+    "max_region_overlap_css_px": 1,
+    "min_interactive_height_css_px": 40,
+    "min_interactive_width_css_px": 32,
+    "min_visible_region_fraction": 0.95,
+    "max_clipped_core_text_nodes": 0,
+    "calendar_weekday_columns": 7,
+    "max_text_clip_delta_css_px": 3
+  },
+  "required_regions": ["overview", "focus", "modules", "calendar", "upcoming", "todos", "events", "system"],
+  "optional_regions": ["reminders", "developer", "settings"],
+  "scenarios": [
+    {"id": "desktop", "viewport": [1366, 768], "font_scale": 100, "expected_mode": "desktop"},
+    {"id": "laptop", "viewport": [1180, 800], "font_scale": 110, "expected_mode": "medium"},
+    {"id": "zoom-like", "viewport": [900, 900], "font_scale": 140, "expected_mode": "single"},
+    {"id": "narrow", "viewport": [520, 900], "font_scale": 120, "expected_mode": "single"},
+    {"id": "wcag-reflow-320", "viewport": [320, 900], "font_scale": 100, "expected_mode": "single"}
+  ]
+}
