@@ -1,14 +1,63 @@
-# AGENTS.md — Verbindliche Entwicklungsregeln
+# AGENTS.md — Verbindlicher Entwicklungs- und Qualitätsvertrag
 
-Diese Regeln gelten für Menschen, KI-Agenten und automatisierte Entwicklungswerkzeuge im Repository.
+Diese Regeln gelten für Menschen, KI-Agenten und automatisierte Entwicklungswerkzeuge im Repository. Sie sind **Produktionsregeln**, keine unverbindlichen Empfehlungen.
 
-## 1. Arbeitsprinzip
+## 1. Entwicklungsfluss
 
-**Besprechen → klar abgrenzen → gezielt ändern → automatisch prüfen → Fehler beheben → Regression sichern → dokumentieren → nächsten unabhängigen Schritt wählen.**
+**Besprechen → abgrenzen → kleinste verantwortliche Codezone bestimmen → ändern → automatisch prüfen → Fehler beheben → Regression sichern → Evidenz erzeugen → Dokumentation synchronisieren → nächsten unabhängigen Slice wählen.**
 
-Keine großflächigen Umbauten ohne nachgewiesenen Nutzen. Bestehende funktionierende Bereiche werden möglichst lokal gepatcht.
+- Keine großflächigen Umbauten ohne belegten strukturellen Nutzen.
+- Funktionierende Bereiche möglichst lokal patchen.
+- Keine neue Nutzfunktion beginnen, solange ein P0/P1-Gate des aktuellen Slices rot ist.
+- Ein Fix ist erst abgeschlossen, wenn der zugehörige Fehlervertrag erneut geprüft wurde.
 
-## 2. Laien zuerst
+## 2. Quellenhierarchie — welche Datei ist wofür Wahrheit?
+
+Bei Widersprüchen gilt diese Reihenfolge:
+
+1. **Produktvalidatoren / ausführbarer Code** — tatsächlicher Daten- und Laufzeitvertrag.
+2. **`VERSION` + validierte `VERSION_REGISTRY.json`** — Versions- und Statuswahrheit.
+3. **`manifests/RUNTIME_MANIFEST.json`** — einzige Allowlist für transportierte Runtime-Dateien.
+4. **Automatisierte Tests / CI-Evidenz** — Nachweis, nicht Produktdefinition.
+5. **README / TODO / CHANGELOG / MANIFEST / LAIEN-ANLEITUNG / TOOLBESCHREIBUNG** — Erklärung des bewiesenen Zustands.
+
+Dokumentation darf niemals einen besseren Zustand behaupten als Registry + Evidenz.
+
+## 3. Versionszustände und erlaubte Übergänge
+
+Kanonische Versionsstatus:
+
+- `development` → Dateisuffix `DEV`
+- `tested` → `TESTED`
+- `release-candidate` → `RC`
+- `released` → `RELEASED`
+- `blocked` → `BLOCKED`
+- `deprecated` → `ARCHIVED`
+
+Kanonische Release-Statuspaare:
+
+- `development / draft`
+- `tested / draft`
+- `release-candidate / candidate`
+- `released / released`
+- `blocked / blocked`
+- `deprecated / deprecated`
+
+Unbekannte oder widersprüchliche Kombinationen müssen **fail-closed** abgelehnt werden.
+
+### Unveränderlichkeit bewiesener Versionen
+
+Sobald eine Version `tested`, `release-candidate` oder `released` ist, darf Produktcode dieses Versionsstandes nicht weiter verändert werden. Jeder weitere Codepatch erzeugt eine **neue Version als `development`**. Die alte Evidenz bleibt historisch reproduzierbar.
+
+## 4. Statussprache
+
+- **UMGESETZT** = Code/Artefakt vorhanden.
+- **GEPRÜFT** = Test tatsächlich ausgeführt.
+- **BEWIESEN** = reproduzierbare Evidenz einem konkreten Commit zugeordnet.
+
+`tested`, `release-candidate` und `released` benötigen Evidenz. Nicht geprüfte Zielsysteme bleiben ausdrücklich offen.
+
+## 5. Laien zuerst
 
 - Standardsprache der Nutzeroberfläche: Deutsch.
 - Alltagssprache vor Fachsprache.
@@ -16,12 +65,11 @@ Keine großflächigen Umbauten ohne nachgewiesenen Nutzen. Bestehende funktionie
 - Pro Ansicht möglichst 3–6 Hauptentscheidungen.
 - Ein klarer nächster Schritt muss sichtbar sein.
 - Expertenoptionen standardmäßig einklappen.
+- Farbe unterstützt die Orientierung, ist aber nie die einzige Information; Status benötigt zusätzlich Text/Icon.
 
-## 3. Auswahl vor Zeicheneingabe
+## 6. Auswahl vor Zeicheneingabe
 
-Neue Eingabefelder sind begründungspflichtig.
-
-Reihenfolge:
+Neue Eingabefelder sind begründungspflichtig. Reihenfolge:
 
 1. Button
 2. Auswahldialog
@@ -29,101 +77,157 @@ Reihenfolge:
 4. intelligente Empfehlung
 5. erst dann Freitext-Fallback
 
-Ausnahmen: Inhalte, die naturgemäß frei eingegeben werden müssen, z. B. Notiztext oder PIN.
+Ausnahmen: Inhalte, die naturgemäß frei eingegeben werden müssen, z. B. Notiztext oder PIN. Wiederkehrende sichere Eingaben sollen gespeichert und später als Auswahl angeboten werden. Keine sensiblen Inhalte automatisch als Vorschläge übernehmen.
 
-Wiederkehrende sichere Eingaben sollen gespeichert und später als Auswahl angeboten werden. Keine sensiblen Inhalte automatisch als Vorschläge übernehmen.
-
-## 4. Sicherheit
+## 7. Sicherheit und Integrität
 
 - Keine destruktive Dateiaktion ohne Vorschau und klare Auswirkung.
-- Kritische Operationen benötigen Vorvalidierung und Nachvalidierung.
-- Undo/Recovery ist Teil des Funktionsvertrags, nicht spätere Kosmetik.
+- Kritische Operationen benötigen Vor- und Nachvalidierung.
+- Undo/Recovery ist Teil des Funktionsvertrags.
 - Endgültiges Löschen ist nie Standard.
 - Kein stiller Zielwechsel bei Laufwerks-/Pfadproblemen.
 - Fehler dürfen keinen falschen Erfolg melden.
 - `DONE` erst nach erfolgreicher Persistenz des Abschlusszustands.
+- Prüfungen dürfen produktive Nutzerdaten nicht verändern.
 
-## 5. Offline-first und Datenschutz
+## 8. Launcher- und Instanzvertrag
+
+Eine Antwort `HTTP 200` beweist **keine** passende Toolinstanz.
+
+Vor Wiederverwendung müssen mindestens übereinstimmen:
+
+- erwartete Toolversion,
+- Loopback-Bindung,
+- Ready-Zustand,
+- konkrete lokale Installationskennung.
+
+Ein fremd oder alt belegter Port wird niemals still übernommen. Der Launcher darf einen freien Loopback-Ausweichport wählen und muss dies sichtbar melden. Startdiagnose und Backendlog bleiben getrennt.
+
+## 9. Offline-first und Datenschutz
 
 - Kernfunktionen funktionieren ohne Internet.
 - Keine Telemetrie ohne ausdrücklich dokumentierte Produktentscheidung.
 - Lokales Backend nur auf Loopback binden, sofern kein anderer Vertrag beschlossen wurde.
-- So wenig personenbezogene oder nutzerspezifische Daten speichern wie möglich.
+- So wenig personenbezogene/nutzerspezifische Daten speichern wie möglich.
 - Keine Secrets, PINs oder Passwörter im Klartext protokollieren.
+- Diagnoseausgaben dürfen keine vollständige Config oder unnötige lokale Pfade ausgeben.
 
-## 6. Architektur
+## 10. Architektur und Wartbarkeit
 
-- Module mit klaren Verantwortlichkeiten.
-- UI, Domänenlogik, Persistenz und Transport nicht unnötig koppeln.
-- Lange Dateien frühzeitig modularisieren; Zielwert für zentrale Quellmodule: möglichst unter ca. 800 Zeilen.
-- Keine Abhängigkeit hinzufügen, wenn Standardbibliothek oder bestehende Abhängigkeit die Aufgabe robust erfüllt.
-- Externe Abhängigkeiten müssen begründet, geprüft und im Manifest dokumentiert werden.
+- UI, Domänenlogik, Persistenz, Launcher, Transport und Testharness klar trennen.
+- Wiederverwendbare Verträge in kleinen Modulen zentralisieren statt in Shell/JS/Python mehrfach nachzubauen.
+- Zentrale Quellmodule möglichst unter ca. 800 Zeilen halten; vorher Verantwortlichkeiten prüfen.
+- Keine neue externe Runtime-Abhängigkeit, wenn Standardbibliothek oder bestehende Abhängigkeit robust genügt.
+- Externe Entwicklungsabhängigkeiten müssen gepinnt und vom Runtime-Transport getrennt sein.
 
-## 7. Persistenz
+## 11. Runtime ≠ Repository
 
-- Zustände atomar schreiben, wo Datenverlust relevant ist.
+Das Runtime-ZIP enthält **nur** die explizite Allowlist aus `manifests/RUNTIME_MANIFEST.json` plus generiertes `MANIFEST_RELEASE.json`.
+
+Repository-/Entwicklungsbestand bleibt außerhalb des Transportpakets, insbesondere:
+
+- README/AGENTS/TODO/CHANGELOG/Regressionen/Learning Memory,
+- Tests und Testdaten,
+- CI-Konfiguration,
+- Screenshots/Reports,
+- Entwicklungslogs.
+
+Der Launcher darf beim normalen Betrieb **nur Runtime-Dateien voraussetzen**. `scripts/runtime_preflight.py` ist der Startvertrag; `scripts/validate.py` ist eine Repository-Vollprüfung und darf im Runtime-ZIP fehlen.
+
+## 12. Persistenz
+
+- Relevante Zustände atomar schreiben.
 - Unterbrochene Prozesse dürfen nach Neustart nicht als „läuft“ erscheinen.
 - Backups/Recovery-Metadaten konsistent halten.
-- Konfigurationsänderungen dürfen nicht als Nebeneffekt einer reinen Prüfung entstehen.
+- Konfigurationsänderungen dürfen nicht als Nebeneffekt einer Prüfung entstehen.
+- Schemaänderung → Validator + Vorlage + gültige/ungültige Testdaten + Regression gemeinsam aktualisieren.
 
-## 8. Tests, Musterdateien und Regression
+## 13. Tests und Regressionserkennung
 
-Jeder bestätigte Fehler erhält möglichst reproduzierbaren Test, erwartetes Verhalten, tatsächliches Fehlverhalten, Fix-Nachweis und dauerhaftes Gate.
+Jeder bestätigte Fehler erhält soweit möglich:
 
-Für jedes persistente JSON-/Config-Format gilt zusätzlich:
+- reproduzierbaren Auslöser,
+- erwartetes Verhalten,
+- tatsächliches Fehlverhalten,
+- minimalen Fix,
+- Regressionstest,
+- erneuten Nachweis.
+
+### Erkennungsebenen
+
+1. **L0 Syntax/Schema** — schnell, billig.
+2. **L1 Unit/Contract** — Domänen- und Strukturvertrag.
+3. **L2 Integration/Runtime-ZIP** — transportierter Bestand funktioniert zusammen.
+4. **L3 Browser-Render/Interaktion** — echte Chromium-/Firefox-Geometrie und Bedienung.
+5. **L4 Native Zielsystemabnahme** — reales Kubuntu/DPI/Browserzoom/Tastatur.
+
+Eine niedrigere Ebene darf keine Aussage einer höheren Ebene vortäuschen.
+
+### Priorisierung
+
+- **P0:** Datenverlust, falsche Instanz, Sicherheits-/Release-Integritätsbruch → sofort blockieren.
+- **P1:** Start, Persistenz, Kernbedienung, gravierende UI-Reflow-/A11y-Fehler → vor neuer Funktion beheben.
+- **P2:** relevante Nutzerfreundlichkeit/Wartbarkeit → im aktuellen oder nächsten Slice.
+- **P3:** Kosmetik/Komfort ohne Funktionsrisiko → planbar.
+
+## 14. UI-Acceptance
+
+Statische HTML/CSS-/DOM-Tests sind **kein Renderbeweis**.
+
+Für Aussagen zu Layout, Reflow, Überlappung, Zielgrößen oder Browserinteraktion gilt:
+
+- maschinenlesbarer Rastervertrag,
+- deterministische isolierte Fixtures,
+- messbarer Ready-Zustand,
+- echte Chromium- und Firefox-Läufe,
+- Viewport-/Reflow-Matrix einschließlich 320 CSS-px,
+- Screenshot + JSON-Report als Evidenz,
+- Fehlerartefakte auch bei rotem Gate.
+
+Screenshot-Baselines dürfen nicht einfach aktualisiert werden, um einen Fehler verschwinden zu lassen. Geometrie-/Interaktionsvertrag entscheidet zuerst.
+
+## 15. Musterdateien und Fehlerhilfe
+
+Für jedes persistente JSON-/Config-Format:
 
 - mindestens eine gültige versionierte Mustervorlage,
 - relevante absichtlich ungültige Testdaten,
 - dieselben Validatoren für Produktdaten, Vorlage und Tests,
-- Vorlagen niemals ungefragt über Nutzerdaten schreiben,
-- Schemaänderung → Validator + Vorlage + Testdaten + Regression gemeinsam aktualisieren.
+- Vorlagen niemals ungefragt über Nutzerdaten schreiben.
 
-Keine Aussage „behoben“ ohne erneute Prüfung.
+Wiederkehrende sichtbare Systemtexte werden versioniert ausgelagert. Fehlerhilfe unterscheidet Nutzereingabe, Integrität/Persistenz und unbekannte Fehler. `retry_safe=true` nur bei tatsächlich sicherem Wiederholungsversuch.
 
-## 9. Versionierte Nutztexte und Fehlerhilfe
+## 16. Entwicklungs-Lerngedächtnis
 
-Wiederkehrende sichtbare Systemtexte werden aus versionierten Textkatalogen geladen statt an vielen Stellen hart codiert.
+`LEARNING_MEMORY.jsonl` hält bestätigte strukturelle Entwicklungslektionen dauerhaft fest. Ein Eintrag enthält Auslöser, Erkenntnis, neue Regel, Regression und Geltungsbereich. CI validiert Eindeutigkeit und Form. Ein Bericht darf keine Lernregel als vorhanden behaupten, die nicht im Repository steht.
 
-Fehlerhilfe muss unterscheiden:
+## 17. Codesparendes Patchen
 
-- ungültige Nutzereingabe,
-- Integritäts-/Persistenzfehler,
-- unbekannter Fehler.
+Vor größeren Änderungen bestimmen:
 
-Eine Hilferegel darf eine geprüfte Mustervorlage empfehlen, aber keine Nutzerdaten automatisch ersetzen. `retry_safe=true` darf nur gesetzt werden, wenn ein erneuter Versuch ohne zusätzliche Datengefährdung vertretbar ist.
+**Datei → Funktion/Klasse → Zeilenbereich → zugehöriger Test → Auswirkung auf Manifeste/Doku.**
 
-## 10. Entwicklungs-Lerngedächtnis
+Lokaler Patch + Regression vor breitem Refactor. Größerer Umbau nur, wenn lokale Reparatur die Kopplung verschlimmern würde. Zeilenangaben in Abschlussberichten stammen aus dem tatsächlich geprüften finalen Stand.
 
-`LEARNING_MEMORY.jsonl` hält bestätigte Entwicklungslektionen dauerhaft fest.
+## 18. Release-Gate
 
-Ein Eintrag soll enthalten: Auslöser, Erkenntnis, neue Regel, Regression und Geltungsbereich. Wiederkehrende oder strukturelle Fehler müssen dort aufgenommen werden. CI validiert die Datei; widersprüchliche oder ungültige Lerndaten dürfen keinen Release passieren.
+Vor Statuspromotion mindestens:
 
-## 11. Codesparendes Patchen
+- Python-/Shell-/JavaScript-Syntax grün,
+- Unit-/Integrations-/Vertragstests grün,
+- Foundation-/Learning-Gate grün,
+- Runtime-ZIP gebaut und Manifest/Hashes geprüft,
+- gebautes ZIP frisch entpackt und `runtime_preflight.py` daraus erfolgreich ausgeführt,
+- für UI-Änderungen Chromium + Firefox Acceptance grün,
+- Dokumentations-/Manifeststatus synchron,
+- keine Runtime-/Nutzerdaten/Testartefakte im Transport.
 
-Vor einem größeren Fix zuerst die kleinste verantwortliche Codezone bestimmen: **Datei → Funktion/Klasse → Zeilenbereich → zugehöriger Test**.
+Erst danach Statuspromotion; **auf dem Promotion-Commit komplette CI erneut ausführen**.
 
-Bevorzugt wird ein lokaler Patch mit passender Regression statt breitem Refactor. Größere Umbauten nur, wenn die lokale Reparatur strukturell unvertretbar wäre. Abschlussberichte nennen bei relevanten offenen Punkten konkrete Patchstellen mit Zeilenangaben.
+## 19. Dokumentationspflicht
 
-## 12. Release-Regeln
+Änderungen mit Wirkung auf Verhalten, Architektur, Sicherheit, Bedienung, Status oder Transport müssen die relevanten Dateien gemeinsam synchronisieren:
 
-Vor einem Release:
+`README.md`, `TODO.md`, `CHANGELOG.md`, `MANIFEST.md`, `REGRESSIONSINFOS.md`, `LAIEN-ANLEITUNG.md`, `TOOLBESCHREIBUNG.md`.
 
-- Tests grün,
-- Learning Guard grün,
-- Changelog/TODO/Manifest/Regressionen aktuell,
-- Laienanleitung auf tatsächliches Verhalten geprüft,
-- Muster-/Testdaten mit Validatoren konsistent,
-- keine `.venv`, Caches, temporären Logs, Testprofile oder lokalen Nutzerdaten im Release,
-- erzeugtes Release erneut prüfen.
-
-## 13. Statussprache
-
-`UMGESETZT` = Code/Artefakt vorhanden.  
-`GEPRÜFT` = Test tatsächlich ausgeführt.  
-`BEWIESEN` = reproduzierbare Evidenz vorhanden.
-
-Nicht geprüfte Zielsysteme ausdrücklich als offen kennzeichnen.
-
-## 14. Dokumentationspflicht
-
-Änderungen mit Auswirkung auf Verhalten, Architektur, Sicherheit oder Bedienung müssen mindestens in den relevanten Dateien aus README, TODO, CHANGELOG, MANIFEST, REGRESSIONSINFOS und LAIEN-ANLEITUNG nachgezogen werden.
+README zeigt aktuellen Zustand und verständlichen Start; TODO nur tatsächlich offene Punkte; CHANGELOG zeitliche Änderung; MANIFEST Architektur/Transport; REGRESSIONSINFOS Fehlerverträge. Keine Datei darf einen alten Versionsstand als „aktuell“ ausgeben.

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import os
 import sys
 import zipfile
@@ -13,51 +14,160 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from app import ROOT_DIR, VERSION
+from app.version_registry import validate_registry
 
-EXCLUDE_PARTS = {".git", ".venv", "__pycache__", ".pytest_cache", "dist", "build"}
-EXCLUDE_PREFIXES = {"runtime/"}
+RUNTIME_MANIFEST_PATH = ROOT_DIR / "manifests" / "RUNTIME_MANIFEST.json"
+REGISTRY_PATH = ROOT_DIR / "VERSION_REGISTRY.json"
 FIXED_TIME = (2026, 8, 27, 0, 0, 0)
+STATUS_LABELS = {
+    "development": "DEV",
+    "tested": "TESTED",
+    "release-candidate": "RC",
+    "released": "RELEASED",
+    "blocked": "BLOCKED",
+    "deprecated": "ARCHIVED",
+}
 
 
-def included_files():
-    for path in sorted(ROOT_DIR.rglob("*")):
+def _load_json(path: Path) -> dict:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise SystemExit(f"FEHLER: {path.name} ist nicht lesbar.") from exc
+
+
+def load_runtime_manifest() -> dict:
+    data = _load_json(RUNTIME_MANIFEST_PATH)
+    if data.get("schema_version") != 1 or not isinstance(data.get("files"), list):
+        raise SystemExit("FEHLER: Runtime-Manifest-Schema unbekannt.")
+    files = data["files"]
+    if len(files) != len(set(files)) or not all(isinstance(item, str) and item for item in files):
+        raise SystemExit("FEHLER: Runtime-Manifest enthält ungültige oder doppelte Pfade.")
+    return data
+
+
+def current_version_record() -> dict:
+    registry = validate_registry(_load_json(REGISTRY_PATH))
+    if registry.get("current_version") != VERSION:
+        raise SystemExit("FEHLER: VERSION und VERSION_REGISTRY.json weichen voneinander ab.")
+    matches = [item for item in registry.get("versions", []) if item.get("version") == VERSION]
+    if len(matches) != 1:
+        raise SystemExit("FEHLER: Aktuelle Version fehlt oder ist doppelt in der Registry.")
+    return matches[0]
+
+
+def status_label(record: dict) -> str:
+    status = str(record.get("status", "")).strip().lower()
+    try:
+        return STATUS_LABELS[status]
+    except KeyError as exc:
+        raise SystemExit(f"FEHLER: Unbekannter Release-Status für Dateinamen: {status!r}.") from exc
+
+
+def runtime_files(manifest: dict):
+    for rel in manifest["files"]:
+        path = ROOT_DIR / rel
         if not path.is_file():
-            continue
-        rel = path.relative_to(ROOT_DIR).as_posix()
-        if any(part in EXCLUDE_PARTS for part in path.relative_to(ROOT_DIR).parts):
-            continue
-        if any(rel.startswith(prefix) for prefix in EXCLUDE_PREFIXES):
-            continue
-        if rel.endswith(".zip") or rel.endswith(".pyc"):
-            continue
+            raise SystemExit(f"FEHLER: deklarierte Runtime-Basisdatei fehlt: {rel}")
         yield path, rel
 
 
-def build(output: Path) -> str:
+def _file_meta(path: Path, rel: str) -> dict:
+    raw = path.read_bytes()
+    return {"path": rel, "size": len(raw), "sha256": hashlib.sha256(raw).hexdigest()}
+
+
+def build(output: Path | None = None) -> tuple[Path, str]:
+    manifest = load_runtime_manifest()
+    record = current_version_record()
+    label = status_label(record)
+    archive_name = f"AIO-Tool-{VERSION}-{label}.zip"
+    output = output or (ROOT_DIR / "dist" / archive_name)
+    if output.name != archive_name:
+        raise SystemExit(f"FEHLER: Release-Dateiname muss exakt '{archive_name}' heißen.")
     output.parent.mkdir(parents=True, exist_ok=True)
+
+    entries = list(runtime_files(manifest))
+    release_manifest = {
+        "schema_version": 1,
+        "tool": "AIO-Tool",
+        "version": VERSION,
+        "status": label,
+        "registry_status": record["status"],
+        "release_status": record["release_status"],
+        "runtime_manifest_version": manifest.get("manifest_version"),
+        "archive_name": output.name,
+        "file_count": len(entries) + 1,
+        "files": [_file_meta(path, rel) for path, rel in entries],
+    }
+    release_bytes = (json.dumps(release_manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")
+
+    root_name = f"AIO-Tool-{VERSION}"
     with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
-        for path, rel in included_files():
-            info = zipfile.ZipInfo(f"AIO-Tool-{VERSION}/{rel}", FIXED_TIME)
-            mode = 0o755 if os.access(path, os.X_OK) or rel in {"start_tool.sh", "scripts/validate.py", "scripts/release.py"} else 0o644
+        for path, rel in entries:
+            info = zipfile.ZipInfo(f"{root_name}/{rel}", FIXED_TIME)
+            mode = 0o755 if os.access(path, os.X_OK) or rel in {"start_tool.sh", "scripts/runtime_preflight.py", "scripts/launcher_probe.py"} else 0o644
             info.external_attr = mode << 16
             info.compress_type = zipfile.ZIP_DEFLATED
             zf.writestr(info, path.read_bytes())
-    return hashlib.sha256(output.read_bytes()).hexdigest()
+        info = zipfile.ZipInfo(f"{root_name}/MANIFEST_RELEASE.json", FIXED_TIME)
+        info.external_attr = 0o644 << 16
+        info.compress_type = zipfile.ZIP_DEFLATED
+        zf.writestr(info, release_bytes)
+    return output, hashlib.sha256(output.read_bytes()).hexdigest()
+
+
+def verify(output: Path) -> None:
+    runtime_manifest = load_runtime_manifest()
+    expected_rel = set(runtime_manifest["files"]) | {"MANIFEST_RELEASE.json"}
+    root_name = f"AIO-Tool-{VERSION}/"
+    with zipfile.ZipFile(output) as zf:
+        names = [name for name in zf.namelist() if not name.endswith("/")]
+        if len(names) != len(set(names)):
+            raise SystemExit("FEHLER: ZIP enthält doppelte Dateieinträge.")
+        if any(not name.startswith(root_name) for name in names):
+            raise SystemExit("FEHLER: ZIP enthält Dateien außerhalb des Versionsordners.")
+        rel_names = {name.removeprefix(root_name) for name in names}
+        if rel_names != expected_rel:
+            missing = sorted(expected_rel - rel_names)
+            extra = sorted(rel_names - expected_rel)
+            raise SystemExit(f"FEHLER: Release-Inhalt weicht vom Runtime-Manifest ab. Fehlend={missing}; Extra={extra}")
+        release_manifest = json.loads(zf.read(root_name + "MANIFEST_RELEASE.json").decode("utf-8"))
+        if release_manifest.get("archive_name") != output.name:
+            raise SystemExit("FEHLER: Release-Manifest und Dateiname stimmen nicht überein.")
+        if release_manifest.get("version") != VERSION:
+            raise SystemExit("FEHLER: Release-Manifest und VERSION stimmen nicht überein.")
+        if release_manifest.get("status") != status_label(current_version_record()):
+            raise SystemExit("FEHLER: Release-Manifest und Registry-Status stimmen nicht überein.")
+        listed = {item["path"]: item for item in release_manifest.get("files", [])}
+        if set(listed) != set(runtime_manifest["files"]):
+            raise SystemExit("FEHLER: Release-Manifest listet nicht exakt die Runtime-Basis.")
+        if release_manifest.get("file_count") != len(expected_rel):
+            raise SystemExit("FEHLER: file_count im Release-Manifest ist inkonsistent.")
+        for rel, meta in listed.items():
+            raw = zf.read(root_name + rel)
+            if len(raw) != meta.get("size") or hashlib.sha256(raw).hexdigest() != meta.get("sha256"):
+                raise SystemExit(f"FEHLER: Hash-/Größenprüfung fehlgeschlagen: {rel}")
+        forbidden_prefixes = tuple(runtime_manifest.get("forbidden_prefixes", []))
+        repo_only_root = set(runtime_manifest.get("repo_only_root_files", []))
+        forbidden = [rel for rel in rel_names if rel in repo_only_root or rel.startswith(forbidden_prefixes)]
+        if forbidden:
+            raise SystemExit("FEHLER: Repo-/Log-/Testinhalt im Runtime-ZIP: " + ", ".join(sorted(forbidden)))
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Reproduzierbares AIO-Tool Release-ZIP")
-    parser.add_argument("--output", type=Path, default=ROOT_DIR / "dist" / f"AIO-Tool-{VERSION}.zip")
-    parser.add_argument("--check", action="store_true", help="Build erzeugen und Inhalt auf Ausschlüsse prüfen")
+    record = current_version_record()
+    label = status_label(record)
+    default_output = ROOT_DIR / "dist" / f"AIO-Tool-{VERSION}-{label}.zip"
+    parser = argparse.ArgumentParser(description="Reproduzierbares AIO-Tool Runtime-Release-ZIP")
+    parser.add_argument("--output", type=Path, default=default_output)
+    parser.add_argument("--check", action="store_true", help="Build erzeugen und Manifest/Allowlist/Hashes prüfen")
     args = parser.parse_args()
-    digest = build(args.output)
+    output, digest = build(args.output)
     if args.check:
-        with zipfile.ZipFile(args.output) as zf:
-            names = zf.namelist()
-            forbidden = [n for n in names if "/runtime/" in n or "/.venv/" in n or "__pycache__" in n]
-            if forbidden:
-                raise SystemExit("FEHLER: unerlaubte Release-Dateien: " + ", ".join(forbidden))
-    print(args.output)
+        verify(output)
+    print(output)
+    print("STATUS", label)
     print("SHA256", digest)
 
 

@@ -1,86 +1,84 @@
 # TODO — AIO-Tool
 
-## Status
+## Aktueller Stand
 
-**P1 DASHBOARD V2 / 0.4.0-dashboard-v2 — CODE-GATE GRÜN**
+**🟢 `0.4.3-integrity-hardening` — TESTED / DRAFT**
 
-GitHub Actions Run `33026823914`: 77 Tests + Validierung + Learning Guard + Launcher + JavaScript + Release-Builder + ZIP-Upload erfolgreich. Finaler Dokumentations-/Registry-Head wird separat erneut geprüft.
+Finaler Entwicklungshead: GitHub Actions Run `33034359454` — **Core/Release + Chromium + Firefox SUCCESS**.
 
-## Foundation
+### Fortschritt 0.4.3
 
-- [x] Klick-&-Start, lokale `.venv`, Loopback-Backend.
+```text
+Audit / Befundaufnahme          ████████████████████ 100 %
+Launcher-Instanzhärtung         ████████████████████ 100 %
+Runtime-Transportvertrag        ████████████████████ 100 %
+Statusmodell                    ████████████████████ 100 %
+Regressionstests                ████████████████████ 100 %
+Dokumentationssynchronisierung  ████████████████████ 100 %
+Finale CI / Browser-Evidenz     ████████████████████ 100 %
+TESTED-Promotion                ████████████████░░░░  80 %  Promotion-Revalidierung läuft
+```
+
+## P0/P1 — Integritätshärtung
+
+- [x] `0.4.2-TESTED` als historischen Evidenzstand einfrieren.
+- [x] neuen Patchstand als `0.4.3-integrity-hardening` führen.
+- [x] Launcher übernimmt nicht mehr jedes HTTP 200 als eigene Instanz.
+- [x] Version + Ready/Loopback + konkrete Installationskennung prüfen.
+- [x] fremd belegten Standardport transparent auf freien Loopback-Port umleiten.
+- [x] ungültigen Port / unbekannten Probe-Status fail-closed behandeln.
+- [x] normaler Runtime-Start nutzt `runtime_preflight.py`, nicht Repo-`validate.py`.
+- [x] Launcher-/Eventlogs lokal begrenzen/rotieren.
+- [x] Status-/Releasevokabular vereinheitlichen und widersprüchliche Paare ablehnen.
+- [x] Runtime-ZIP bauen → entpacken → Preflight aus dem ZIP ausführen.
+- [x] Documentation Guard gegen Versions-/Statusdrift.
+- [x] README/AGENTS/TODO/CHANGELOG/MANIFEST/REGRESSIONS/LAIEN-ANLEITUNG/TOOLBESCHREIBUNG synchronisieren.
+- [x] Core-/Release-Gate auf finalem Entwicklungshead grün.
+- [x] Chromium + Firefox auf finalem Entwicklungshead grün.
+- [x] Evidenz Run `33034359454` in Registry eintragen und auf `tested / draft` setzen.
+- [ ] Promotion-Commit erneut vollständig grün prüfen.
+
+## Bereits bewiesene Basis
+
 - [x] atomare Config + Backup-Fallback.
-- [x] Host-/Origin-/Security-Header.
-- [x] vier Themes und Schriftgrößen-Presets.
-- [x] CI + reproduzierbarer ZIP-Builder.
-- [ ] sauber entpacktes Release real auf Kubuntu starten.
-- [ ] Firefox + Chrome/Chromium prüfen.
-- [ ] 125–200 % Zoom und Tastaturfokus real prüfen.
-
-## Persistenter Kern
-
+- [x] Loopback Host-/Origin-Schutz.
 - [x] VersionRegistry + Evidenzpflicht.
 - [x] EventRegistry.
 - [x] TODO-Core + Titelgedächtnis + Erledigt-Archiv.
-- [x] Calendar-Core + Monats/Wochen/Jahr + Reminder-Quittierung + zoneinfo/DST.
-- [x] versionierte Muster-/Testdaten.
-- [x] versionierte Core-Texte/Fehlerregeln.
-- [x] `LEARNING_MEMORY.jsonl` + CI-Guard.
-- [ ] VERSION/Registry-Drift zusätzlich automatisiert gegen CHANGELOG/MANIFEST prüfen.
+- [x] Calendar-Core + Monat/Woche/Jahr + Reminder + `zoneinfo`/DST.
+- [x] Dashboard V2 mit Monatskalender, nächsten TODOs/Terminen und letzten Ereignissen.
+- [x] Reminder nur nach sichtbarer Nutzerquittierung.
+- [x] 12-Spalten-Raster + Browser-Reflow bis 320 CSS-px.
+- [x] Chromium-/Firefox-Acceptance-Pipeline.
+- [x] positive Runtime-Allowlist + `MANIFEST_RELEASE.json`.
+- [x] Status im Release-Dateinamen.
+- [x] versionierte Texte/Fehlerregeln und Mustervorlagen.
+- [x] `LEARNING_MEMORY.jsonl` + Guard.
 
-## Dashboard V2
+## Native Zielsystemabnahme — nächster Slice
 
-- [x] Monatskalender dauerhaft sichtbar.
-- [x] nächste Termine kompakt.
-- [x] nächste drei TODOs aus Serverreihenfolge.
-- [x] TODO direkt abhaken.
-- [x] letzte fünf Ereignisse.
-- [x] Version/Registry/Backend/Fremdpaket-Status.
-- [x] fällige Reminder sichtbar anzeigen.
-- [x] Reminder erst nach Klick auf „Gesehen“ quittieren.
-- [x] unsichtbarer Tab quittiert Reminder nicht.
-- [x] Entwicklerbereich klein und persistent ein-/ausblendbar.
-- [x] Diagnose ohne vollständige Config, Projektpfad oder Favoriten.
-- [x] Module in „Häufig“ und „Alle“ trennen.
-- [x] linker modularer Schnellzugriff.
-- [x] vier Themes + 90–140 % Schriftgröße.
-- [x] automatische Dichte `kompakt / normal / weit` aus Fenster/Schriftgröße.
-- [x] responsive Breakpoints 1180 / 920 / 720 / 430 px.
-- [x] Skip-Link, Fokusindikator, ARIA-Live und Reduced-Motion-Vertrag.
-- [x] versionierter Dashboard-Textkatalog.
-- [x] statischer Dashboard-Regressionsvertrag.
-- [x] 77 Tests im Code-Gate `33026823914`.
-- [ ] echte Browserdarstellung auf Zielsystem visuell/bedienseitig abnehmen.
+- [ ] `AIO-Tool-0.4.3-integrity-hardening-TESTED.zip` in frischen Ordner auf Kubuntu entpacken.
+- [ ] `start_tool.desktop` und `start_tool.sh` real prüfen.
+- [ ] passende laufende Instanz wiederverwenden.
+- [ ] fremd belegten Port / sicheren Ausweichport real prüfen.
+- [ ] Firefox + Chrome/Chromium: Start, Kalender, TODO, Reminder, Einstellungen.
+- [ ] 100 / 125 / 150 / 175 / 200 % Browserzoom.
+- [ ] KDE-/DPI-Skalierung und kleine / Full-HD / große Fenster.
+- [ ] reiner Tastaturdurchlauf und Fokusreihenfolge.
+- [ ] reale Befunde als Regression + Learning Memory aufnehmen.
 
-## P0 vor SAFE-FILE-CORE
+## SAFE-FILE-CORE — erst danach
 
-- [ ] vollständiges `0.4.0-dashboard-v2` Release aus CI entpacken.
-- [ ] `start_tool.sh` auf Kubuntu aus sauberem Ordner starten.
-- [ ] Firefox: Start, Kalender, TODO-Abhaken, Reminder, Einstellungen, Fokus, Zoom.
-- [ ] Chrome/Chromium: denselben Vertrag prüfen.
-- [ ] 100 / 125 / 150 / 175 / 200 % Zoom prüfen.
-- [ ] Bildschirmbreiten klein / Full-HD / groß prüfen.
-- [ ] gefundene reale UI-Fehler jeweils als Regression + Learning Memory übernehmen.
-
-## SAFE-FILE-CORE danach
-
-- [ ] Copy als erste Dateioperation.
-- [ ] Quelle/Ziel nur über sichere Auswahl.
-- [ ] Vorprüfung: Existenz, Lesbarkeit, Schreibbarkeit, freier Speicher, Konflikte.
-- [ ] Vorschau vor Änderung.
+- [ ] Copy als erste reale Dateioperation.
+- [ ] Quelle/Ziel möglichst über Auswahl statt Pfadeingabe.
+- [ ] Existenz, Lesbarkeit, Schreibbarkeit, freier Speicher und Konflikte vorab prüfen.
+- [ ] Vorschau und klare Auswirkung vor Änderung.
 - [ ] persistenter Jobstatus.
 - [ ] Nachprüfung gegen erwartetes Ergebnis.
 - [ ] Undo-/Recovery-Datensatz.
 - [ ] Abbruch/Neustart robust behandeln.
 - [ ] erst danach Move, Rename und Papierkorb/Delete.
 
-## Job & Recovery
+## Empfohlener nächster Schritt
 
-- [ ] persistente Job-Queue.
-- [ ] `DONE` erst nach erfolgreicher Persistenz + Nachprüfung.
-- [ ] Pause / Abbruch / Wiederaufnahme.
-- [ ] Checkpoints und Recovery Center.
-
-## Aktuell empfohlener nächster Schritt
-
-**Dashboard V2 finalen Dokumentations-/Registry-Gate grün machen und mergen. Danach keine neue Funktion: zuerst reale Kubuntu-/Firefox-/Chrome-/Zoom-Abnahme aus dem erzeugten ZIP.**
+**Promotion-Commit vollständig durch Core/Release + Chromium/Firefox laufen lassen. Danach ohne neue Funktion direkt die native Kubuntu-/Zoom-/Tastaturabnahme aus dem TESTED-ZIP durchführen.**

@@ -1,0 +1,2 @@
+# Nur Entwicklungs-/CI-Abhängigkeit. Nicht für den normalen Tool-Start erforderlich.
+playwright==1.62.0
