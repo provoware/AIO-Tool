@@ -1,55 +1,52 @@
 # TOOLBESCHREIBUNG — AIO-Tool
 
-## Aktueller Stand
+## Aktueller Entwicklungsstand
 
-`0.5.0-native-acceptance-safe-file-sim` — 🟢 **TESTED / draft für automatisierte L0–L3-Gates**. Die reale Kubuntu-Abnahme L4 bleibt offen. SAFE-FILE-Ausführung bleibt technisch gesperrt.
+`0.5.1-audit-modern-ui` — 🟠 **DEVELOPMENT / draft**. Letzter vollständig bewiesener Stand: `0.5.0-native-acceptance-safe-file-sim` — 🟢 TESTED L0–L3. Native Kubuntu L4 bleibt offen; SAFE-FILE-Ausführung bleibt technisch gesperrt.
 
-AIO-Tool ist ein lokales, offline-first ausgelegtes Werkzeug mit Browseroberfläche und Python-Loopback-Backend. Dieser Stand ergänzt zwei bewusst getrennte Qualitäts-/Sicherheitswerkzeuge.
+AIO-Tool ist ein lokales, offline-first ausgelegtes Werkzeug mit Browseroberfläche und Python-Loopback-Backend. Der aktuelle Slice verbessert bewusst **Robustheit, Wartbarkeit, Nutzerfeedback und Erscheinungsbild**, ohne SAFE-FILE-Mutation freizuschalten.
 
-## Native Acceptance Runner
+## Audit-Schwerpunkte
 
-Zweck: die Lücke zwischen automatisierter L3-Browser-CI und realem Kubuntu-Zielsystem schließen.
+### Persistenz
 
-- 18 geführte Prüfschritte,
-- Kubuntu-Start-/Instanz-/Portfälle,
-- kleine/Full-HD/große Darstellung,
-- Tastatur-only,
-- Firefox und Chrome/Chromium jeweils 100/125/150/175/200 %,
-- persistente gemeinsame Sitzung,
-- explizites PASS/FAIL/SKIP,
-- automatische JSON-/TXT-Berichte,
-- keine automatische Hochstufung offener Schritte.
+`AtomicJsonStore` serialisiert parallele Threadzugriffe und behandelt Read→Mutate→Write als einen zusammenhängenden In-Process-Vertrag. Backup-Refresh und Hauptdatei werden atomar ersetzt. `ConfigStore` nutzt denselben Kern statt einer zweiten Schreibimplementierung.
 
-Der Runner selbst wurde automatisiert in Chromium und Firefox geprüft. **Seine späteren PASS/FAIL-L4-Ergebnisse können nur auf einem echten Kubuntu-System entstehen.**
+### Lokale Sicherheit
 
-## Release Evidence Index
+Hauptbackend, Native Runner und SAFE-FILE Simulator verwenden denselben exakten Loopback-Host-/Port-Vertrag. Eine Anfrage auf falschem Port oder fremdem Host gilt nicht als vertrauenswürdig.
 
-Zweck: TESTED-Evidenz nicht über README, Chatberichte und CI-Seiten verteilen.
+### Dashboard-Zustand
 
-- Masterindex: `evidence/RELEASE_EVIDENCE_INDEX.json`.
-- je TESTED-/höherer Version genau eine Datei unter `evidence/releases/`.
-- Inhalte: Commits, CI-Runs, Artefakthashstatus, Browsermatrix, offene L4-Gates.
-- CI-Guard prüft Mengen-/Commit-/Hash-/Browserkonsistenz gegen `VERSION_REGISTRY.json`.
-- historische Lücken werden als `not-recorded` festgehalten.
+Fehlgeschlagene Kalender-/Upcoming-Abfragen können keine alten Daten unter einem neuen Kontext weiterzeigen. Erfolgreiche Wiederholungen löschen alte Aktionsfehler. Der Boot-Guard zeigt Start, READY oder einen klaren Fehlerzustand.
 
-## SAFE-FILE Core V0 — Simulation
+### Modernes Theme-System
 
-Zweck: den vollständigen sicheren Copy-Entscheidungsweg entwickeln, **bevor** die erste Datei verändert werden darf.
+Fünf Themes nutzen denselben semantischen Tokenvertrag:
 
-Workflow:
+- Aurora Glass
+- Steel Night
+- Trash Neon
+- Clean Light
+- High Contrast
 
-`Quelle auswählen → Ziel auswählen → Vorprüfen → Konfliktoption → Vorschau → Failure-/Recovery-Auswertung`
+Oberflächenebenen, Akzent, Fokus, Status, Schatten und Kontrast sind getrennt definiert. High Contrast bleibt bewusst ohne dekorative Schatten. Bewegungsreduktion (`prefers-reduced-motion`) wird respektiert.
 
-Technische Sperren:
+### Hilfsoberflächen
+
+Native Acceptance Runner und SAFE-FILE Simulator verwenden ein gemeinsames `web/helper-ui.css`. Inline-Styles wurden entfernt und die lokale CSP auf `style-src 'self'` verschärft. Dynamische Inhalte werden mit DOM-/`textContent`-Methoden statt `innerHTML` erzeugt.
+
+## SAFE-FILE-Grenze
+
+Weiterhin unverändert:
 
 - `SIMULATION_ONLY=True`
 - `EXECUTION_ENABLED=False`
 - kein Execute-Endpunkt
 - keine Copy-/Move-/Delete-Primitive
-- `mutation_performed=false`
 
-Die Simulation, Failure-Matrix und Sicherheitsverträge wurden automatisiert geprüft. Das ist **keine Freigabe echter Copy**. Eine spätere reale Copy benötigt einen neuen evidenzgebundenen Versionsslice mit persistentem Journal, Staging, Postvalidation, Crash-/Recoverytests und sicherem Undo.
+Eine spätere echte Copy benötigt einen eigenen neuen Versionsslice mit Journal, Staging, Postvalidation, Crash-/Recoverytests und Guarded Undo.
 
-## Automatisierte Evidenz
+## Qualitätsstatus
 
-DEV-Head `6cf6754dcf5da88edb13ee34f2e99b4e22bca593`, GitHub Actions Run `33038051967`: 113 Tests, Evidence/Documentation/Runtime-Gates sowie Dashboard, Native Runner und SAFE-FILE-Simulation in Chromium+Firefox erfolgreich.
+`0.5.1-audit-modern-ui` wird erst nach komplett grünem Core-/Release- und Chromium-/Firefox-Gate auf TESTED promoviert.
