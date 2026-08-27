@@ -1,10 +1,17 @@
 # LAIEN-ANLEITUNG — AIO-Tool
 
-Aktuelle Entwicklung: **🟠 `0.5.1-audit-modern-ui` (DEV)**. Letzter vollständig bewiesener Vorgänger: **🟢 `0.5.0-native-acceptance-safe-file-sim-TESTED`**. Die echte Kubuntu-Abnahme L4 bleibt offen. SAFE-FILE bleibt reine Simulation und kann keine Datei verändern.
+Aktueller Kandidat: **🟢 `0.5.1-audit-modern-ui` — TESTED für automatische Prüfungen L0–L3.** Die echte Kubuntu-Abnahme L4 bleibt offen. SAFE-FILE bleibt reine Simulation und kann keine Datei verändern.
 
 ## AIO-Tool starten
 
 Doppelklick auf `start_tool.desktop` oder `./start_tool.sh` ausführen. Die Startkonsole zeigt ihre Checkpoints mit Ampelstatus. Das Dashboard öffnet ausschließlich einen lokalen Loopback-Dienst.
+
+## Wenn das Dashboard lädt
+
+- **🔵 lädt / Prüfe …** bedeutet: Das Tool liest gerade die lokalen Daten.
+- Der Button **Neu prüfen** wird währenddessen kurz gesperrt, damit dieselbe Prüfung nicht mehrfach gleichzeitig startet.
+- Antwortet das lokale Backend länger als ungefähr 8 Sekunden nicht, erscheint ein verständlicher Hinweis auf die Startkonsole statt eines endlosen Ladezustands.
+- **Keine Daten vorhanden** und **Daten konnten nicht geladen werden** werden ausdrücklich unterschieden.
 
 ## Neue Darstellung
 
@@ -16,11 +23,13 @@ Unter **⚙ Darstellung** stehen fünf klar beschriebene Designs zur Auswahl:
 - **Clean Light** — helle Arbeitsansicht.
 - **High Contrast** — besonders deutliche Kontraste ohne dekorative Schatten.
 
-Die Auswahl wird gespeichert. Farbe ist nie das einzige Statussignal; Ampeltext und Symbole bleiben zusätzlich sichtbar.
+Ein Theme reagiert sofort als Vorschau. Während es lokal gespeichert wird, sind konkurrierende Darstellungsschalter kurz gesperrt. Scheitert das Speichern, stellt AIO-Tool automatisch die vorher bestätigte Darstellung wieder her.
+
+Farbe ist nie das einzige Statussignal; Ampeltext und Symbole bleiben zusätzlich sichtbar. Tastaturfokus und größere Bedienziele bleiben in allen Themes erhalten.
 
 ## Wenn etwas nicht geladen werden kann
 
-Das Dashboard zeigt absichtlich **keine alten Kalender-/Terminwerte als wären sie aktuell**. Ein fehlgeschlagener Bereich wird leer bzw. mit Fehlerhinweis dargestellt. „Neu prüfen“ versucht den Bereich erneut zu laden. Nach erfolgreichem Retry verschwindet ein alter Aktionsfehler wieder.
+Das Dashboard zeigt absichtlich **keine alten Kalender-/Terminwerte als wären sie aktuell**. Der betroffene Bereich zeigt stattdessen einen klaren Fehler-/Nicht-verfügbar-Hinweis. **Neu prüfen** versucht den Bereich erneut zu laden. Nach erfolgreichem Retry verschwindet ein alter Aktionsfehler wieder.
 
 ## Oberfläche real prüfen
 
@@ -28,21 +37,16 @@ Doppelklick auf `native_acceptance.desktop`. Der Assistent führt durch 18 Schri
 
 ## SAFE-FILE gefahrlos testen
 
-Doppelklick auf `safe_file_simulation.desktop`. Oben muss stehen:
+Doppelklick auf `safe_file_simulation.desktop`. Quelle und Ziel werden nur geprüft. Es existiert weiterhin **keine echte Copy-/Move-/Delete-Ausführung**.
 
-**🔒 AUSFÜHRUNG TECHNISCH GESPERRT**
+Der Sicherheitsvertrag bleibt:
 
-Quelle und Ziel werden über einen Auswahldialog gewählt. Die Vorschau prüft nur lesend. Es gibt weiterhin keinen Execute-Endpunkt und keine Copy-/Move-/Delete-Funktion.
+```text
+simulation_only=true
+execution_enabled=false
+mutation_performed=false
+```
 
-## Datenschutz und Sicherheit
+## Stand der automatischen Prüfung
 
-- keine Telemetrie
-- kein Internet für Kernfunktionen nötig
-- Backend nur auf Loopback
-- exakter Host-/Port-Vertrag
-- lokale persistente Daten werden validiert und atomar geschrieben
-- Entwicklungsdokumentation, Tests und CI-Evidenz liegen nicht im Runtime-Transportpaket
-
-## Aktueller Qualitätsstatus
-
-`0.5.1-audit-modern-ui` ist noch **DEV**. Die Verbesserungen gelten erst als TESTED, wenn Unit-/Regressionstests, Runtime-ZIP und Chromium+Firefox auf demselben Commit grün sind.
+DEV-Run `33045348341` und TESTED-Promotion `33045669222` haben Core/Release, Chromium, Firefox sowie Native-/SAFE-FILE-Hilfsoberflächen bestanden. **Das ersetzt die reale Kubuntu-L4-Prüfung nicht.**
