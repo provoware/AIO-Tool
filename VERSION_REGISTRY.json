@@ -65,9 +65,9 @@
     {
       "version": "0.4.0-dashboard-v2",
       "created_at": "2026-08-27T02:25:00+02:00",
-      "status": "development",
+      "status": "tested",
       "release_status": "draft",
-      "commit_sha": null,
+      "commit_sha": "692295180b7b9d564a6af00c73f9e36c8412fb56",
       "summary": "Kompaktes Dashboard V2 auf den getesteten Version-, TODO-, Kalender- und Ereignis-APIs.",
       "changes": [
         "dauerhaft sichtbare Monatskalenderübersicht",
@@ -84,8 +84,21 @@
         "reale Firefox-/Chrome-/Zoom-/Tastatur-Abnahme auf Kubuntu noch offen",
         "SAFE-FILE-CORE noch nicht enthalten"
       ],
-      "regression_status": "pending",
-      "evidence": []
+      "regression_status": "passed-ci",
+      "evidence": [
+        {
+          "time": "2026-08-27T02:26:25+02:00",
+          "kind": "github-actions",
+          "reference": "run:33026823914",
+          "note": "SUCCESS: 77 Tests, Foundation-/Dashboard-Validierung, Learning Guard, Launcher, JavaScript, Release-Builder und ZIP-Upload."
+        },
+        {
+          "time": "2026-08-27T02:30:00+02:00",
+          "kind": "github-actions",
+          "reference": "run:33027028226",
+          "note": "SUCCESS: vollständiger Dokumentations-/Regression-/Manifest-Synchronisationsstand erneut durch alle Gates geprüft."
+        }
+      ]
     }
   ]
 }
