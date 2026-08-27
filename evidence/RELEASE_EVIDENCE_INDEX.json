@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "index_version": "1.1.0",
+  "purpose": "Index auf genau eine maschinenlesbare Evidenzdatei je TESTED-/höherer Version.",
+  "entries": [
+    {"version":"0.1.1-foundation","file":"evidence/releases/0.1.1-foundation.json"},
+    {"version":"0.2.0-core","file":"evidence/releases/0.2.0-core.json"},
+    {"version":"0.2.1-robustness","file":"evidence/releases/0.2.1-robustness.json"},
+    {"version":"0.3.0-calendar-core","file":"evidence/releases/0.3.0-calendar-core.json"},
+    {"version":"0.4.0-dashboard-v2","file":"evidence/releases/0.4.0-dashboard-v2.json"},
+    {"version":"0.4.2-ui-acceptance","file":"evidence/releases/0.4.2-ui-acceptance.json"},
+    {"version":"0.4.3-integrity-hardening","file":"evidence/releases/0.4.3-integrity-hardening.json"},
+    {"version":"0.5.0-native-acceptance-safe-file-sim","file":"evidence/releases/0.5.0-native-acceptance-safe-file-sim.json"}
+  ]
+}

@@ -3,134 +3,80 @@
 ## Projekt
 
 - **Name:** AIO-Tool
-- **Aktuelle Version:** `0.4.3-integrity-hardening` — 🟢 `tested / draft`
-- **Evidenzlauf:** GitHub Actions Run `33034359454` — Core/Release + Chromium/Firefox SUCCESS
-- **Repository:** `provoware/AIO-Tool`
+- **Aktueller automatisiert bewiesener Stand:** `0.5.0-native-acceptance-safe-file-sim` — 🟢 `tested / draft` für L0–L3
+- **Native L4:** 🟡 offen und nur über reale Nutzerabnahme beweisbar
 - **Backend:** Python-Standardbibliothek, Loopback-only
-- **Internetpflicht:** nein
-- **Telemetrie:** nein
+- **Telemetrie:** keine
+- **SAFE-FILE-Ausführung:** technisch gesperrt (`EXECUTION_ENABLED=False`)
 
-## Architektur
+## Runtime-Architektur
 
-### Runtime-Core
+### Produktkern
 
-- `app/config.py` — validierte Konfiguration.
-- `app/persistence.py` — atomare JSON-Persistenz + Backup-Fallback.
-- `app/version_registry.py` — kanonischer Versions-/Status-/Evidenzvertrag.
-- `app/event_registry.py` — menschenlesbare Ereignisse.
-- `app/todo_store.py` — TODOs, Titelgedächtnis, Archiv.
-- `app/calendar_store.py` — Kalender, Perioden, Reminder, `zoneinfo`/DST.
-- `app/text_catalog.py` — versionierte Core-Texte.
-- `app/error_advisor.py` — regelbasierte Fehlerhilfe.
-- `app/instance_identity.py` — stabile lokale Installationskennung.
-- `app/server.py` — lokale Core-API.
+- `app/persistence.py` — atomare JSON-Persistenz.
+- `app/version_registry.py` — Version/Status/Evidenzpflicht.
+- `app/event_registry.py`, `app/todo_store.py`, `app/calendar_store.py` — bestehender Kern.
+- `app/loopback_security.py` — Host/Origin müssen Loopback und denselben Port verwenden.
 
-### Start / Diagnose
+### Native Acceptance
 
-- `start_tool.sh` — 9-Checkpoint-Startroutine mit Ampel, Fehler-IDs und Logrotation.
-- `start_tool.desktop` — sichtbarer Desktopstart; Fehlerkonsole bleibt bei Abbruch offen.
-- `scripts/launcher_probe.py` — verifiziert vorhandene Instanz und findet bei Fremdbelegung sicheren Loopback-Ausweichport.
-- `scripts/runtime_preflight.py` — einzige Vorprüfung, die ein Runtime-ZIP zum normalen Start benötigt.
+- `app/native_acceptance.py` — 18-Schritt-Modell, Validierung, persistente Sitzung, Berichte.
+- `scripts/native_acceptance_runner.py` — lokaler Runner auf Standardport 8778.
+- `web/native-acceptance.html` + `.js` — geführte Oberfläche.
+- `start_native_acceptance.sh` + `native_acceptance.desktop` — Laienstart.
+- lokale Berichte unter `runtime/`.
+- kein Auto-PASS; nur explizites PASS/FAIL/SKIP.
 
-### Dashboard / UI
+### SAFE-FILE Simulation
 
-- `web/index.html` — semantische Dashboardstruktur.
-- `web/app.js` — dünne API-/Darstellungsschicht.
-- `web/styles.css` — Themes und Basislayout.
-- `web/acceptance.css` — harte Raster-/Reflow-/Mindestzielgrößen-Verträge.
-- `web/dashboard-texts.de.v1.json` — versionierte deutsche UI-Texte.
-- `ui/layout-contract.v1.json` — maschinenlesbarer UI-Acceptance-Vertrag, nur Repository/Testschicht.
+- `app/safe_file_sim.py` — rein lesende Vorprüfung, Failure-Matrix, Recovery-Vertrag.
+- `scripts/safe_file_simulator.py` — lokaler Simulator auf Standardport 8779 mit kdialog/zenity.
+- `web/safe-file-sim.html` + `.js` — Quelle → Ziel → Konflikt → Vorschau.
+- `start_safe_file_simulation.sh` + `.desktop` — Laienstart.
+- **keine Ausführungs-API und keine Copy-/Move-/Delete-Primitive**.
+
+## SAFE-FILE-Sicherheitsvertrag
+
+- `SIMULATION_ONLY=True`
+- `EXECUTION_ENABLED=False`
+- `mutation_performed=false`
+- Symlink-Quellen/-Ziele gesperrt.
+- einzelne normale Datei als simuliertes Quellmodell.
+- Standard-Konfliktpolicy `skip`.
+- spätere echte Copy benötigt Journal, Staging, Postvalidation, Crash-Recovery und verifiziertes Undo.
+
+## Failure-Matrix
+
+`SF-001` source_missing · `SF-002` source_not_file · `SF-003` source_symlink · `SF-004` target_missing · `SF-005` target_not_directory · `SF-006` target_symlink · `SF-007` target_not_writable · `SF-008` insufficient_space · `SF-009` destination_exists · `SF-010` same_source_destination.
+
+## Release-Evidenz
+
+Repository-only:
+
+- `evidence/RELEASE_EVIDENCE_INDEX.json`
+- `evidence/releases/<version>.json`
+- `scripts/evidence_guard.py`
+
+Jede TESTED-/höhere Registry-Version besitzt exakt eine Evidenzdatei. Historisch fehlende Werte werden `not-recorded`, niemals geraten.
 
 ## Transportvertrag
 
-`manifests/RUNTIME_MANIFEST.json` ist die **positive Allowlist** für das Nutzer-/Runtime-ZIP.
+`manifests/RUNTIME_MANIFEST.json` Version **1.2.1** ist die positive Runtime-Allowlist.
 
-Runtime-ZIP enthält ausschließlich:
+Transportiert werden die neuen Native-Acceptance- und SAFE-FILE-Simulationsmodule, Starter, Webdateien und Referenzvorlagen. Nicht transportiert werden `evidence/`, Tests/Testdaten, Repository-Dokumentation, CI-Evidenz oder lokale Reports.
 
-- `VERSION` + `VERSION_REGISTRY.json`,
-- Startdateien,
-- benötigten `app/`-Runtime-Code,
-- `scripts/runtime_preflight.py` + `scripts/launcher_probe.py`,
-- produktive Weboberfläche,
-- notwendige Text-/Fehlerdaten,
-- geprüfte Referenzvorlagen,
-- `manifests/RUNTIME_MANIFEST.json`,
-- generiertes `MANIFEST_RELEASE.json`.
+## Qualitätsebenen / Evidenz
 
-Nicht im Runtime-ZIP:
+- **L0:** Syntax/Schema — 🟢
+- **L1:** Unit/Contract/Failure-Matrix/Evidence Guard — 🟢 DEV-Run `33038051967`, 113 Tests
+- **L2:** Runtime-ZIP + frischer Runtime-Preflight — 🟢 DEV-Run `33038051967`
+- **L3:** Dashboard + Native Runner + SAFE-FILE in Chromium/Firefox — 🟢 DEV-Run `33038051967`
+- **L4:** echtes Kubuntu/Zoom/DPI/Tastatur — 🟡 offen
 
-- README / AGENTS / TODO / CHANGELOG / LAIEN-ANLEITUNG / TOOLBESCHREIBUNG,
-- REGRESSIONSINFOS / LEARNING_MEMORY,
-- Tests und Testdaten,
-- `.github/`, CI, Playwright,
-- Browserreports/Screenshots,
-- `.venv/`, Caches, lokale Logs,
-- produktive Nutzer-/Kalender-/TODO-/Eventdaten.
+## Aktuell offen
 
-## Lokale generierte Daten
-
-Nicht versioniert und nicht transportiert:
-
-- `runtime/**`
-- `web/.aio-instance-id` — lokale Installationskennung
-
-## Statusvertrag
-
-| Versionsstatus | Release-Status | ZIP-Suffix |
-|---|---|---|
-| `development` | `draft` | `DEV` |
-| `tested` | `draft` | `TESTED` |
-| `release-candidate` | `candidate` | `RC` |
-| `released` | `released` | `RELEASED` |
-| `blocked` | `blocked` | `BLOCKED` |
-| `deprecated` | `deprecated` | `ARCHIVED` |
-
-Widersprüchliche oder unbekannte Paare werden fail-closed abgelehnt.
-
-## Qualitätsebenen
-
-- **L0:** Syntax / Schema
-- **L1:** Unit-/Contracttests
-- **L2:** Runtime-ZIP bauen, verifizieren, frisch entpacken und Preflight darin ausführen
-- **L3:** Chromium + Firefox über Raster-/Reflow-/Interaktionsmatrix
-- **L4:** echtes Kubuntu/DPI/Zoom/Tastatur-Zielsystem
-
-Eine niedrigere Ebene darf keine höhere als bestanden behaupten.
-
-## Aktuelle Evidenz 0.4.3
-
-GitHub Actions Run `33034359454`:
-
-- Core-/Release-Job: **SUCCESS**
-- Documentation Guard: **SUCCESS**
-- Runtime-ZIP-End-to-End-Vertrag: **SUCCESS**
-- Chromium + Firefox UI-Acceptance: **SUCCESS**
-
-Registry-Status: **`tested`**  
-Release-Status: **`draft`**  
-Erwarteter Runtime-Dateiname: **`AIO-Tool-0.4.3-integrity-hardening-TESTED.zip`**
-
-Der Promotion-Commit wird anschließend erneut durch dieselbe Pipeline geprüft; erst dann ist die Promotion selbst vollständig bewiesen.
-
-## Persistenzschemata
-
-- VersionRegistry: 1
-- EventRegistry: 1
-- TODO: 1
-- Calendar: 1
-- Core-Textkatalog: 1
-- Fehlerregeln: 1
-- Learning Memory: 1 je JSONL-Zeile
-- Dashboard-Textkatalog: 1
-
-## Noch offene L4-Gates
-
-- native Kubuntu-Klick-&-Start-Abnahme
-- KDE-/DPI-Skalierung
-- 100/125/150/175/200 % Browserzoom auf Zielsystem
-- realer Tastatur-/Screenreader-Durchlauf
-- verschiedene reale Displaygrößen
-
-## Danach
-
-Erst nach L4-Abnahme: SAFE-FILE-CORE mit Copy, Vorprüfung, Vorschau, persistenter Jobausführung, Nachprüfung und Undo-/Recovery-Datensatz.
+- TESTED-Promotion-Commit erneut durch L0–L3,
+- reale L4-Sitzung,
+- persistentes Copy-Jobjournal,
+- Staging/Postvalidation/Undo für echte Copy,
+- jede echte Dateioperation.

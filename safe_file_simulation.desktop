@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=AIO-Tool SAFE-FILE Simulation
+Comment=Quelle, Ziel und Vorschau sicher prüfen – ohne Dateiänderung
+Terminal=true
+Categories=Utility;Development;
+Exec=bash -lc 'cd "$(dirname "$1")" && ./start_safe_file_simulation.sh; code=$?; if [ "$code" -ne 0 ]; then read -r -p "Enter zum Schließen …" _; fi; exit "$code"' _ %k
+Icon=folder
+StartupNotify=true

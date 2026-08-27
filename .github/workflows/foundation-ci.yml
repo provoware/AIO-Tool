@@ -33,12 +33,17 @@ jobs:
         run: python scripts/validate.py
       - name: Development learning guard
         run: python scripts/learning_guard.py
+      - name: Release evidence guard
+        run: python scripts/evidence_guard.py
       - name: Documentation version/status guard
         run: python scripts/documentation_guard.py
       - name: Launcher syntax
-        run: bash -n start_tool.sh
+        run: bash -n start_tool.sh start_native_acceptance.sh start_safe_file_simulation.sh
       - name: JavaScript syntax
-        run: node --check web/app.js
+        run: |
+          node --check web/app.js
+          node --check web/native-acceptance.js
+          node --check web/safe-file-sim.js
       - name: Release builder
         id: release
         shell: bash
@@ -74,13 +79,17 @@ jobs:
         run: python -m pip install -r requirements-ui.txt
       - name: Install pinned Playwright browsers
         run: python -m playwright install --with-deps chromium firefox
-      - name: Browser render, raster and interaction gate
+      - name: Dashboard render, raster and interaction gate
         run: python scripts/ui_acceptance_ci.py --browser chromium --browser firefox --strict
-      - name: Upload UI screenshots and report
+      - name: Native Runner and SAFE-FILE helper UI gate
+        run: python scripts/aux_ui_acceptance.py
+      - name: Upload UI screenshots and reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: AIO-Tool-UI-Acceptance-${{ github.sha }}
-          path: artifacts/ui-acceptance/
+          path: |
+            artifacts/ui-acceptance/
+            artifacts/aux-ui-acceptance/
           if-no-files-found: error
           retention-days: 30

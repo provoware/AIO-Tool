@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "mode": "simulation-only",
+  "simulation_only": true,
+  "execution_enabled": false,
+  "operation": "copy-preview",
+  "source": {"path": "/home/user/Beispiel.txt", "size_bytes": 1024},
+  "target": {"directory": "/home/user/Ziel", "free_bytes": 1000000000, "reserve_bytes": 10485760},
+  "mutation_performed": false,
+  "recovery_contract": {"current_mode": "no-mutation", "rollback_required": false, "future_execution_requires_persistent_journal": true, "future_done_requires_postvalidation": true, "future_undo_must_verify_destination_unchanged": true}
+}

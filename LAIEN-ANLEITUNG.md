@@ -1,116 +1,54 @@
 # LAIEN-ANLEITUNG — AIO-Tool
 
-## Welchen Stand soll ich benutzen?
+Aktueller Stand: **`0.5.0-native-acceptance-safe-file-sim` — TESTED für automatische Prüfungen L0–L3.** Die echte Kubuntu-Abnahme L4 ist noch offen. SAFE-FILE ist weiterhin **nur Simulation** und kann keine Datei verändern.
 
-- 🟢 **Bewiesen:** `0.4.2-ui-acceptance-TESTED`
-- 🟠 **In Entwicklung:** `0.4.3-integrity-hardening-DEV`
+## Welche Datei starte ich?
 
-Für normale Nutzung ist ein `TESTED`-Paket der sichere Zwischenstand. `DEV` bedeutet: Änderungen sind eingebaut, aber die vollständige neue Evidenz ist noch nicht abgeschlossen.
+### AIO-Tool normal
 
-## Start in 4 Schritten
+Doppelklick auf `start_tool.desktop`.
 
-1. ZIP vollständig in einen eigenen Ordner entpacken.
-2. `start_tool.desktop` doppelklicken oder `start_tool.sh` starten.
-3. Die Startkonsole zeigt 9 Prüfschritte.
-4. Bei Erfolg öffnet sich das Dashboard automatisch.
+### Oberfläche auf deinem echten Rechner prüfen
 
-## Was bedeutet die Ampel?
+Doppelklick auf `native_acceptance.desktop`.
 
-- 🟢 **PASS** — geprüft und in Ordnung.
-- 🟡 **WARN** — Hinweis; Start kann trotzdem möglich sein.
-- 🔴 **FAIL** — sicherer Abbruch. Die Ursache wird erklärt.
-- 🔵 **INFO** — normaler Zwischenzustand.
+Es öffnet sich ein Prüfassistent. Oben siehst du den Fortschritt, links den aktuellen Schritt und rechts alle 18 Prüfschritte.
 
-Die Farbe ist nur Zusatzhilfe. Der Status steht immer auch als Text dabei.
+Für jeden Schritt gibt es nur drei eindeutige Entscheidungen:
 
-## Die 9 Start-Checkpoints
+- 🟢 **PASS** — ich habe es wirklich geprüft und es funktioniert.
+- 🔴 **FAIL** — ich habe es geprüft und etwas stimmt nicht.
+- ⚪ **Überspringen** — jetzt nicht geprüft; gilt nicht als bestanden.
 
-1. Toolordner erkannt.
-2. Python vorhanden.
-3. Diagnose und Installationskennung vorbereitet.
-4. laufende Instanz/Port geprüft.
-5. lokale Python-Umgebung geprüft.
-6. Runtime-Basis geprüft.
-7. Backendprozess gestartet.
-8. Backend als passende Instanz verifiziert.
-9. Browseroberfläche geöffnet.
+Bei Browser-Schritten steht genau dabei, welchen Browser und welchen Zoom du einstellen sollst. Der Assistent speichert technische Größen automatisch, aber du bestätigst selbst, ob die Darstellung korrekt war. **Er setzt niemals selbst PASS.**
 
-Wenn der Standardport durch eine andere oder ältere lokale Anwendung belegt ist, übernimmt AIO-Tool diese **nicht**. Es sucht einen freien lokalen Ausweichport und zeigt das als gelben Hinweis.
+Berichte entstehen automatisch unter `runtime/reports/` und können zusätzlich als JSON/TXT heruntergeladen werden.
 
-## Wenn der Start fehlschlägt
+## SAFE-FILE gefahrlos ausprobieren
 
-Die Konsole bleibt offen und zeigt eine eindeutige Fehler-ID, zum Beispiel:
+Doppelklick auf `safe_file_simulation.desktop`.
 
-- `LAUNCH-E102` — Python fehlt.
-- `LAUNCH-E205` — lokale Python-Umgebung konnte nicht erstellt werden.
-- `LAUNCH-E303` — Installationskennung konnte nicht vorbereitet werden.
-- `LAUNCH-E306` — Runtime-Vorprüfung fehlgeschlagen.
-- `LAUNCH-E404` — kein freier lokaler Ausweichport.
-- `LAUNCH-E407` — Backendprozess wurde direkt beendet.
-- `LAUNCH-E508` — Backend wurde nicht als passende Instanz bereit.
+Oben muss deutlich stehen:
 
-Unter `runtime/` liegen dann lokale Diagnose-Dateien. Diese Dateien werden **nicht** ins Release-ZIP aufgenommen.
+**🔒 AUSFÜHRUNG TECHNISCH GESPERRT**
 
-## Was sehe ich im Dashboard?
+Dann:
 
-### Monatskalender
+1. „Quelldatei auswählen“ klicken.
+2. „Zielordner auswählen“ klicken.
+3. Konfliktoption wählen; empfohlen ist **Sicher: überspringen**.
+4. „Sichere Vorschau erstellen“ klicken.
 
-- Montag bis Sonntag.
-- vorheriger/nächster Monat über Pfeile.
-- **Heute** springt zum aktuellen Monat.
-- Termine werden im Kalender und zusätzlich kompakt darunter gezeigt.
+Du erhältst eine Ampelprüfung für Quelle, Ziel, Speicherplatz und Konflikte.
 
-### Nächste Aufgaben
+### Kann dabei eine Datei kopiert, verschoben oder gelöscht werden?
 
-Rechts erscheinen höchstens die nächsten drei TODOs. Mit **✓** wird eine Aufgabe nicht einfach gelöscht, sondern mit Zeitstempel ins Erledigt-Archiv verschoben.
+**Nein.** Diese Version besitzt absichtlich keine Ausführungsfunktion. Sie kann nur lesen, prüfen und anzeigen, was eine spätere Copy tun würde. Auch der Status TESTED ändert diese Sperre nicht.
 
-### Letzte Ereignisse
+## Wenn ein Prüfschritt FAIL ist
 
-Die letzten fünf wichtigen Ereignisse erscheinen in verständlicher Sprache. Technische Rohdetails bleiben im Diagnosebereich.
-
-### Erinnerungen
-
-Ablauf:
-
-`fällig → sichtbar anzeigen → du klickst „Gesehen“ → erst dann speichern`
-
-Ein unsichtbarer Tab oder bloßes Nachfragen im Hintergrund quittiert keine Erinnerung.
-
-### Module
-
-Links zeigt **Häufig** die wichtigsten Module. **Alle** blendet weitere Bereiche ein. Der Datei-Bereich bleibt absichtlich noch ohne echte Dateiänderungen, bis der Sicherheits-Slice SAFE-FILE-CORE entwickelt ist.
-
-## Darstellung
-
-- vier Themes,
-- Schriftgrößen-Presets,
-- automatische Dichte,
-- Tastatur-Fokusrahmen,
-- Sprunglink zum Hauptinhalt,
-- Reduced-Motion-Schutz,
-- Browser-Reflow bis 320 CSS-px automatisiert geprüft.
-
-Chromium und Firefox werden in CI real gerendert und bedient. Die **native** Kubuntu-/KDE-/DPI-/100–200-%-Zoom-Abnahme bleibt trotzdem ein eigener offener Praxistest.
+Nicht einfach PASS wählen. Schreibe optional eine kurze Notiz und lasse FAIL gespeichert. Dieser reale Befund soll anschließend als Regressionstest in die Entwicklung zurückfließen.
 
 ## Datenschutz
 
-- kein Internetzwang,
-- Backend nur lokal auf `127.0.0.1`,
-- keine Telemetrie,
-- keine externen Runtime-Pakete,
-- lokale Config/TODO/Kalender/Ereignisse/Logs werden nicht ins Release übernommen.
-
-## Was bedeutet der ZIP-Dateiname?
-
-- `DEV` — Entwicklung.
-- `TESTED` — automatisiert geprüft.
-- `RC` — Release Candidate.
-- `RELEASED` — offiziell freigegeben.
-- `BLOCKED` — bekannter Blocker.
-- `ARCHIVED` — historischer Stand.
-
-## Was kommt als Nächstes?
-
-1. `0.4.3-integrity-hardening` vollständig prüfen und nur bei grünem Gate auf TESTED setzen.
-2. Danach natives Kubuntu-/Zoom-/Tastatur-Gate.
-3. Erst danach SAFE-FILE-CORE mit **Copy** als erster kontrollierter Dateioperation.
+Alle Sitzungs-/Simulationsdaten bleiben lokal. Es gibt keine Telemetrie. Der Release-Evidenzindex liegt im Entwicklungsrepository und wird nicht in dein Runtime-Paket übernommen.

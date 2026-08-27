@@ -1,88 +1,46 @@
-# CHANGELOG
+# CHANGELOG — AIO-Tool
 
-Alle wesentlichen Änderungen an AIO-Tool werden nachvollziehbar dokumentiert.
-
-## [0.4.3-integrity-hardening] — 2026-08-27
-
-### Auditbefunde
-
-- Startroutine war beim UX-Umbau auf einen bloßen `HTTP 200` als Instanzkriterium zurückgefallen.
-- normaler Launcher rief wieder die Repository-Prüfung `scripts/validate.py --quick` auf, obwohl diese absichtlich nicht zum Runtime-ZIP gehört.
-- VersionRegistry und Release-Builder konnten bei Statusbegriffen auseinanderlaufen.
-- statusrelevante Dokumente waren gegenüber dem Produktstand veraltet.
-- `0.4.2-TESTED` war nach seiner Evidenz weiter verändert worden; daraus wurde die Regel abgeleitet, bewiesene Versionen einzufrieren.
-- Learning Memory und Entwicklungsberichte waren zwischenzeitlich nicht mengenmäßig konsistent.
+## [0.5.0-native-acceptance-safe-file-sim] — TESTED (L0–L3) — 2026-08-27
 
 ### Added
 
-- `app/instance_identity.py` als Installations-/UI-Identitätsvertrag.
-- `scripts/launcher_probe.py` für Instanzprüfung und sicheren Loopback-Ausweichport.
-- echte Launcher-Probe-Regressionen mit lokalem Fake-HTTP-Server.
-- End-to-End-Releasevertrag: Runtime-ZIP bauen → entpacken → `runtime_preflight.py` darin ausführen.
-- `scripts/documentation_guard.py` gegen Versions-/Statusdrift in Pflichtdokumenten.
-- zusätzliche Learning-Regeln bis LRN-015.
-- Launcher-Logrotation.
+- Native Acceptance Runner mit 18 realen L4-Prüfschritten für Kubuntu, Anzeige, Tastatur und Firefox/Chromium × 100/125/150/175/200 %.
+- persistente gemeinsame Abnahmesitzung und automatisch aktualisierte JSON-/TXT-Berichte.
+- Release-Evidenz-Masterindex plus genau eine maschinenlesbare Datei je TESTED-/höherer Version.
+- `scripts/evidence_guard.py` als blockierendes CI-Gate.
+- SAFE-FILE Copy-Simulation mit kdialog-/zenity-Auswahladapter.
+- Failure-Matrix `SF-001` bis `SF-010` und Recovery-Vorvertrag.
+- versionierte Mustervorlagen/Negativfixtures für Native Acceptance und SAFE-FILE.
+- zentrale exakte Loopback-Host-/Origin-/Port-Prüfung für lokale Hilfsserver.
+- eigener Chromium-/Firefox-L3-Gate für Native Runner und SAFE-FILE-Oberfläche.
 
-### Changed
+### Safety
 
-- Launcher prüft Version + Loopback/Ready + konkrete Installationskennung, bevor eine vorhandene Instanz wiederverwendet wird.
-- fremd belegter Standardport wird nicht übernommen; freier lokaler Ausweichport wird transparent gewählt.
-- ungültiger Port oder unbekannter Probe-Zustand führt fail-closed zum sicheren Abbruch.
-- normaler Start nutzt ausschließlich `scripts/runtime_preflight.py`.
-- Statusmodell kanonisiert: `development`, `tested`, `release-candidate`, `released`, `blocked`, `deprecated`.
-- Release-Statuspaare werden zentral validiert; unbekannte Kombinationen sind Fehler.
-- Release-Verifikation prüft zusätzlich doppelte ZIP-Einträge, Version, Status und `file_count`.
-- README und AGENTS wurden als Status-/Qualitätscockpit bzw. verbindlicher Entwicklungsvertrag neu strukturiert.
+- SAFE-FILE bleibt `simulation_only=true` und `execution_enabled=false`.
+- kein `/api/execute` und keine Copy-/Move-/Delete-Primitive.
+- Preview-Vertrag verlangt `mutation_performed=false`.
+- Native Acceptance setzt keinen Schritt automatisch auf PASS.
+- historische Evidenzlücken bleiben `not-recorded` statt erfunden.
 
-### Verified — Entwicklungshead
+### Verification
 
-GitHub Actions Run `33034359454`: **SUCCESS**.
+DEV-Head `6cf6754dcf5da88edb13ee34f2e99b4e22bca593`, GitHub Actions Run `33038051967`:
 
-- Core-/Release-Job erfolgreich,
-- Unit-/Integrations-/Vertragstests erfolgreich,
-- Foundation Validation erfolgreich,
-- Learning Guard erfolgreich,
-- Documentation Guard erfolgreich,
-- Launcher-/JavaScript-Syntax erfolgreich,
-- Runtime-ZIP-End-to-End-Vertrag erfolgreich,
-- Chromium + Firefox UI-Acceptance erfolgreich.
+- 113/113 Unit-/Contracttests PASS,
+- Foundation/Learning/Evidence/Documentation Guards PASS,
+- Runtime-ZIP + frischer Runtime-Preflight PASS,
+- Dashboard Chromium+Firefox PASS,
+- Native Runner Chromium+Firefox PASS,
+- SAFE-FILE Simulation Chromium+Firefox PASS.
 
-Danach wurde `0.4.3-integrity-hardening` regelkonform auf **`tested / draft`** promoviert. Der Promotion-Commit wird erneut durch dieselbe Pipeline geprüft.
+Registry wurde deshalb auf `tested / draft` promoviert. **L4 bleibt separat offen** und echte Datei-Ausführung bleibt gesperrt. Der Promotion-Commit muss anschließend nochmals dieselben L0–L3-Gates bestehen.
 
-### Still open
+## [0.4.3-integrity-hardening] — TESTED
 
-- native Kubuntu-/KDE-Abnahme,
-- reale 100–200-%-Zoom-/DPI-Matrix,
-- Tastatur-/Screenreader-Praxistest,
-- SAFE-FILE-CORE,
-- persistente Job-/Recovery-Queue.
+- Launcher-Instanzidentität, Runtime-Preflight, fail-closed Statusmodell, Documentation Guard, Release-End-to-End-Preflight und Cross-Browser-Gate.
+- finaler Main-Commit `c8b80161e1770f8636d3e77d72b57f9c24723078`.
+- Main-CI Run `33036217621` erfolgreich.
 
-## [0.4.2-ui-acceptance] — 2026-08-27
+## Frühere Stände
 
-- 12-Spalten-Rastervertrag, Chromium-/Firefox-Acceptance, 320-CSS-px-Reflow, Runtime-Allowlist, Statusdateinamen und `MANIFEST_RELEASE.json`.
-- GitHub Actions Run `33032999752`: Core/Release und Chromium+Firefox vollständig erfolgreich.
-- TESTED-ZIP SHA256: `57c461b56abd024775de8a38d8edf216066c8fd11631d4d266e4572a6d58a6cc`.
-
-## [0.4.0-dashboard-v2] — 2026-08-27
-
-- Dashboard V2 mit Monatskalender, nächsten Terminen/TODOs, letzten fünf Ereignissen, Reminder-Quittierung, Diagnosebereich und responsiver Dichte.
-
-## [0.3.0-calendar-core] — 2026-08-27
-
-- CalendarStore, Reminder-Quittierung, Monats-/Wochen-/Jahresperioden, `zoneinfo`/DST und optionale TODO-Verknüpfung.
-
-## [0.2.1-robustness] — 2026-08-27
-
-- Muster-/Testdaten, Texte, Fehlerregeln, ErrorAdvisor, Learning Memory und Release-Gates.
-
-## [0.2.0-core] — 2026-08-27
-
-- VersionRegistry, EventRegistry, TODO-Core und gemeinsamer AtomicJsonStore.
-
-## [0.1.1-foundation] — 2026-08-27
-
-- ausführbarer Foundation-Kern mit Klick-&-Start, Loopback-Backend, atomarer Config, Tests und CI.
-
-## [0.1.0-foundation] — 2026-08-27
-
-- saubere Projektgrundlage und verbindliche Basisdokumentation.
+Siehe `VERSION_REGISTRY.json` und `evidence/releases/*.json`.
