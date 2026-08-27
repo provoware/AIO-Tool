@@ -12,6 +12,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from app import ROOT_DIR, VERSION
+from app.calendar_store import CalendarStore, validate_calendar
 from app.config import ConfigStore, DEFAULT_CONFIG, validate_config
 from app.error_advisor import ErrorAdvisor
 from app.event_registry import EventRegistry, validate_events
@@ -25,18 +26,21 @@ REQUIRED = [
     "TOOLBESCHREIBUNG.md", "MANIFEST.md", "REGRESSIONSINFOS.md", "VERSION", "VERSION_REGISTRY.json",
     "LEARNING_MEMORY.jsonl", "start_tool.sh",
     "app/config.py", "app/persistence.py", "app/version_registry.py", "app/event_registry.py", "app/todo_store.py",
-    "app/text_catalog.py", "app/error_advisor.py", "app/learning_memory.py", "app/server.py",
+    "app/calendar_store.py", "app/text_catalog.py", "app/error_advisor.py", "app/learning_memory.py", "app/server.py",
     "resources/texts/de/v1.json", "resources/error_rules/v1.json", "resources/templates/README.md",
     "resources/templates/config/config.v1.example.json",
     "resources/templates/version_registry/version_registry.v1.example.json",
     "resources/templates/events/events.v1.example.json",
     "resources/templates/todos/todos.v1.example.json",
+    "resources/templates/calendar/calendar.v1.example.json",
     "scripts/learning_guard.py", "web/index.html", "web/app.js", "web/styles.css",
     "testdata/valid/config.v1.json", "testdata/valid/version_registry.v1.json",
-    "testdata/valid/events.v1.json", "testdata/valid/todos.v1.json",
+    "testdata/valid/events.v1.json", "testdata/valid/todos.v1.json", "testdata/valid/calendar.v1.json",
     "testdata/invalid/config.invalid-theme.v1.json", "testdata/invalid/config.corrupt-json.txt",
     "testdata/invalid/version_registry.duplicate.v1.json", "testdata/invalid/events.empty-message.v1.json",
     "testdata/invalid/todos.duplicate-title-memory.v1.json",
+    "testdata/invalid/calendar.end-before-start.v1.json",
+    "testdata/invalid/calendar.reminder-without-time.v1.json",
 ]
 
 
@@ -69,17 +73,20 @@ def main() -> None:
 
     advisor = ErrorAdvisor()
     help_meta = advisor.metadata()
-    check(help_meta["rule_count"] >= 5, "versionierte Fehlerregeln geladen")
+    check(help_meta["rule_count"] >= 8, "versionierte Fehlerregeln inkl. Kalender geladen")
+    check(help_meta["rules_version"] == "1.1.0", "Fehlerregeln-Version 1.1.0")
+    check(help_meta["text_catalog"]["catalog_version"] == "1.1.0", "Textkatalog-Version 1.1.0")
     check(help_meta["text_catalog"]["language"] == "de", "deutscher Textkatalog geladen")
 
     learnings = load_jsonl(ROOT_DIR / "LEARNING_MEMORY.jsonl")
-    check(len(active_entries(learnings)) >= 6, "Entwicklungs-Lerngedächtnis validiert")
+    check(len(active_entries(learnings)) >= 8, "Entwicklungs-Lerngedächtnis inkl. Zeit-/Reminderregeln validiert")
 
     validate_config(load_json("resources/templates/config/config.v1.example.json"))
     validate_registry(load_json("resources/templates/version_registry/version_registry.v1.example.json"))
     validate_events(load_json("resources/templates/events/events.v1.example.json"))
     validate_todos(load_json("resources/templates/todos/todos.v1.example.json"))
-    print("OK: versionierte Mustervorlagen entsprechen den Validatoren")
+    validate_calendar(load_json("resources/templates/calendar/calendar.v1.example.json"))
+    print("OK: versionierte Mustervorlagen entsprechen den Produktvalidatoren")
 
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
@@ -91,7 +98,7 @@ def main() -> None:
 
         versions = VersionRegistry(root / "versions.json", default=tracked_registry)
         check(versions.consistency(VERSION)["ok"], "Versions-Registry konsistent")
-        check(len(versions.load()["versions"]) >= 4, "Versionshistorie auf frischer Runtime vorhanden")
+        check(len(versions.load()["versions"]) >= 5, "Versionshistorie auf frischer Runtime vorhanden")
 
         events = EventRegistry(root / "events.json")
         events.add(kind="validation", area="System", message="Validierung wurde ausgeführt.")
@@ -102,6 +109,17 @@ def main() -> None:
         check(todos.title_suggestions(1)[0]["title"] == "Validierung prüfen", "TODO-Titel merken")
         todos.complete(item["id"])
         check(len(todos.list_archive()) == 1, "TODO ins Erledigt-Archiv verschieben")
+
+        calendar_store = CalendarStore(root / "calendar.json")
+        appointment = calendar_store.create(
+            title="Kalender prüfen",
+            date="2026-08-27",
+            start_time="10:00",
+            reminders=[10],
+        )
+        check(calendar_store.get(appointment["id"])["title"] == "Kalender prüfen", "Kalendertermin persistent speichern")
+        check(calendar_store.period("month", "2026-08-15")["end"] == "2026-08-31", "Kalender-Monatsperiode korrekt")
+        check(calendar_store.title_suggestions(1)[0]["title"] == "Kalender prüfen", "Kalendertitel merken")
 
     if not args.quick:
         check((ROOT_DIR / "tests").is_dir(), "Test-Verzeichnis vorhanden")
