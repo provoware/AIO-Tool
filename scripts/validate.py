@@ -33,7 +33,8 @@ REQUIRED = [
     "resources/templates/events/events.v1.example.json",
     "resources/templates/todos/todos.v1.example.json",
     "resources/templates/calendar/calendar.v1.example.json",
-    "scripts/learning_guard.py", "web/index.html", "web/app.js", "web/styles.css",
+    "scripts/learning_guard.py", "web/index.html", "web/app.js", "web/styles.css", "web/dashboard-texts.de.v1.json",
+    "tests/test_dashboard_contract.py",
     "testdata/valid/config.v1.json", "testdata/valid/version_registry.v1.json",
     "testdata/valid/events.v1.json", "testdata/valid/todos.v1.json", "testdata/valid/calendar.v1.json",
     "testdata/invalid/config.invalid-theme.v1.json", "testdata/invalid/config.corrupt-json.txt",
@@ -52,6 +53,25 @@ def check(condition: bool, label: str) -> None:
 
 def load_json(rel: str) -> dict:
     return json.loads((ROOT_DIR / rel).read_text(encoding="utf-8"))
+
+
+def validate_dashboard_contract() -> None:
+    dashboard_texts = load_json("web/dashboard-texts.de.v1.json")
+    check(dashboard_texts.get("schema_version") == 1, "Dashboard-Textschema bekannt")
+    check(dashboard_texts.get("language") == "de", "Dashboard-Texte deutsch")
+    check(isinstance(dashboard_texts.get("catalog_version"), str) and bool(dashboard_texts["catalog_version"].strip()), "Dashboard-Textkatalog versioniert")
+    messages = dashboard_texts.get("messages")
+    check(isinstance(messages, dict) and len(messages) >= 60, "Dashboard-Textkatalog ausreichend befüllt")
+    check(all(isinstance(value, str) and value.strip() for value in messages.values()), "Dashboard-Texte nicht leer")
+
+    html = (ROOT_DIR / "web" / "index.html").read_text(encoding="utf-8")
+    js = (ROOT_DIR / "web" / "app.js").read_text(encoding="utf-8")
+    for element_id in ("monthGrid", "todoList", "eventList", "reminderRegion", "systemSummary", "developerPanel", "settingsPanel"):
+        check(f'id="{element_id}"' in html, f"Dashboard-Bereich {element_id} vorhanden")
+    for endpoint in ("/api/status", "/api/todos", "/api/events?limit=5", "/api/calendar?view=month", "/api/calendar/reminders/due"):
+        check(endpoint in js, f"Dashboard nutzt getestete API {endpoint}")
+    check("document.visibilityState!=='visible'" in js, "Reminder werden im unsichtbaren Tab nicht quittiert")
+    check("button.addEventListener('click',()=>ackReminder" in js, "Reminder-Quittierung verlangt sichtbare Nutzeraktion")
 
 
 def main() -> None:
@@ -73,13 +93,15 @@ def main() -> None:
 
     advisor = ErrorAdvisor()
     help_meta = advisor.metadata()
+    declared_rules = load_json("resources/error_rules/v1.json")["rules_version"]
+    declared_texts = load_json("resources/texts/de/v1.json")["catalog_version"]
     check(help_meta["rule_count"] >= 8, "versionierte Fehlerregeln inkl. Kalender geladen")
-    check(help_meta["rules_version"] == "1.1.0", "Fehlerregeln-Version 1.1.0")
-    check(help_meta["text_catalog"]["catalog_version"] == "1.1.0", "Textkatalog-Version 1.1.0")
-    check(help_meta["text_catalog"]["language"] == "de", "deutscher Textkatalog geladen")
+    check(help_meta["rules_version"] == declared_rules, "Fehlerregeln-Metadaten entsprechen ihrer Quelldatei")
+    check(help_meta["text_catalog"]["catalog_version"] == declared_texts, "Textkatalog-Metadaten entsprechen ihrer Quelldatei")
+    check(help_meta["text_catalog"]["language"] == "de", "deutscher Core-Textkatalog geladen")
 
     learnings = load_jsonl(ROOT_DIR / "LEARNING_MEMORY.jsonl")
-    check(len(active_entries(learnings)) >= 8, "Entwicklungs-Lerngedächtnis inkl. Zeit-/Reminderregeln validiert")
+    check(len(active_entries(learnings)) >= 9, "Entwicklungs-Lerngedächtnis inkl. Metadatenregel validiert")
 
     validate_config(load_json("resources/templates/config/config.v1.example.json"))
     validate_registry(load_json("resources/templates/version_registry/version_registry.v1.example.json"))
@@ -87,6 +109,8 @@ def main() -> None:
     validate_todos(load_json("resources/templates/todos/todos.v1.example.json"))
     validate_calendar(load_json("resources/templates/calendar/calendar.v1.example.json"))
     print("OK: versionierte Mustervorlagen entsprechen den Produktvalidatoren")
+
+    validate_dashboard_contract()
 
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)

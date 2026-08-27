@@ -4,130 +4,115 @@
 
 - **Name:** AIO-Tool
 - **Repository:** `provoware/AIO-Tool`
-- **Phase:** P1 — Kalender-/Organisationskern
-- **Version:** `0.3.0-calendar-core`
+- **Version:** `0.4.0-dashboard-v2`
+- **Phase:** P1 — Dashboard-Integration
 - **Stand:** 2026-08-27
+- **Backend:** Python-Standardbibliothek, Loopback-only
+- **Internetpflicht:** nein
 
-## Verbindlicher Projektbestand
-
-### Root
+## Verbindlicher Root-Bestand
 
 `README.md`, `TODO.md`, `AGENTS.md`, `CHANGELOG.md`, `LAIEN-ANLEITUNG.md`, `TOOLBESCHREIBUNG.md`, `MANIFEST.md`, `REGRESSIONSINFOS.md`, `VERSION`, `VERSION_REGISTRY.json`, `LEARNING_MEMORY.jsonl`, `start_tool.sh`, `start_tool.desktop`, `.gitignore`.
 
-### Anwendung
+## Anwendung
 
-- `app/config.py` — validierte Config-Persistenz.
+- `app/config.py` — validierte Konfiguration.
 - `app/persistence.py` — atomarer JSON-Speicher.
-- `app/version_registry.py` — Versionen/Evidenz/Drift.
+- `app/version_registry.py` — Versions-/Evidenzvertrag.
 - `app/event_registry.py` — menschenlesbare Ereignisse.
-- `app/todo_store.py` — TODOs/Titelgedächtnis/Archiv.
-- `app/calendar_store.py` — persistente Kalendertermine, Perioden, Titelgedächtnis und Reminder-Quittierung.
-- `app/text_catalog.py` — versionierte Nutztexte.
+- `app/todo_store.py` — TODOs, Titelgedächtnis, Archiv.
+- `app/calendar_store.py` — Kalender, Perioden, Reminder, zoneinfo/DST.
+- `app/text_catalog.py` — versionierte Core-Texte.
 - `app/error_advisor.py` — regelbasierte Fehlerhilfe.
-- `app/learning_memory.py` — validiertes Entwicklungs-Lerngedächtnis.
-- `app/server.py` — Loopback-HTTP/API inkl. Kalenderendpunkte.
-- `web/` — Browser-Dashboard-Shell; Dashboard V2 folgt als eigener UI-Slice.
+- `app/learning_memory.py` — Entwicklungs-Lerngedächtnis.
+- `app/server.py` — lokale Core-API.
 
-### Ressourcen
+## Dashboard V2
 
-- `resources/texts/de/v1.json` — deutscher Textkatalog, Katalogversion `1.1.0`.
-- `resources/error_rules/v1.json` — Fehlerregeln, Regelversion `1.1.0`.
-- `resources/templates/config/` — Config-Referenz.
-- `resources/templates/version_registry/` — Registry-Referenz.
-- `resources/templates/events/` — Event-Referenz.
-- `resources/templates/todos/` — TODO-Referenz.
-- `resources/templates/calendar/` — Kalender-Referenz.
+- `web/index.html` — semantische Dashboardstruktur.
+- `web/app.js` — dünne API-/Darstellungsschicht; keine Kopie der Domänenlogik.
+- `web/styles.css` — Themes, Kontrast, Fokus, responsive Dichte.
+- `web/dashboard-texts.de.v1.json` — versionierte deutsche Dashboardtexte, Schema 1 / Katalog 1.0.0.
 
-### Testdaten
+### Sichtbare Kernbereiche
 
-- `testdata/valid/` — muss von den jeweiligen Produktvalidatoren akzeptiert werden.
-- `testdata/invalid/` — muss für die jeweils dokumentierte Fehlerklasse abgelehnt werden.
-- Kalender-Negativfälle umfassen mindestens Ende vor Beginn und Reminder ohne Startzeit.
-- Testdaten werden niemals automatisch nach `runtime/` kopiert.
+- Monatskalender,
+- kommende Termine,
+- nächste drei TODOs,
+- letzte fünf Ereignisse,
+- System-/Registry-/Versionsstatus,
+- fällige Reminder,
+- Schnellmodule Häufig/Alle,
+- optionaler Entwicklerbereich,
+- Darstellungseinstellungen.
 
-### Qualität / Release
+## Reminder-UI-Vertrag
 
-Zusätzlich zu den bisherigen Tests gehören zum aktuellen Gate:
+- Pollingintervall: 60 Sekunden.
+- Polling quittiert keinen Reminder.
+- unsichtbarer Tab quittiert keinen Reminder.
+- ACK erst über sichtbaren Reminder + explizite Nutzeraktion `Gesehen`.
+- Backend persistiert erst dann `notified_at`.
 
-- `tests/test_calendar_store.py` — Persistenz, Perioden, Titelgedächtnis, Reminder und DST.
-- `tests/test_calendar_api.py` — HTTP-Vertrag, TODO-Link, Reminder-Abfrage/Quittierung.
-- `tests/test_templates.py` — Kalender-Muster-/Negativdaten inklusive.
-- `tests/test_error_advisor.py` — Kalender-Fehlerhilfe inklusive.
-- `tests/test_core_api.py` — Metadaten-/Core-Vertrag ohne redundante Versionskonstanten.
-- `scripts/validate.py` — Foundation-/Core-/Kalender-Vorprüfung.
-- `scripts/learning_guard.py`.
-- `scripts/release.py`.
-- `.github/workflows/foundation-ci.yml`.
+## Ressourcen und Testdaten
 
-## Laufzeitvoraussetzungen
+`resources/templates/` enthält geprüfte Referenzen für Config, VersionRegistry, Events, TODO und Kalender.  
+`testdata/valid/` muss von Produktvalidatoren akzeptiert werden.  
+`testdata/invalid/` hält reproduzierbare Negativfälle.  
+Mustervorlagen dürfen niemals automatisch echte Runtime-Daten überschreiben.
 
-Linux/Kubuntu primär, Python 3.12 angestrebt, nur Standardbibliothek, `python3-venv`, lokaler Browser. Keine externen Python-/JS-Pakete, keine CDN-/Remote-Font-Abhängigkeiten.
+## Qualität / Tests
 
-## Persistenz
+Zusätzlich zum bisherigen Core gehören verbindlich:
 
-Lokale Nutzerdaten bleiben unter `runtime/` und sind aus Git/Release ausgeschlossen. Atomare Hauptdatei + Backup-Fallback gilt für persistente Domänenmodelle.
+- `tests/test_dashboard_contract.py`
+- Dashboard-Textkatalogprüfung,
+- erforderliche DOM-Bereiche,
+- API-Vertragsmarker,
+- Reminder-Visibility-/ACK-Vertrag,
+- sichere Textausgabe von Nutzertiteln,
+- Diagnose-Datensparsamkeit,
+- Responsive-/A11y-Schutzmarker.
 
-Aktuelle persistente Schemata:
+`scripts/validate.py` prüft diese Verträge zusätzlich außerhalb des Unit-Test-Laufs.
+
+## Persistenzschemata
 
 - VersionRegistry: 1
 - EventRegistry: 1
-- TODO-Core: 1
-- Calendar-Core: 1
-- Textkatalog: 1
+- TODO: 1
+- Calendar: 1
+- Core-Textkatalog: 1
 - Fehlerregeln: 1
-- Learning Memory: 1 pro JSONL-Eintrag
+- Learning Memory: 1 pro JSONL-Zeile
+- Dashboard-Textkatalog: 1
 
-Schemaänderung benötigt Validator, Vorlage, positive/negative Testdaten und Regression/Migration gemeinsam.
+## Netzwerk / Datenschutz
 
-## Kalendervertrag
-
-Ein Kalendertermin kann Titel, Datum, optionale Start-/Endzeit, Kategorie, Beschreibung, optionale TODO-ID, Zeitzonenmodus und Reminder enthalten.
-
-- Endzeit ohne Startzeit ist ungültig.
-- Endzeit muss nach Startzeit liegen.
-- Reminder benötigen eine Startzeit.
-- erlaubte Reminder: 0, 10, 30, 60, 1440 Minuten vorher.
-- fällige Reminder bleiben offen, bis `notified_at` atomar persistiert wurde.
-- lokale zukünftige Termine verwenden die System-IANA-Zeitzone via `zoneinfo`, nicht einen festen aktuellen UTC-Offset.
-- TODO-Verknüpfung ist optional; bei Angabe muss die TODO-ID existieren.
-
-## Fehlerhilfe-Vertrag
-
-Fehlerantworten können liefern: `rule_id`, Kategorie, Schweregrad/Ampel, verständliche Meldung, sichere Handlung, optional `template_path`, `retry_safe` und Bereich.
-
-Mustervorlagen sind reine Referenzen. Keine Regel darf sie ohne ausdrückliche Aktion über echte Nutzerdaten schreiben.
-
-## Learning-Memory-Vertrag
-
-`LEARNING_MEMORY.jsonl` enthält Entwicklungslektionen, keine Nutzerdaten. CI prüft eindeutige IDs, Schema, Pflichtfelder und aktive Regeln. Aktuell sind zusätzlich DST-/Reminder-/Metadatenversions-Lektionen verbindlich.
-
-## Netzwerk
-
-Backend ausschließlich `127.0.0.1`, Standardport 8765, kein Internetzwang, keine Telemetrie, Host-/Origin-Guard, keine CORS-Freigabe.
+- Bind ausschließlich `127.0.0.1`.
+- Host-/Origin-Guard.
+- keine Telemetrie.
+- keine externen Python-/JS-Pakete.
+- keine CDN-/Remote-Fonts.
+- Entwicklerdiagnose zeigt keine vollständige Config, `active_project` oder Favoritenliste.
 
 ## Release-Ausschlüsse
 
-`.venv/`, `runtime/*` außer `.gitkeep`, `__pycache__`, Testcache, `dist/`, `build/`, Logs, lokale Profile/Pfade, reale TODO-/Event-/Kalender-/Recovery-Daten, Secrets/PINs/Passwörter.
+`.venv/`, produktive `runtime/*` außer `.gitkeep`, `__pycache__`, Testcache, lokale Logs, `dist/`/`build/` als Eingabe, lokale Profile/Pfade sowie reale Nutzer-/Kalender-/TODO-/Recovery-Daten.
 
-**Nicht ausgeschlossen** werden dokumentierte `resources/templates/`, `testdata/` und Tests: sie sind Teil des vollständigen Entwicklungs-/Releaseprojekts und enthalten ausschließlich künstliche Beispieldaten.
+Tests, künstliche Testdaten und Referenzvorlagen bleiben Teil des vollständigen Projekt-ZIPs.
 
-## Testkommandos
+## Automatisierter Nachweis
 
-```bash
-python3 -m unittest discover -s tests -v
-python3 scripts/validate.py
-python3 scripts/learning_guard.py
-bash -n start_tool.sh
-node --check web/app.js
-python3 scripts/release.py --check
-```
+Code-Gate `33026823914`: **SUCCESS** mit 77 Tests, Validierung, Learning Guard, Launcher, JavaScript, Release-Builder und ZIP-Upload.
 
-GitHub Actions lädt nach grünem Build das vollständige Release-ZIP als Artefakt hoch.
+Release-Builder-Ausgabe: `AIO-Tool-0.4.0-dashboard-v2.zip`  
+SHA256: `104c361caf65c484626cd24812272e0781c151d2afcbcb933b5fc393a3e9e946`.
 
-## Status
+## Noch offene reale Gates
 
-`0.3.0-calendar-core` ist automatisiert **GEPRÜFT** durch Run `33026180855`, bleibt `draft`. Reale Kubuntu-/Browser-/Zoom-Gates und die sichtbare Reminder-Darstellung sind weiterhin offen.
+Kubuntu, Firefox, Chrome/Chromium, 125–200 % Zoom, echte Tastatur-/Fokusnavigation und verschiedene Displaygrößen.
 
 ## Nächster Manifest-Schritt
 
-Dashboard V2: vorhandene Version-/TODO-/Calendar-/Event-APIs sichtbar integrieren, Reminder-Anzeige sicher quittieren, Monatskalender und nächste Termine darstellen, Debugzugang und responsive Dichteführung ergänzen — ohne Domänenlogik in JavaScript zu duplizieren.
+Nach realer Dashboard-Abnahme: SAFE-FILE-CORE mit Copy, Vorprüfung, Vorschau, persistenter Jobausführung, Nachprüfung und Undo-/Recovery-Datensatz.

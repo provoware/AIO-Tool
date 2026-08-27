@@ -2,105 +2,85 @@
 
 ## Status
 
-**P1 CALENDAR CORE / 0.3.0-calendar-core — AUTOMATISIERT GEPRÜFT**
+**P1 DASHBOARD V2 / 0.4.0-dashboard-v2 — CODE-GATE GRÜN**
 
-Neue Funktionen werden nur in klar abgegrenzeten Slices ergänzt. Sicherheits-, Persistenz-, Fehler- und Learning-Gates bleiben vorrangig.
+GitHub Actions Run `33026823914`: 77 Tests + Validierung + Learning Guard + Launcher + JavaScript + Release-Builder + ZIP-Upload erfolgreich. Finaler Dokumentations-/Registry-Head wird separat erneut geprüft.
 
-## P0 — Foundation
+## Foundation
 
-- [x] Projektstruktur, Klick-&-Start, lokale `.venv`, Loopback-Backend.
+- [x] Klick-&-Start, lokale `.venv`, Loopback-Backend.
 - [x] atomare Config + Backup-Fallback.
-- [x] Host-/Origin-/Security-Header-Vertrag.
-- [x] Dashboard-Shell, 4 Themes, Schriftgrößen-Presets.
-- [x] CI und reproduzierbarer Release-Builder.
-- [ ] frischen Klick-&-Start auf Kubuntu aus sauberem Release prüfen.
-- [ ] Firefox und Chrome/Chromium auf Zielsystem prüfen.
-- [ ] 125–200 % Browserzoom auf Zielsystem prüfen.
+- [x] Host-/Origin-/Security-Header.
+- [x] vier Themes und Schriftgrößen-Presets.
+- [x] CI + reproduzierbarer ZIP-Builder.
+- [ ] sauber entpacktes Release real auf Kubuntu starten.
+- [ ] Firefox + Chrome/Chromium prüfen.
+- [ ] 125–200 % Zoom und Tastaturfokus real prüfen.
 
-## P1 — Persistenter Kern
+## Persistenter Kern
 
-### VersionRegistry
-- [x] getrackte Projekt-Historie + lokale Runtime-Registry.
-- [x] Status/Evidenz/Commit-SHA/Regressionstatus.
-- [x] Vorgängerversion und VERSION-Driftprüfung.
-- [ ] Drift zusätzlich gegen CHANGELOG/MANIFEST automatisieren.
+- [x] VersionRegistry + Evidenzpflicht.
+- [x] EventRegistry.
+- [x] TODO-Core + Titelgedächtnis + Erledigt-Archiv.
+- [x] Calendar-Core + Monats/Wochen/Jahr + Reminder-Quittierung + zoneinfo/DST.
+- [x] versionierte Muster-/Testdaten.
+- [x] versionierte Core-Texte/Fehlerregeln.
+- [x] `LEARNING_MEMORY.jsonl` + CI-Guard.
+- [ ] VERSION/Registry-Drift zusätzlich automatisiert gegen CHANGELOG/MANIFEST prüfen.
 
-### EventRegistry
-- [x] persistente menschenlesbare Events, newest-first, max. 500.
-- [ ] Dashboard rechts: letzte fünf Ereignisse.
-- [ ] „Alle Ereignisse“ + Debug-Zugang.
+## Dashboard V2
 
-### TODO-Core
-- [x] persistente TODOs, Priorität, optionaler Termin/Notiz/Kalenderbezug.
-- [x] Titelgedächtnis ohne case-sensitive Dubletten.
-- [x] Abhaken → Erledigt-Archiv mit Zeitstempel.
-- [x] nächste drei TODOs serverseitig.
-- [ ] TODO-UI und Archivansicht.
-- [ ] Dashboard: nächste drei TODOs anzeigen/abhaken.
+- [x] Monatskalender dauerhaft sichtbar.
+- [x] nächste Termine kompakt.
+- [x] nächste drei TODOs aus Serverreihenfolge.
+- [x] TODO direkt abhaken.
+- [x] letzte fünf Ereignisse.
+- [x] Version/Registry/Backend/Fremdpaket-Status.
+- [x] fällige Reminder sichtbar anzeigen.
+- [x] Reminder erst nach Klick auf „Gesehen“ quittieren.
+- [x] unsichtbarer Tab quittiert Reminder nicht.
+- [x] Entwicklerbereich klein und persistent ein-/ausblendbar.
+- [x] Diagnose ohne vollständige Config, Projektpfad oder Favoriten.
+- [x] Module in „Häufig“ und „Alle“ trennen.
+- [x] linker modularer Schnellzugriff.
+- [x] vier Themes + 90–140 % Schriftgröße.
+- [x] automatische Dichte `kompakt / normal / weit` aus Fenster/Schriftgröße.
+- [x] responsive Breakpoints 1180 / 920 / 720 / 430 px.
+- [x] Skip-Link, Fokusindikator, ARIA-Live und Reduced-Motion-Vertrag.
+- [x] versionierter Dashboard-Textkatalog.
+- [x] statischer Dashboard-Regressionsvertrag.
+- [x] 77 Tests im Code-Gate `33026823914`.
+- [ ] echte Browserdarstellung auf Zielsystem visuell/bedienseitig abnehmen.
 
-## P1 — Robustheits- und Entwicklungs-Guard
+## P0 vor SAFE-FILE-CORE
 
-- [x] versionierte Musterdateien und positive/negative Testdaten.
-- [x] versionierter deutscher Textkatalog.
-- [x] versionierte Fehlerregeln + `ErrorAdvisor`.
-- [x] Integritätsfehler und Nutzereingabefehler getrennt.
-- [x] Exception-Hierarchie-Matching.
-- [x] `LEARNING_MEMORY.jsonl` + `scripts/learning_guard.py`.
-- [x] CI lädt vollständiges Release-ZIP als Artefakt hoch.
-- [x] versionierte Metadaten in Tests gegen ihre Quelldatei statt redundante harte Versionsnummer prüfen.
+- [ ] vollständiges `0.4.0-dashboard-v2` Release aus CI entpacken.
+- [ ] `start_tool.sh` auf Kubuntu aus sauberem Ordner starten.
+- [ ] Firefox: Start, Kalender, TODO-Abhaken, Reminder, Einstellungen, Fokus, Zoom.
+- [ ] Chrome/Chromium: denselben Vertrag prüfen.
+- [ ] 100 / 125 / 150 / 175 / 200 % Zoom prüfen.
+- [ ] Bildschirmbreiten klein / Full-HD / groß prüfen.
+- [ ] gefundene reale UI-Fehler jeweils als Regression + Learning Memory übernehmen.
 
-## P1 — Kalender-Core
+## SAFE-FILE-CORE danach
 
-- [x] persistentes Kalender-Schema auf `AtomicJsonStore`.
-- [x] Termin: Titel, Datum, Startzeit optional, Ende optional, Kategorie, Beschreibung optional.
-- [x] Titelgedächtnis und Vorschläge.
-- [x] Erinnerungen: Terminzeit / 10 min / 30 min / 1 h / 1 Tag vorher.
-- [x] Reminder nur mit Startzeit zulassen.
-- [x] persistente Reminder-Quittierung gegen Doppelmeldung.
-- [x] Monatsperiode mit echten Monatsgrenzen.
-- [x] Wochenperiode Montag–Sonntag.
-- [x] Jahresperiode.
-- [x] lokale Systemzeitzone via `zoneinfo`; DST-Regressionsschutz.
-- [x] optionale TODO-Verknüpfung; unbekannte TODO-ID wird abgelehnt.
-- [x] Kalender-Mustervorlage + gültige/ungültige Testdaten.
-- [x] Kalender-Fehlerregeln und Laienhinweise.
-- [x] Kalender-API + API-Regressionen.
-- [x] automatisierte Kalender-CI Run `33026180855`: SUCCESS.
-- [ ] sichtbare Browser-/Desktop-Reminderanzeige — gehört zu Dashboard V2.
-
-## P1 — Dashboard V2 / NÄCHSTER SLICE
-
-- [ ] Informationsarchitektur auf getestete Core-APIs umstellen.
-- [ ] Monatskalender dauerhaft sichtbar, optional einklappbare Details.
-- [ ] nächste Termine kompakt anzeigen.
-- [ ] nächste drei TODOs anzeigen und abhaken.
-- [ ] letzte fünf Ereignisse in einfacher Sprache.
-- [ ] Version + Registry-/Gesundheitsstatus sichtbar.
-- [ ] fällige Reminder sichtbar anzeigen und erst nach bestätigter Darstellung quittieren.
-- [ ] Debug-/Diagnose-Button dauerhaft erreichbar.
-- [ ] Entwicklungsbereich klein anwählbar/versteckbar.
-- [ ] häufig genutzte Funktionen getrennt von „Alle“.
-- [ ] linker modularer Kachelbereich für weitere Funktionen.
-- [ ] Start-Erkennung von Fenster/Bildschirm und Dichte-Modus.
-- [ ] kleine Displays, Full-HD, große Displays und 125–200 % Zoom regressionssicher berücksichtigen.
-- [ ] Tastaturnavigation, Fokusindikatoren und ARIA-Live-Status prüfen.
-
-## P1 — SAFE-FILE-CORE / danach
-
-- [ ] Copy zuerst: Quelle → Ziel → Vorprüfung → Vorschau → Konflikte → Kopieren → Nachprüfung → Undo-Datensatz.
+- [ ] Copy als erste Dateioperation.
+- [ ] Quelle/Ziel nur über sichere Auswahl.
+- [ ] Vorprüfung: Existenz, Lesbarkeit, Schreibbarkeit, freier Speicher, Konflikte.
+- [ ] Vorschau vor Änderung.
+- [ ] persistenter Jobstatus.
+- [ ] Nachprüfung gegen erwartetes Ergebnis.
+- [ ] Undo-/Recovery-Datensatz.
+- [ ] Abbruch/Neustart robust behandeln.
 - [ ] erst danach Move, Rename und Papierkorb/Delete.
 
-## P1 — Job & Recovery
+## Job & Recovery
 
 - [ ] persistente Job-Queue.
-- [ ] `DONE` erst nach erfolgreicher Persistenz.
-- [ ] Pause/Abbruch/Wiederaufnahme.
-- [ ] Checkpoints und Recovery-Center.
-
-## Quality Gates
-
-Ein Slice gilt erst als abgeschlossen, wenn Code, positive/negative Testdaten, Tests, Learning Memory falls relevant, Dokumentation, Regressionen, Manifest und Changelog konsistent sind. Zielsystem-Gates dürfen nicht aus CI-Erfolg abgeleitet werden.
+- [ ] `DONE` erst nach erfolgreicher Persistenz + Nachprüfung.
+- [ ] Pause / Abbruch / Wiederaufnahme.
+- [ ] Checkpoints und Recovery Center.
 
 ## Aktuell empfohlener nächster Schritt
 
-**Dashboard V2 ausschließlich auf den jetzt getesteten Version-/TODO-/Kalender-/Event-APIs aufbauen. Keine neue Domänenlogik in die UI kopieren. Danach reale Browser-/Zoom-Abnahme, erst anschließend SAFE-FILE-CORE.**
+**Dashboard V2 finalen Dokumentations-/Registry-Gate grün machen und mergen. Danach keine neue Funktion: zuerst reale Kubuntu-/Firefox-/Chrome-/Zoom-Abnahme aus dem erzeugten ZIP.**

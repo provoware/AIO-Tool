@@ -1,106 +1,104 @@
 # LAIEN-ANLEITUNG
 
-## Was ist AIO-Tool?
+## AIO-Tool 0.4.0-dashboard-v2
 
-AIO-Tool bündelt wiederkehrende Aufgaben in einer gemeinsamen, lokalen Oberfläche. Die Bedienung soll einfach, sichtbar und sicher bleiben.
+AIO-Tool ist ein lokaler Arbeitsplatz für wiederkehrende Aufgaben. Die aktuelle Version bringt die vorhandenen Kalender-, TODO-, Ereignis- und Systemdaten erstmals gemeinsam in eine kompakte Hauptansicht.
 
-## Aktueller Stand: 0.3.0-calendar-core
+## Was sehe ich direkt nach dem Start?
 
-Der bisherige Versions-, Ereignis-, TODO- und Robustheitskern wurde um einen getesteten Kalender-Kern erweitert.
+### 1. Oben: Systemzustand
 
-Neu vorhanden sind:
+Du siehst:
 
-- Termine lokal und dauerhaft speichern,
-- Kalendertitel merken und wieder anbieten,
-- Monats-, Wochen- und Jahresbereiche erzeugen,
-- Erinnerungen vorbereiten,
-- bereits angezeigte Erinnerungen merken,
-- optional einen Termin mit einem TODO verknüpfen,
-- Sommer-/Winterzeit automatisch korrekt berücksichtigen.
+- aktuelle Version,
+- ob das lokale Backend bereit ist,
+- ob die Versionsdaten zusammenpassen,
+- einen Button **Neu prüfen**.
 
-Die sichtbare Kalenderoberfläche folgt im nächsten Entwicklungsschritt.
+🟢 **bereit** bedeutet: Die geladenen Kernbereiche melden keinen Fehler.  
+🟠 **teilweise** bedeutet: Das Grundsystem läuft, aber mindestens ein Bereich konnte nicht vollständig geladen werden.  
+🔴 **Eingriff** bedeutet: Der Systemstatus selbst konnte nicht sicher geladen werden.
 
-## Einen Termin verstehen
+## 2. Nächster sinnvoller Schritt
 
-Ein Termin kann enthalten:
+Das Dashboard versucht nicht, dir möglichst viele Meldungen gleichzeitig zu zeigen. Es hebt zuerst hervor:
 
-- Titel,
-- Datum,
-- Startzeit optional,
-- Endzeit optional,
-- Kategorie optional,
-- Beschreibung optional,
-- Erinnerung optional,
-- TODO-Verknüpfung optional.
+1. eine fällige Erinnerung,
+2. sonst die nächste offene Aufgabe,
+3. sonst den nächsten Termin.
 
-Ein TODO ist **keine Pflicht**. Kalender und TODO funktionieren auch unabhängig voneinander.
+## 3. Monatskalender
 
-## Erinnerungen
+Der Kalender bleibt in der Hauptansicht sichtbar.
 
-Zur Auswahl sind vorbereitet:
+- Woche: **Montag bis Sonntag**.
+- **‹ / ›** wechselt den Monat.
+- **Heute** springt zurück zum aktuellen Monat.
+- Der heutige Tag wird hervorgehoben.
+- An Tagen mit Terminen wird eine kleine Anzahl angezeigt.
 
-- zum Terminzeitpunkt,
-- 10 Minuten vorher,
-- 30 Minuten vorher,
-- 1 Stunde vorher,
-- 1 Tag vorher.
+Auf kleinen Bildschirmen werden Details im Monatsraster reduziert, damit der Monat trotzdem übersichtlich bleibt. Die nächsten Termine stehen zusätzlich unter dem Kalender.
 
-Eine Erinnerung braucht eine Uhrzeit. Ohne Startzeit kann das Tool nicht eindeutig wissen, wann erinnert werden soll und lehnt diese Kombination deshalb verständlich ab.
+## 4. Nächste TODOs
 
-### Warum gibt es eine Quittierung?
+Rechts erscheinen höchstens die nächsten drei Aufgaben aus der bereits getesteten TODO-Reihenfolge.
 
-Die Oberfläche darf eine Erinnerung erst als „angezeigt“ markieren, wenn sie tatsächlich sichtbar dargestellt wurde.
+Mit **✓** wird eine Aufgabe erledigt. Sie wird dabei nicht einfach gelöscht, sondern vom Backend ins Erledigt-Archiv verschoben.
 
-Vereinfacht:
+## 5. Letzte Ereignisse
 
-`Reminder fällig → Oberfläche zeigt ihn → erst dann quittieren → nicht erneut anzeigen`
+Das Dashboard zeigt die letzten fünf wichtigen Ereignisse in verständlichen Sätzen. Technische Rohdetails bleiben vom normalen Verlauf getrennt.
 
-Dadurch soll dieselbe Erinnerung nicht bei jeder neuen Abfrage wieder erscheinen.
+## 6. Erinnerungen
 
-## Sommer- und Winterzeit
+Eine fällige Erinnerung erscheint deutlich oberhalb des Dashboards.
 
-Das Tool verwendet die lokale System-Zeitzone. Dadurch wird für einen zukünftigen Termin geprüft, welche Zeitregel **an diesem zukünftigen Datum** gilt.
+Wichtig:
 
-Das ist wichtig, weil ein heute gültiger UTC-Abstand nach einem Sommer-/Winterzeitwechsel falsch sein kann.
+> Nur weil das Tool nach Erinnerungen fragt, gilt eine Erinnerung noch nicht als gesehen.
 
-## Monats-, Wochen- und Jahresansicht
+Der Ablauf ist:
 
-Der Datenkern kann bereits berechnen:
+`fällig → sichtbar anzeigen → du klickst „Gesehen“ → erst dann speichern`
 
-- Monat vom ersten bis zum letzten echten Kalendertag,
-- Woche von Montag bis Sonntag,
-- komplettes Kalenderjahr.
+Ist der Browser-Tab gerade nicht sichtbar, quittiert das Dashboard keine Erinnerung.
 
-Dashboard V2 macht diese Daten anschließend sichtbar.
+## 7. Schnellzugriff
 
-## Mustervorlagen und Fehlerhilfe
+Links findest du Module zunächst unter **Häufig**. Mit **Alle** werden zusätzliche Bereiche eingeblendet.
 
-Auch der Kalender besitzt eine geprüfte Musterdatei und gezielte Fehler-Testdateien.
+Der Datei-Bereich ist absichtlich noch deaktiviert. Echte Dateiänderungen werden erst nach den offenen Zielsystemprüfungen als eigener Sicherheits-Slice ergänzt.
 
-Beispiele für automatisch geprüfte Fehler:
+## 8. Entwicklerbereich
 
-- Endzeit liegt vor der Startzeit,
-- Erinnerung wurde gewählt, aber keine Startzeit gesetzt,
-- unbekannte Kalenderoption,
-- nicht vorhandene TODO-Verknüpfung.
+Unter **Darstellung** kannst du den Entwicklerbereich freischalten. Danach erscheint ein kleiner Diagnose-Button.
 
-Eine Mustervorlage dient nur zum Vergleichen. Sie wird **nicht automatisch über deine echten Daten geschrieben**.
+Die Diagnose zeigt nur technische Zustände wie Version, Registrystatus und Zähler. Sie zeigt bewusst nicht die vollständige Konfiguration, den aktiven Projektpfad oder deine Favoritenliste.
 
-## Entwicklungs-Lerngedächtnis
+## 9. Darstellung
 
-Das Toolprojekt merkt sich inzwischen auch Entwicklungslektionen. Neu hinzugekommen sind unter anderem:
+Vier Themes bleiben verfügbar:
 
-- zukünftige Zeitberechnung muss echte Zeitzonenregeln berücksichtigen,
-- Reminder brauchen einen gespeicherten Quittierungszustand,
-- Tests dürfen versionierte Nummern nicht unnötig doppelt hart speichern.
+- Trash Neon,
+- Steel Night,
+- Clean Light,
+- High Contrast.
 
-Diese Datei enthält keine privaten Nutzerdaten.
+Schriftgrößen: 90 / 100 / 110 / 120 / 130 / 140 %.
 
-## TODOs und Ereignisse
+Zusätzlich passt das Dashboard seine Dichte automatisch an Fenstergröße und Schriftgröße an: **kompakt / normal / weit**.
 
-TODOs bleiben nach Neustart erhalten. Verwendete Titel können wieder angeboten werden. Erledigte TODOs wandern mit Zeitstempel ins Archiv statt gelöscht zu werden.
+## Barriereärmere Bedienung
 
-Wichtige Ereignisse werden mit einem kurzen verständlichen Satz gespeichert. Dashboard V2 zeigt davon standardmäßig die letzten fünf.
+Vorbereitet und automatisiert geprüft sind:
+
+- sichtbare Tastatur-Fokusrahmen,
+- Sprunglink zum Hauptinhalt,
+- Status-/Reminder-Livebereiche für assistive Technik,
+- Reduced-Motion-Regel,
+- responsive Layoutstufen.
+
+Die reale Bedienung mit Firefox/Chrome und 125–200 % Zoom ist noch ein eigener offener Test und wird nicht als bestanden ausgegeben.
 
 ## Datenschutz
 
@@ -108,31 +106,22 @@ Wichtige Ereignisse werden mit einem kurzen verständlichen Satz gespeichert. Da
 - Backend nur lokal auf `127.0.0.1`,
 - keine Telemetrie,
 - keine externen Python-Pakete,
-- lokale Config-/TODO-/Event-/Kalenderdaten nicht im Release-ZIP.
+- lokale Config-, TODO-, Event- und Kalenderdaten werden nicht ins Release-ZIP übernommen.
 
-## Bedienprinzip
+## Was wurde automatisch geprüft?
 
-**Button → Auswahldialog → gemerkte Auswahl → Preset/Empfehlung → erst dann eigene Texteingabe.**
+GitHub Actions Run `33026823914` war grün:
 
-## Ampelsystem
-
-- 🟢 bereit / erfolgreich
-- 🟡 optional / Hinweis
-- 🟠 prüfen / Entscheidung nötig
-- 🔴 Fehler / Risiko / Eingriff nötig
-
-Farbe wird immer zusätzlich durch Text erklärt.
+- 77 Tests,
+- Dashboard-/Foundation-Validierung,
+- Learning Guard,
+- Launcher,
+- JavaScript,
+- Release-Builder,
+- vollständiges ZIP-Artefakt.
 
 ## Was kommt als Nächstes?
 
-Als nächstes wird **Dashboard V2** gebaut. Dort sollen die bereits getesteten Daten einfach sichtbar werden:
+Zuerst wird genau dieses ZIP auf dem echten Kubuntu-Zielsystem mit Firefox, Chrome/Chromium, mehreren Zoomstufen und Tastaturbedienung geprüft.
 
-- Monatskalender,
-- nächste Termine,
-- nächste drei TODOs,
-- letzte fünf Ereignisse,
-- Versions-/Gesundheitsstatus,
-- Reminder-Hinweise,
-- Debug-/Diagnosezugang.
-
-Danach werden die reale Kubuntu-/Browser-/Zoom-Bedienung geprüft und anschließend die ersten sicheren Dateioperationen aufgebaut.
+Erst danach beginnt **SAFE-FILE-CORE**: Kopieren mit Vorprüfung, Vorschau, Nachprüfung und Undo-/Recovery-Vertrag.

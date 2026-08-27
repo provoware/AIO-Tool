@@ -6,122 +6,117 @@
 
 ## Produktidee
 
-AIO-Tool ist ein lokales, modulares All-in-One-Werkzeug für wiederkehrende Datei-, Projekt-, Organisations- und Automatisierungsaufgaben. Häufige Abläufe sollen in einer einheitlichen, sicheren und laienfreundlichen Oberfläche zusammengeführt werden.
+AIO-Tool ist ein lokaler, modularer All-in-One-Arbeitsplatz für Organisations-, Datei-, Projekt- und Automatisierungsaufgaben. Die Oberfläche richtet sich zuerst an Nutzer ohne technisches Spezialwissen und trennt einfache Bedienung von optionaler Diagnose.
 
-## Leitidee der Bedienung
+## Leitregel
 
-**Keine Zeicheneingabe, wenn eine Auswahl ausreicht.**
+**Auswahl vor Zeicheneingabe. Sichtbarkeit vor Automatisierung. Sicherheit vor Bequemlichkeit.**
 
-Reihenfolge: Button → Auswahldialog → Preset/zuletzt verwendet → Empfehlung → Freitext nur als Fallback.
+## Aktueller Stand: 0.4.0-dashboard-v2
 
-## Aktueller technischer Kern
+Dashboard V2 ist die erste zusammenhängende sichtbare Integration der zuvor getrennt getesteten Core-Bausteine.
+
+### Sichtbare Informationsarchitektur
+
+**Linke Spalte**
+- Schnellmodule,
+- Häufig / Alle,
+- optionaler Entwickler-/Diagnosebereich.
+
+**Mitte**
+- dauerhaft sichtbarer Monatskalender,
+- kommende Termine.
+
+**Rechte Spalte**
+- nächste drei TODOs,
+- letzte fünf Ereignisse,
+- System-/Registry-/Versionsstatus.
+
+**Darüber**
+- globaler Systemstatus,
+- nächster sinnvoller Schritt,
+- fällige Reminder.
+
+## Dashboard-Prinzipien
+
+### 1. Backend bleibt Quelle der Fachlogik
+
+JavaScript berechnet nicht selbst, welches TODO fachlich das nächste ist oder wann ein Reminder fällig wird. Es visualisiert die getesteten API-Antworten.
+
+### 2. Reminder erst nach Sichtbarkeit quittieren
+
+`fällig → sichtbar darstellen → Nutzer bestätigt → ACK persistieren`
+
+Ein Hintergrund-Poll oder unsichtbarer Tab darf keinen gesehenen Zustand erzeugen.
+
+### 3. Progressive Informationsdichte
+
+Das Dashboard zeigt zuerst häufige Module. Zusatzmodule erscheinen über **Alle**. Entwicklerdiagnose ist standardmäßig nur verfügbar, wenn sie in den Einstellungen freigeschaltet wurde.
+
+### 4. Responsive Dichte
+
+Fensterbreite, Fensterhöhe und gewählte Schriftgröße bestimmen den Darstellungsmodus `kompakt`, `normal` oder `weit`. Dies ist eine Präsentationsentscheidung; Fachlogik bleibt unverändert.
+
+### 5. Datensparsame Diagnose
+
+Die Diagnose zeigt technische Kernzustände, keine vollständige Nutzerkonfiguration, Projektpfade oder Favoriten.
+
+## Technischer Kern
 
 ### VersionRegistry
 
-Getrackte Projekt-Historie und lokale Runtime-Registry mit Status, Commit-SHA, Änderungen, bekannten Problemen, Regressionstatus und Evidenz. Getestet/freigegeben darf nicht ohne Prüfnachweis vergeben werden.
+Getrackte Historie + lokale Runtime-Registry mit Evidenzvertrag.
 
 ### EventRegistry
 
-Persistente wichtige Ereignisse mit eigenem verständlichem Meldungstext und getrennten technischen Details. Dashboard V2 zeigt davon standardmäßig die letzten fünf.
+Persistente menschenlesbare Ereignisse; technische Details getrennt.
 
 ### TODO-Core
 
-Persistente TODOs mit Titelgedächtnis, optionalem Datum/Kalenderbezug und Erledigt-Archiv mit Zeitstempel. Die nächsten drei offenen TODOs können serverseitig ermittelt werden.
+Persistente Aufgaben, Titelgedächtnis, Priorität, nächste drei TODOs und Erledigt-Archiv.
 
-### Calendar-Core 0.3.0
+### Calendar-Core
 
-Persistente Kalendertermine auf demselben atomaren Datenvertrag wie die übrigen Domänenmodelle.
+Persistente Termine, Monats/Wochen/Jahr, Titelgedächtnis, Reminder-Quittierung, optionale TODO-Verknüpfung und lokale `zoneinfo`-/DST-Berechnung.
 
-Unterstützt werden:
+### Robustheitskern
 
-- Titel und Datum,
-- optionale Start-/Endzeit,
-- optionale Kategorie und Beschreibung,
-- optionale TODO-Verknüpfung,
-- Titelgedächtnis,
-- Monats-/Wochen-/Jahresperioden,
-- Reminder 0/10/30/60/1440 Minuten vorher,
-- fällige Reminder mit separater persistenter Quittierung,
-- lokale Systemzeitzone via `zoneinfo` für korrekte DST-Berechnung.
+- atomare Persistenz,
+- geprüfte Mustervorlagen,
+- positive/negative Testdaten,
+- versionierte Core-Texte,
+- versionierte Fehlerregeln,
+- intelligente Fehlerhilfe,
+- `LEARNING_MEMORY.jsonl`,
+- Learning Guard,
+- reproduzierbarer Release-Builder.
 
-Die sichtbare Kalender-/Reminderdarstellung wird bewusst im nachfolgenden Dashboard-Slice implementiert. Domänenlogik bleibt im Backend.
+## Dashboard-Textvertrag
 
-## Robustheitskern
+`web/dashboard-texts.de.v1.json` lagert wiederkehrende UI-Texte aus. Fehlende oder leere `data-i18n`-Texte werden automatisiert erkannt.
 
-AIO-Tool schützt nicht nur Nutzerdaten, sondern zunehmend auch den Entwicklungsprozess selbst.
+## Dashboard-Regressionsvertrag
 
-### Mustervorlagen und Testdaten
+`tests/test_dashboard_contract.py` sichert Kernbereiche, API-Verwendung, Reminder-Sicherheit, Textausgabe, Diagnose-Datensparsamkeit, Responsive- und A11y-Marker.
 
-Jedes langlebige JSON-/Config-Format besitzt eine geprüfte Referenzdatei. Positive Testdaten müssen akzeptiert, bekannte negative Testfälle gezielt abgelehnt werden. Der Kalender folgt demselben Vertrag.
-
-Mustervorlagen sind Vergleichshilfen und dürfen niemals still über Nutzerdaten geschrieben werden.
-
-### Versionierte Texte
-
-Wiederkehrende Nutzer- und Systemmeldungen werden in einem versionierten deutschen Textkatalog gepflegt. Dadurch lassen sich Sprache, Verständlichkeit und Konsistenz zentral testen und erweitern.
-
-### Intelligente Fehlerhilfe
-
-Versionierte Fehlerregeln ordnen bekannte Fehlerfamilien einer verständlichen Erklärung, Ampelstufe und sicheren nächsten Handlung zu. Kalenderfehler wie ungültiges Datum, Reminder ohne Uhrzeit oder unzulässige Terminzeiten sind darin integriert.
-
-### Entwicklungs-Lerngedächtnis
-
-`LEARNING_MEMORY.jsonl` bewahrt bestätigte Entwicklungslektionen. Der Learning Guard validiert diese Datei in CI. Aktuelle Strukturlektionen betreffen unter anderem optionale Felder, Fehlerklassifikation, Zeit-/DST-Verträge, Reminder-Quittierung und versionierte Metadaten.
-
-### Codesparendes Patchen
-
-Vor breiten Umbauten wird die kleinste verantwortliche Codezone bestimmt: Datei, Funktion/Klasse, Zeilenbereich und passender Test. Lokale Fixes mit Regression werden bevorzugt.
-
-## Nächster Organisationsschritt: Dashboard V2
-
-Der nächste Slice verändert möglichst keine Domänenlogik, sondern macht die vorhandenen getesteten Daten nutzbar sichtbar:
-
-- Monatskalender als dauerhafte Übersicht,
-- nächste Termine,
-- nächste drei TODOs,
-- letzte fünf Ereignisse,
-- Version/Registry-/Gesundheitsstatus,
-- fällige Reminder mit Quittierung erst nach sichtbarer Darstellung,
-- direkter Debug-/Diagnosezugang,
-- kleiner ein-/ausblendbarer Entwicklungsbereich,
-- häufig genutzte Funktionen getrennt von „Alle“,
-- linker modularer Kachelbereich,
-- responsive Dichte und Zoom-/Tastaturfreundlichkeit.
-
-## Sicherheitsphilosophie
-
-Für verändernde Operationen gilt grundsätzlich:
+## Sicherheitsphilosophie für spätere Dateioperationen
 
 `Vorprüfung → Vorschau → Bestätigung → Aktion → Nachprüfung → Protokoll → Undo/Recovery`
 
-Prüfungen bleiben seiteneffektfrei. Ein sekundärer Protokollfehler darf eine bereits sicher gespeicherte Hauptaktion nicht rückwirkend als fehlgeschlagen darstellen.
+Dateioperationen sind in Dashboard V2 noch bewusst deaktiviert. Sie folgen erst nach realer UI-/Zielsystemabnahme.
 
-Für Reminder gilt zusätzlich:
+## Nachweis
 
-`fällig → sichtbar darstellen → erst danach quittieren`
+Code-Gate `33026823914`: 77 Tests + vollständige CI erfolgreich; Release `AIO-Tool-0.4.0-dashboard-v2.zip` wurde erzeugt.
 
-## Technische Richtung
+## Noch nicht als bestanden behauptet
 
-- Linux/Kubuntu zuerst,
-- lokale Browseroberfläche,
-- Loopback-Backend,
-- Standardbibliothek bevorzugt,
-- keine Telemetrie,
-- atomare Persistenz,
-- `zoneinfo` für lokale zukünftige Zeitregeln,
-- versionierte Schemata/Text-/Fehlerverträge,
-- reproduzierbare Tests und Releases,
-- Release-ZIP als automatisch geprüftes CI-Artefakt.
+- reale Kubuntu-Bedienung,
+- Firefox/Chrome/Chromium,
+- 125–200 % Zoom,
+- echte Tastatur-/Fokusreihenfolge,
+- unterschiedliche reale Displaygrößen.
 
-## Definition eines guten Workflows
+## Nächste Produktstufe
 
-Ein Laie soll jederzeit beantworten können:
-
-1. Wo bin ich?
-2. Was passiert gerade?
-3. Was soll ich als Nächstes tun?
-4. Was wird verändert?
-5. Kann ich es rückgängig machen?
-6. Was ist das Ergebnis?
-
-Wenn eine Hauptansicht diese Fragen nicht beantwortet, ist sie noch nicht fertig optimiert.
+Nach erfolgreicher Zielsystemabnahme beginnt SAFE-FILE-CORE mit **Copy** als erster kontrollierter Dateioperation. Erst wenn Copy inklusive Vorschau, Nachprüfung, Abbruch und Recovery stabil ist, folgen Move, Rename und Papierkorb/Delete.

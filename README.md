@@ -1,117 +1,89 @@
 # AIO-Tool
 
-> Modulares, laienfreundliches, offline-first All-in-One-Tool mit lokalem Backend.
+> Lokales, modulares und laienfreundliches All-in-One-Tool mit sicherem Python-Backend und Browseroberfläche.
 
 ## Status
 
-- **Phase:** P1 — Kalender-/Organisationskern
-- **Version:** `0.3.0-calendar-core`
-- **Status:** automatisiert getestet / `draft`
-- **Datum:** 2026-08-27
-- **Zielsystem:** primär Linux/Kubuntu
-- **Oberfläche:** Browser-UI
-- **Backend:** Python-Standardbibliothek, ausschließlich Loopback
+- **Version:** `0.4.0-dashboard-v2`
+- **Phase:** P1 — Dashboard-Integration
+- **Stand:** 2026-08-27
+- **Automatischer Code-Gate:** GitHub Actions Run `33026823914` — SUCCESS
+- **Tests:** 77 Unit-/Integrations-/Vertragstests
+- **Release-Status:** `draft`; reale Kubuntu-/Browser-/Zoom-Gates bleiben offen
+- **Backend:** ausschließlich `127.0.0.1`, kein Internetzwang
 - **Externe Python-Pakete:** keine
 
-## Aktueller Kern
+## Was ist jetzt sichtbar nutzbar?
 
-AIO-Tool besitzt inzwischen einen getesteten gemeinsamen Daten- und Robustheitskern:
+Dashboard V2 verbindet die bereits getesteten Core-APIs zu einer kompakten Arbeitsübersicht, ohne die Fachlogik in JavaScript zu duplizieren:
 
-- Klick-&-Start mit lokalem Loopback-Backend,
-- atomare Config-Persistenz + Backup-Fallback,
+- dauerhaft sichtbarer Monatskalender,
+- nächste Termine,
+- nächste drei TODOs mit direktem Abhaken,
+- letzte fünf verständliche Ereignisse,
+- Versions-, Registry- und Systemstatus,
+- fällige Reminder als sichtbare Hinweise,
+- explizite Reminder-Quittierung über **„Gesehen“**,
+- Schnellzugriff **Häufig / Alle**,
+- kleiner optionaler Entwickler-/Diagnosebereich,
+- vier Themes und Schriftgrößen 90–140 %,
+- automatisch abgeleitete Darstellungsdichte für verschiedene Fenstergrößen,
+- Tastatur-Fokus, Skip-Link, ARIA-Live-Bereiche und Reduced-Motion-Schutz.
+
+## Sicherer Reminder-Vertrag
+
+Ein fälliger Reminder wird nicht beim bloßen Polling quittiert.
+
+`fällig → sichtbar im Dashboard → Nutzer klickt „Gesehen“ → Backend speichert notified_at`
+
+Ist der Browser-Tab unsichtbar, führt Dashboard V2 keine Quittierung aus. Dadurch bleibt ein noch nicht tatsächlich gesehener Hinweis nach Reload/erneuter Abfrage offen.
+
+## Kalender/TODO/Ereignisse
+
+Die UI verwendet ausschließlich die vorhandenen APIs:
+
+- `/api/status`
+- `/api/todos`
+- `/api/todos/<id>/complete`
+- `/api/events?limit=5`
+- `/api/calendar?view=month|year`
+- `/api/calendar/reminders/due`
+- `/api/calendar/<event>/reminders/<minutes>/ack`
+
+Kalenderperioden, TODO-Reihenfolge, Reminder-Fälligkeit und Persistenz bleiben Backend-Verantwortung.
+
+## Versionierte Dashboard-Texte
+
+`web/dashboard-texts.de.v1.json` enthält die wiederkehrenden deutschen UI-Texte mit eigenem Versionsvertrag. `tests/test_dashboard_contract.py` prüft, dass sichtbare `data-i18n`-Schlüssel vorhanden und nicht leer sind.
+
+## Dashboard-Vertragstest
+
+Automatisch geprüft werden unter anderem:
+
+- Kernbereiche des Dashboards vorhanden,
+- Montag–Sonntag-Vertrag,
+- Nutzung der getesteten Core-APIs,
+- Reminder nicht im unsichtbaren Tab quittieren,
+- Reminder-ACK nur über sichtbare Nutzeraktion,
+- Nutzertitel via `textContent` statt HTML-Injektion,
+- Diagnose enthält keine vollständige Config/Projektpfade/Favoriten,
+- responsive Breakpoints, Fokusdarstellung und Reduced-Motion-Schutz.
+
+## Bestehender Robustheitskern
+
+Weiterhin enthalten sind:
+
+- `AtomicJsonStore` + Backup-Fallback,
 - VersionRegistry mit Evidenzpflicht,
-- EventRegistry mit verständlichen Ereignissen,
-- persistenter TODO-Core mit Titelgedächtnis und Erledigt-Archiv,
-- versionierte Muster-/Testdaten,
-- versionierter deutscher Textkatalog,
-- regelbasierte Fehlerhilfe,
-- `LEARNING_MEMORY.jsonl` + CI-Learning-Guard,
-- reproduzierbarer Release-Builder + vollständiges CI-ZIP,
-- **persistenter Kalender-Core mit Erinnerungen, Perioden und optionaler TODO-Verknüpfung**.
-
-## Kalender-Core 0.3.0
-
-`app/calendar_store.py` verwaltet lokale Termine auf demselben atomaren Persistenzvertrag wie die übrigen Domänenmodelle.
-
-Ein Termin unterstützt:
-
-- Titel,
-- Datum,
-- optionale Startzeit,
-- optionale Endzeit,
-- optionale Kategorie,
-- optionale Beschreibung,
-- optionale TODO-Verknüpfung,
-- lokale Zeitzone,
-- Erinnerungen 0 / 10 / 30 / 60 / 1440 Minuten vorher.
-
-### Kalenderansichten als Datenvertrag
-
-Der Core liefert getestete Perioden für:
-
-- **Monat** — echte Monatsgrenzen,
-- **Woche** — Montag bis Sonntag,
-- **Jahr** — vollständiges Kalenderjahr.
-
-Die sichtbare Monats-/Wochen-/Jahresoberfläche folgt in Dashboard V2. Der Core selbst ist davon bewusst getrennt.
-
-### Erinnerungen
-
-Fällige Erinnerungen werden nur geliefert, solange sie noch nicht quittiert wurden. Die Quittierung speichert `notified_at` atomar, damit Polling denselben Reminder nicht immer wieder meldet.
-
-Für zukünftige lokale Termine wird die echte System-Zeitzone über Python `zoneinfo` verwendet. Damit bleiben Sommer-/Winterzeitwechsel korrekt; ein fester aktueller UTC-Offset wird ausdrücklich nicht verwendet.
-
-Eine sichtbare Browser-/Desktop-Benachrichtigung ist **noch kein Bestandteil des getesteten Core-Vertrags**. Dashboard V2 bindet diese Anzeige später an den vorhandenen Reminder-Core an.
-
-## Kalender-API
-
-Der lokale API-Vertrag umfasst unter anderem:
-
-- Kalenderstatus / Terminanzahl,
-- Termine anlegen,
-- Monats-/Wochen-/Jahresperiode lesen,
-- Titelvorschläge,
-- fällige Reminder lesen,
-- Reminder quittieren,
-- optionale TODO-Verknüpfung validieren.
-
-Kalender-Eingabefehler werden über die versionierte Fehlerhilfe mit verständlicher Erklärung und sicherer nächster Handlung beantwortet.
-
-## Musterdateien und Testdaten
-
-Geprüfte Referenzen unter `resources/templates/` umfassen jetzt:
-
-- Config,
-- VersionRegistry,
 - EventRegistry,
-- TODOs,
-- Kalender.
+- TODO-Core,
+- Calendar-Core mit `zoneinfo`/DST,
+- positive/negative Testdaten und Mustervorlagen,
+- versionierte Core-Texte und Fehlerregeln,
+- `LEARNING_MEMORY.jsonl` + Learning Guard,
+- reproduzierbarer Release-Builder.
 
-`testdata/valid/` muss von denselben Produktvalidatoren akzeptiert werden. `testdata/invalid/` enthält gezielte Negativfälle, darunter Ende vor Beginn und Erinnerung ohne Startzeit.
-
-**Mustervorlagen überschreiben niemals automatisch Nutzerdaten.**
-
-## Entwicklungs-Lerngedächtnis
-
-Das Learning Memory enthält inzwischen zusätzlich Regeln für:
-
-- DST-/Zeitzonenberechnung,
-- persistente Reminder-Quittierung,
-- versionierte Metadaten ohne redundant hart codierte Testversionen.
-
-Der CI-Schritt `python scripts/learning_guard.py` validiert diese Regeln bei jeder Änderung.
-
-## Sicherheit und Datenschutz
-
-- kein Internetzwang,
-- keine Telemetrie,
-- Backend nur `127.0.0.1`,
-- Host-/Origin-Guard,
-- keine externen Python-Pakete,
-- atomare Persistenz + Backup-Fallback,
-- Runtime/Nutzerdaten nicht im Release-ZIP.
-
-## Entwicklung / Prüfung
+## Prüfung
 
 ```bash
 python3 -m unittest discover -s tests -v
@@ -122,16 +94,19 @@ node --check web/app.js
 python3 scripts/release.py --check
 ```
 
-Letzter getesteter Kalender-Codehead: GitHub Actions Run `33026180855` — **SUCCESS** inklusive Release-ZIP-Upload.
+Der erfolgreiche Run `33026823914` erzeugte `AIO-Tool-0.4.0-dashboard-v2.zip`; der Release-Builder meldete SHA256 `104c361caf65c484626cd24812272e0781c151d2afcbcb933b5fc393a3e9e946`.
 
 ## Noch offen
 
-- Dashboard V2: Kalender/TODO/Event/Version sichtbar integrieren,
-- sichtbare Reminder-Anzeige im Browser,
-- Debug-/Diagnosebereich,
-- reale Kubuntu-/Firefox-/Chrome-/Zoom-Gates,
-- anschließend SAFE-FILE-CORE.
+- reale Bedienabnahme auf Kubuntu,
+- Firefox und Chrome/Chromium,
+- 125–200 % Browserzoom,
+- echte Tastatur-/Fokusabnahme im Browser,
+- SAFE-FILE-CORE,
+- persistente Job-/Recovery-Queue.
 
-## Nächster Slice
+## Nächste Entwicklungsreihenfolge
 
-**Dashboard V2** — nächste drei TODOs, nächste Termine, Monatskalender, letzte fünf Ereignisse, Versions-/Gesundheitsstatus, Debugzugang und responsive Dichteführung auf Basis der bereits getesteten Core-APIs.
+1. **Dashboard V2 final synchronisieren und mergen.**
+2. **Zielsystem-/Browser-/Zoom-Gate aus sauberem Release.**
+3. Danach **SAFE-FILE-CORE** mit Copy als erster realer Dateioperation.
