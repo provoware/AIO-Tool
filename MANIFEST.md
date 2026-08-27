@@ -3,7 +3,8 @@
 ## Projekt
 
 - **Name:** AIO-Tool
-- **Aktueller Kandidat:** `0.5.1-audit-modern-ui` — 🟢 `tested / draft` für L0–L3; Promotion-CI noch offen
+- **Aktueller Kandidat:** `0.5.1-audit-modern-ui` — 🟢 `tested / draft` für L0–L3
+- **TESTED-Evidenz:** DEV `33045348341`, Promotion `33045669222`
 - **Letzter auf `main` bewiesener Stand:** `0.5.0-native-acceptance-safe-file-sim` — 🟢 `tested / draft` für L0–L3
 - **Native L4:** 🟡 weiterhin real offen
 - **Backend:** Python-Standardbibliothek, Loopback-only
@@ -27,6 +28,12 @@
 
 Verbindliche positive Allowlist: `manifests/RUNTIME_MANIFEST.json` Version `1.3.0`. Dokumentation, Tests, Evidenz und Logs bleiben Repo-/lokal. Das Runtime-ZIP enthält weiterhin nur die vollständige Betriebsbasis plus generiertes `MANIFEST_RELEASE.json`.
 
+## TESTED-Artefakt
+
+- Runtime-ZIP: `AIO-Tool-0.5.1-audit-modern-ui-TESTED.zip`
+- SHA256: `a7ab6d64e978e27c1fa550c549e12dc7ee21e24a17a55fd9c160c19cd3001b72`
+- GitHub-Artefakt-Digest: `62cc0787280328c1bfe5ff08628ea87ed1ec251bf718bf82178e2cfca88a85e0`
+
 ## Statusgrenzen
 
-DEV-Head `e9803086da790f30f8155946539569dd33c395b5` hat Run `33045348341` vollständig bestanden: Core/Release, Chromium, Firefox, Native Runner und SAFE-FILE-Hilfsoberfläche. Deshalb wurde `0.5.1-audit-modern-ui` auf `tested / draft` promoviert. **Der Promotion-Commit muss denselben vollständigen Gate erneut bestehen**, bevor Artefakthash und Merge-Evidenz als abgeschlossen gelten. Native L4 wird daraus nicht abgeleitet. SAFE-FILE Copy/Move/Delete bleibt gesperrt.
+`0.5.1-audit-modern-ui` ist für L0–L3 **GEPRÜFT / tested / draft**. Der aktuelle verbleibende Abschlussweg enthält ausschließlich Metadaten- und Integrationsschritte: Evidence-/Dokumentations-Sync prüfen, PR per Squash nach `main`, Main-CI und abschließenden Main-Runtime-ZIP-Hashvergleich. Native L4 wird daraus ausdrücklich nicht abgeleitet. SAFE-FILE Copy/Move/Delete bleibt gesperrt.
