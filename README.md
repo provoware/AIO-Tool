@@ -4,8 +4,9 @@
 
 ## Status
 
-- **Phase:** P1 — Robustheits- und Datenkern
-- **Version:** `0.2.1-robustness`
+- **Phase:** P1 — Kalender-/Organisationskern
+- **Version:** `0.3.0-calendar-core`
+- **Status:** automatisiert getestet / `draft`
 - **Datum:** 2026-08-27
 - **Zielsystem:** primär Linux/Kubuntu
 - **Oberfläche:** Browser-UI
@@ -14,62 +15,91 @@
 
 ## Aktueller Kern
 
-Vorhanden sind Klick-&-Start, lokales Backend, atomare Konfiguration, VersionRegistry, EventRegistry und persistenter TODO-Core. Zusätzlich schützt `0.2.1-robustness` die Entwicklung selbst stärker:
+AIO-Tool besitzt inzwischen einen getesteten gemeinsamen Daten- und Robustheitskern:
 
-- versionierte Config-/JSON-Mustervorlagen,
-- gültige und absichtlich ungültige Testdaten,
+- Klick-&-Start mit lokalem Loopback-Backend,
+- atomare Config-Persistenz + Backup-Fallback,
+- VersionRegistry mit Evidenzpflicht,
+- EventRegistry mit verständlichen Ereignissen,
+- persistenter TODO-Core mit Titelgedächtnis und Erledigt-Archiv,
+- versionierte Muster-/Testdaten,
 - versionierter deutscher Textkatalog,
-- regelbasierte Fehlerhilfe mit Ampelstufe und sicherer Handlungsempfehlung,
-- `LEARNING_MEMORY.jsonl` für bestätigte Entwicklungslektionen,
-- eigener Learning-Guard in CI,
-- vollständiges Release-ZIP als CI-Artefakt.
+- regelbasierte Fehlerhilfe,
+- `LEARNING_MEMORY.jsonl` + CI-Learning-Guard,
+- reproduzierbarer Release-Builder + vollständiges CI-ZIP,
+- **persistenter Kalender-Core mit Erinnerungen, Perioden und optionaler TODO-Verknüpfung**.
 
-## Versionierung
+## Kalender-Core 0.3.0
 
-`VERSION_REGISTRY.json` enthält die getrackte Projektgeschichte; `runtime/versions.json` führt den lokalen Laufzustand. `tested`, `release-candidate` und `released` benötigen Evidenz. `VERSION` und Registry werden automatisch gegeneinander geprüft.
+`app/calendar_store.py` verwaltet lokale Termine auf demselben atomaren Persistenzvertrag wie die übrigen Domänenmodelle.
+
+Ein Termin unterstützt:
+
+- Titel,
+- Datum,
+- optionale Startzeit,
+- optionale Endzeit,
+- optionale Kategorie,
+- optionale Beschreibung,
+- optionale TODO-Verknüpfung,
+- lokale Zeitzone,
+- Erinnerungen 0 / 10 / 30 / 60 / 1440 Minuten vorher.
+
+### Kalenderansichten als Datenvertrag
+
+Der Core liefert getestete Perioden für:
+
+- **Monat** — echte Monatsgrenzen,
+- **Woche** — Montag bis Sonntag,
+- **Jahr** — vollständiges Kalenderjahr.
+
+Die sichtbare Monats-/Wochen-/Jahresoberfläche folgt in Dashboard V2. Der Core selbst ist davon bewusst getrennt.
+
+### Erinnerungen
+
+Fällige Erinnerungen werden nur geliefert, solange sie noch nicht quittiert wurden. Die Quittierung speichert `notified_at` atomar, damit Polling denselben Reminder nicht immer wieder meldet.
+
+Für zukünftige lokale Termine wird die echte System-Zeitzone über Python `zoneinfo` verwendet. Damit bleiben Sommer-/Winterzeitwechsel korrekt; ein fester aktueller UTC-Offset wird ausdrücklich nicht verwendet.
+
+Eine sichtbare Browser-/Desktop-Benachrichtigung ist **noch kein Bestandteil des getesteten Core-Vertrags**. Dashboard V2 bindet diese Anzeige später an den vorhandenen Reminder-Core an.
+
+## Kalender-API
+
+Der lokale API-Vertrag umfasst unter anderem:
+
+- Kalenderstatus / Terminanzahl,
+- Termine anlegen,
+- Monats-/Wochen-/Jahresperiode lesen,
+- Titelvorschläge,
+- fällige Reminder lesen,
+- Reminder quittieren,
+- optionale TODO-Verknüpfung validieren.
+
+Kalender-Eingabefehler werden über die versionierte Fehlerhilfe mit verständlicher Erklärung und sicherer nächster Handlung beantwortet.
 
 ## Musterdateien und Testdaten
 
-Geprüfte Referenzen liegen unter `resources/templates/`:
+Geprüfte Referenzen unter `resources/templates/` umfassen jetzt:
 
 - Config,
 - VersionRegistry,
 - EventRegistry,
-- TODOs.
+- TODOs,
+- Kalender.
 
-`testdata/valid/` muss von den aktuellen Validatoren akzeptiert werden. `testdata/invalid/` bildet bekannte Fehlerklassen reproduzierbar ab.
+`testdata/valid/` muss von denselben Produktvalidatoren akzeptiert werden. `testdata/invalid/` enthält gezielte Negativfälle, darunter Ende vor Beginn und Erinnerung ohne Startzeit.
 
-**Wichtig:** Musterdateien sind Vergleichs- und Testgrundlagen. Sie überschreiben niemals automatisch lokale Nutzerdaten.
-
-## Versionierte Texte und intelligente Fehlerhilfe
-
-Wiederkehrende Systemtexte liegen unter `resources/texts/de/v1.json`. Fehlerregeln liegen getrennt unter `resources/error_rules/v1.json`.
-
-Eine Fehlerantwort kann dadurch zusätzlich enthalten:
-
-- Regel-ID,
-- Kategorie,
-- Ampel-/Schweregrad,
-- einfache Erklärung,
-- sichere nächste Handlung,
-- optional passende Mustervorlage,
-- Information, ob ein erneuter Versuch als sicher gilt.
-
-`GET /api/help/meta` liefert die verwendeten Regel- und Textversionen.
+**Mustervorlagen überschreiben niemals automatisch Nutzerdaten.**
 
 ## Entwicklungs-Lerngedächtnis
 
-`LEARNING_MEMORY.jsonl` speichert keine Nutzerdaten, sondern bestätigte Entwicklungslektionen. Beispiele: optionale Felder explizit testen, Nutzerfehler von Persistenzfehlern trennen, Prüfungen seiteneffektfrei halten und Qualitätsstatus nie ohne Evidenz erhöhen.
+Das Learning Memory enthält inzwischen zusätzlich Regeln für:
+
+- DST-/Zeitzonenberechnung,
+- persistente Reminder-Quittierung,
+- versionierte Metadaten ohne redundant hart codierte Testversionen.
 
 Der CI-Schritt `python scripts/learning_guard.py` validiert diese Regeln bei jeder Änderung.
-
-## TODO-Core
-
-TODOs werden persistent gespeichert, Titel gemerkt und wieder angeboten. Abhaken verschiebt einen Eintrag mit `completed_at` ins Archiv statt ihn zu löschen. Ein Kalenderbezug ist optional vorbereitet. Die nächsten drei TODOs können serverseitig ermittelt werden.
-
-## Ereignisse
-
-Die EventRegistry speichert maximal 500 wichtige Ereignisse mit kurzem verständlichem `message`-Text. Technische Details bleiben getrennt. Die spätere Dashboard-Spalte verwendet standardmäßig die letzten fünf Ereignisse.
 
 ## Sicherheit und Datenschutz
 
@@ -92,19 +122,16 @@ node --check web/app.js
 python3 scripts/release.py --check
 ```
 
-CI lädt bei vollständig grünem Lauf zusätzlich das komplette Release-ZIP als Artefakt hoch.
+Letzter getesteter Kalender-Codehead: GitHub Actions Run `33026180855` — **SUCCESS** inklusive Release-ZIP-Upload.
 
 ## Noch offen
 
-- Kalender-Core und Erinnerungsmodell,
-- Monats-/Wochen-/Jahresansicht,
-- Dashboard V2 mit nächsten drei TODOs und letzten fünf Ereignissen,
-- Debugmodul,
+- Dashboard V2: Kalender/TODO/Event/Version sichtbar integrieren,
+- sichtbare Reminder-Anzeige im Browser,
+- Debug-/Diagnosebereich,
 - reale Kubuntu-/Firefox-/Chrome-/Zoom-Gates,
-- später SAFE-FILE-CORE.
+- anschließend SAFE-FILE-CORE.
 
 ## Nächster Slice
 
-**`0.3.0-calendar-core` — Kalenderdaten, Erinnerungen, Titelgedächtnis und optionale TODO-Verknüpfung.**
-
-Danach folgt Dashboard V2 auf Basis von TODO-, Kalender-, Event- und Versionsdaten.
+**Dashboard V2** — nächste drei TODOs, nächste Termine, Monatskalender, letzte fünf Ereignisse, Versions-/Gesundheitsstatus, Debugzugang und responsive Dichteführung auf Basis der bereits getesteten Core-APIs.
