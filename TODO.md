@@ -2,9 +2,9 @@
 
 ## Status
 
-**P1 ROBUSTNESS CORE / 0.2.1-robustness — AUTOMATISIERT GEPRÜFT**
+**P1 CALENDAR CORE / 0.3.0-calendar-core — AUTOMATISIERT GEPRÜFT**
 
-Neue Funktionen werden nur in klar abgegrenzten Slices ergänzt. Sicherheits-, Persistenz- und Integritätsgates bleiben vorrangig.
+Neue Funktionen werden nur in klar abgegrenzeten Slices ergänzt. Sicherheits-, Persistenz-, Fehler- und Learning-Gates bleiben vorrangig.
 
 ## P0 — Foundation
 
@@ -27,8 +27,8 @@ Neue Funktionen werden nur in klar abgegrenzten Slices ergänzt. Sicherheits-, P
 
 ### EventRegistry
 - [x] persistente menschenlesbare Events, newest-first, max. 500.
-- [ ] Dashboard rechts unten: letzte fünf Ereignisse.
-- [ ] „Alle Ereignisse“ + Debug-Button.
+- [ ] Dashboard rechts: letzte fünf Ereignisse.
+- [ ] „Alle Ereignisse“ + Debug-Zugang.
 
 ### TODO-Core
 - [x] persistente TODOs, Priorität, optionaler Termin/Notiz/Kalenderbezug.
@@ -40,45 +40,52 @@ Neue Funktionen werden nur in klar abgegrenzten Slices ergänzt. Sicherheits-, P
 
 ## P1 — Robustheits- und Entwicklungs-Guard
 
-- [x] `resources/templates/` mit gültigen, versionierten Musterdateien.
-- [x] `testdata/valid/` nutzt dieselben Validatoren wie Produktdaten.
-- [x] `testdata/invalid/` bildet bekannte Fehler reproduzierbar ab.
-- [x] Textkatalog `resources/texts/de/v1.json` mit eigener Version.
-- [x] Fehlerregeln `resources/error_rules/v1.json` mit eigener Version.
-- [x] intelligente Fehlerhilfe mit Kategorie, Ampel, Handlung, Vorlagenhinweis und `retry_safe`.
-- [x] Fehlerregeln berücksichtigen Klassenhierarchie statt nur exakte Fehlerklasse.
+- [x] versionierte Musterdateien und positive/negative Testdaten.
+- [x] versionierter deutscher Textkatalog.
+- [x] versionierte Fehlerregeln + `ErrorAdvisor`.
 - [x] Integritätsfehler und Nutzereingabefehler getrennt.
-- [x] `LEARNING_MEMORY.jsonl` als validiertes Entwicklungs-Lerngedächtnis.
-- [x] `scripts/learning_guard.py` als CI-Gate.
-- [x] AGENTS-Regel: Datenformat → Vorlage + Negativtest; wiederkehrende Texte → Katalog; bestätigte Strukturfehler → Learning Memory.
+- [x] Exception-Hierarchie-Matching.
+- [x] `LEARNING_MEMORY.jsonl` + `scripts/learning_guard.py`.
 - [x] CI lädt vollständiges Release-ZIP als Artefakt hoch.
-- [x] Robustheits-CI Run `33024919165`: SUCCESS.
+- [x] versionierte Metadaten in Tests gegen ihre Quelldatei statt redundante harte Versionsnummer prüfen.
 
-## P1 — Kalender-Core / NÄCHSTER SLICE
+## P1 — Kalender-Core
 
-- [ ] persistentes Kalender-Schema auf `AtomicJsonStore`.
-- [ ] Termin: Titel, Datum, Startzeit optional, Ende optional, Kategorie, Beschreibung optional.
-- [ ] Titelgedächtnis und Preset-/Auswahllogik vorbereiten.
-- [ ] Erinnerungen: Terminzeit / 10 min / 30 min / 1 h / 1 Tag vorher.
-- [ ] Monatsansicht: Periodengrenzen und nach Datum gruppierte Termine.
-- [ ] Wochenansicht: Montag–Sonntag.
-- [ ] Jahresansicht: 12 Monate / Monatsgruppen.
-- [ ] optionale TODO-Verknüpfung; TODO bleibt ohne Kalender voll funktionsfähig.
-- [ ] Kalender-Mustervorlage + gültige/ungültige Testdaten.
-- [ ] Kalender-API + Regressionstests.
+- [x] persistentes Kalender-Schema auf `AtomicJsonStore`.
+- [x] Termin: Titel, Datum, Startzeit optional, Ende optional, Kategorie, Beschreibung optional.
+- [x] Titelgedächtnis und Vorschläge.
+- [x] Erinnerungen: Terminzeit / 10 min / 30 min / 1 h / 1 Tag vorher.
+- [x] Reminder nur mit Startzeit zulassen.
+- [x] persistente Reminder-Quittierung gegen Doppelmeldung.
+- [x] Monatsperiode mit echten Monatsgrenzen.
+- [x] Wochenperiode Montag–Sonntag.
+- [x] Jahresperiode.
+- [x] lokale Systemzeitzone via `zoneinfo`; DST-Regressionsschutz.
+- [x] optionale TODO-Verknüpfung; unbekannte TODO-ID wird abgelehnt.
+- [x] Kalender-Mustervorlage + gültige/ungültige Testdaten.
+- [x] Kalender-Fehlerregeln und Laienhinweise.
+- [x] Kalender-API + API-Regressionen.
+- [x] automatisierte Kalender-CI Run `33026180855`: SUCCESS.
+- [ ] sichtbare Browser-/Desktop-Reminderanzeige — gehört zu Dashboard V2.
 
-## P1 — Dashboard & Debug DANACH
+## P1 — Dashboard V2 / NÄCHSTER SLICE
 
-- [ ] kompakter/informativer Dashboardaufbau.
-- [ ] Version + Registrystatus sichtbar.
-- [ ] nächste drei TODOs.
-- [ ] nächste Termine / optionaler Kalenderblock.
-- [ ] rechte Spalte: letzte fünf Ereignisse in einfacher Sprache.
-- [ ] Debug-/Diagnose-Button.
+- [ ] Informationsarchitektur auf getestete Core-APIs umstellen.
+- [ ] Monatskalender dauerhaft sichtbar, optional einklappbare Details.
+- [ ] nächste Termine kompakt anzeigen.
+- [ ] nächste drei TODOs anzeigen und abhaken.
+- [ ] letzte fünf Ereignisse in einfacher Sprache.
+- [ ] Version + Registry-/Gesundheitsstatus sichtbar.
+- [ ] fällige Reminder sichtbar anzeigen und erst nach bestätigter Darstellung quittieren.
+- [ ] Debug-/Diagnose-Button dauerhaft erreichbar.
+- [ ] Entwicklungsbereich klein anwählbar/versteckbar.
+- [ ] häufig genutzte Funktionen getrennt von „Alle“.
+- [ ] linker modularer Kachelbereich für weitere Funktionen.
 - [ ] Start-Erkennung von Fenster/Bildschirm und Dichte-Modus.
-- [ ] kleine Displays, Full-HD, große Displays, hohe DPI/Zoom berücksichtigen.
+- [ ] kleine Displays, Full-HD, große Displays und 125–200 % Zoom regressionssicher berücksichtigen.
+- [ ] Tastaturnavigation, Fokusindikatoren und ARIA-Live-Status prüfen.
 
-## P1 — SAFE-FILE-CORE / später
+## P1 — SAFE-FILE-CORE / danach
 
 - [ ] Copy zuerst: Quelle → Ziel → Vorprüfung → Vorschau → Konflikte → Kopieren → Nachprüfung → Undo-Datensatz.
 - [ ] erst danach Move, Rename und Papierkorb/Delete.
@@ -96,4 +103,4 @@ Ein Slice gilt erst als abgeschlossen, wenn Code, positive/negative Testdaten, T
 
 ## Aktuell empfohlener nächster Schritt
 
-**Kalender-Core als separates Daten-/API-Modul umsetzen. Danach Dashboard V2 ausschließlich auf den bereits getesteten Registries aufbauen.**
+**Dashboard V2 ausschließlich auf den jetzt getesteten Version-/TODO-/Kalender-/Event-APIs aufbauen. Keine neue Domänenlogik in die UI kopieren. Danach reale Browser-/Zoom-Abnahme, erst anschließend SAFE-FILE-CORE.**
