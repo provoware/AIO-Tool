@@ -4,54 +4,103 @@
 
 AIO-Tool bündelt wiederkehrende Aufgaben in einer gemeinsamen, lokalen Oberfläche. Die Bedienung soll einfach, sichtbar und sicher bleiben.
 
-## Aktueller Stand: 0.2.1-robustness
+## Aktueller Stand: 0.3.0-calendar-core
 
-Der bisherige Versions-, Ereignis- und TODO-Kern wurde um zusätzliche Schutzschichten ergänzt:
+Der bisherige Versions-, Ereignis-, TODO- und Robustheitskern wurde um einen getesteten Kalender-Kern erweitert.
 
-- geprüfte Musterdateien,
-- Testdateien für typische Fehler,
-- verständliche und versionierte Hilfetexte,
-- intelligente Fehlerhinweise,
-- ein Entwicklungs-Lerngedächtnis, damit bekannte Fehlerarten nicht immer wieder neu entstehen.
+Neu vorhanden sind:
 
-## Was sind Mustervorlagen?
+- Termine lokal und dauerhaft speichern,
+- Kalendertitel merken und wieder anbieten,
+- Monats-, Wochen- und Jahresbereiche erzeugen,
+- Erinnerungen vorbereiten,
+- bereits angezeigte Erinnerungen merken,
+- optional einen Termin mit einem TODO verknüpfen,
+- Sommer-/Winterzeit automatisch korrekt berücksichtigen.
 
-Eine Mustervorlage zeigt, wie eine gültige Config- oder JSON-Datei aussehen soll. Sie dient als **Vergleich**, nicht als automatischer Ersatz.
+Die sichtbare Kalenderoberfläche folgt im nächsten Entwicklungsschritt.
 
-Wenn deine lokale Datei beschädigt ist, darf das Tool die Musterdatei nicht einfach darüberkopieren. Stattdessen soll es erklären, was nicht stimmt und welche sichere Möglichkeit du hast.
+## Einen Termin verstehen
 
-## Intelligente Fehlerhilfe
+Ein Termin kann enthalten:
 
-Bei bekannten Fehlern kann das Backend jetzt zusätzlich angeben:
+- Titel,
+- Datum,
+- Startzeit optional,
+- Endzeit optional,
+- Kategorie optional,
+- Beschreibung optional,
+- Erinnerung optional,
+- TODO-Verknüpfung optional.
 
-- 🔴/🟠/🟡 wie kritisch das Problem ist,
-- was wahrscheinlich passiert ist,
-- was du als Nächstes tun kannst,
-- ob ein erneuter Versuch sicher ist,
-- welche geprüfte Mustervorlage zum Vergleichen passt.
+Ein TODO ist **keine Pflicht**. Kalender und TODO funktionieren auch unabhängig voneinander.
 
-Technische Details bleiben für Diagnosezwecke vorhanden, stehen aber nicht an erster Stelle.
+## Erinnerungen
 
-## Versionierte Texte
+Zur Auswahl sind vorbereitet:
 
-Wiederkehrende Meldungen werden zentral gespeichert. Dadurch können sie gemeinsam verbessert und geprüft werden, statt an vielen Stellen leicht unterschiedlich zu werden.
+- zum Terminzeitpunkt,
+- 10 Minuten vorher,
+- 30 Minuten vorher,
+- 1 Stunde vorher,
+- 1 Tag vorher.
+
+Eine Erinnerung braucht eine Uhrzeit. Ohne Startzeit kann das Tool nicht eindeutig wissen, wann erinnert werden soll und lehnt diese Kombination deshalb verständlich ab.
+
+### Warum gibt es eine Quittierung?
+
+Die Oberfläche darf eine Erinnerung erst als „angezeigt“ markieren, wenn sie tatsächlich sichtbar dargestellt wurde.
+
+Vereinfacht:
+
+`Reminder fällig → Oberfläche zeigt ihn → erst dann quittieren → nicht erneut anzeigen`
+
+Dadurch soll dieselbe Erinnerung nicht bei jeder neuen Abfrage wieder erscheinen.
+
+## Sommer- und Winterzeit
+
+Das Tool verwendet die lokale System-Zeitzone. Dadurch wird für einen zukünftigen Termin geprüft, welche Zeitregel **an diesem zukünftigen Datum** gilt.
+
+Das ist wichtig, weil ein heute gültiger UTC-Abstand nach einem Sommer-/Winterzeitwechsel falsch sein kann.
+
+## Monats-, Wochen- und Jahresansicht
+
+Der Datenkern kann bereits berechnen:
+
+- Monat vom ersten bis zum letzten echten Kalendertag,
+- Woche von Montag bis Sonntag,
+- komplettes Kalenderjahr.
+
+Dashboard V2 macht diese Daten anschließend sichtbar.
+
+## Mustervorlagen und Fehlerhilfe
+
+Auch der Kalender besitzt eine geprüfte Musterdatei und gezielte Fehler-Testdateien.
+
+Beispiele für automatisch geprüfte Fehler:
+
+- Endzeit liegt vor der Startzeit,
+- Erinnerung wurde gewählt, aber keine Startzeit gesetzt,
+- unbekannte Kalenderoption,
+- nicht vorhandene TODO-Verknüpfung.
+
+Eine Mustervorlage dient nur zum Vergleichen. Sie wird **nicht automatisch über deine echten Daten geschrieben**.
 
 ## Entwicklungs-Lerngedächtnis
 
-`LEARNING_MEMORY.jsonl` enthält **keine privaten Nutzerdaten**. Dort stehen Entwicklungslektionen wie:
+Das Toolprojekt merkt sich inzwischen auch Entwicklungslektionen. Neu hinzugekommen sind unter anderem:
 
-- optionale Werte ausdrücklich testen,
-- Eingabefehler und beschädigte Dateien unterscheiden,
-- Prüfungen dürfen nichts verändern,
-- eine Version niemals ohne Prüfnachweis als getestet markieren.
+- zukünftige Zeitberechnung muss echte Zeitzonenregeln berücksichtigen,
+- Reminder brauchen einen gespeicherten Quittierungszustand,
+- Tests dürfen versionierte Nummern nicht unnötig doppelt hart speichern.
 
-Die automatische Prüfung kontrolliert auch diese Datei.
+Diese Datei enthält keine privaten Nutzerdaten.
 
 ## TODOs und Ereignisse
 
-TODOs bleiben nach Neustart erhalten. Verwendete Titel können wieder angeboten werden. Ein erledigtes TODO wird mit Zeitstempel ins Archiv verschoben statt gelöscht.
+TODOs bleiben nach Neustart erhalten. Verwendete Titel können wieder angeboten werden. Erledigte TODOs wandern mit Zeitstempel ins Archiv statt gelöscht zu werden.
 
-Wichtige Ereignisse werden mit einem kurzen verständlichen Satz gespeichert. Später zeigt das Dashboard davon standardmäßig die letzten fünf.
+Wichtige Ereignisse werden mit einem kurzen verständlichen Satz gespeichert. Dashboard V2 zeigt davon standardmäßig die letzten fünf.
 
 ## Datenschutz
 
@@ -59,7 +108,7 @@ Wichtige Ereignisse werden mit einem kurzen verständlichen Satz gespeichert. Sp
 - Backend nur lokal auf `127.0.0.1`,
 - keine Telemetrie,
 - keine externen Python-Pakete,
-- lokale TODO-/Event-/Config-Daten nicht im Release-ZIP.
+- lokale Config-/TODO-/Event-/Kalenderdaten nicht im Release-ZIP.
 
 ## Bedienprinzip
 
@@ -76,6 +125,14 @@ Farbe wird immer zusätzlich durch Text erklärt.
 
 ## Was kommt als Nächstes?
 
-Als nächstes wird der **Kalender-Core** gebaut: Termine persistent speichern, Erinnerungszeiten verwalten, Monats-/Wochen-/Jahresdaten erzeugen und eine TODO-Verknüpfung nur optional anbieten.
+Als nächstes wird **Dashboard V2** gebaut. Dort sollen die bereits getesteten Daten einfach sichtbar werden:
 
-Danach folgt das kompaktere Dashboard mit den nächsten drei TODOs, Terminen, den letzten fünf Ereignissen und einem direkten Debug-Zugang.
+- Monatskalender,
+- nächste Termine,
+- nächste drei TODOs,
+- letzte fünf Ereignisse,
+- Versions-/Gesundheitsstatus,
+- Reminder-Hinweise,
+- Debug-/Diagnosezugang.
+
+Danach werden die reale Kubuntu-/Browser-/Zoom-Bedienung geprüft und anschließend die ersten sicheren Dateioperationen aufgebaut.

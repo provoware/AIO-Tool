@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "events": [
+    {
+      "id": "example-calendar-001",
+      "title": "Projektbesprechung",
+      "date": "2026-08-27",
+      "start_time": "14:00",
+      "end_time": "14:30",
+      "category": "Projekt",
+      "description": "Beispieltermin für die geprüfte Kalenderstruktur.",
+      "todo_id": null,
+      "timezone": "local",
+      "reminders": [
+        {"minutes_before": 30, "notified_at": null},
+        {"minutes_before": 10, "notified_at": null}
+      ],
+      "created_at": "2026-08-27T01:45:00+02:00",
+      "updated_at": "2026-08-27T01:45:00+02:00"
+    }
+  ],
+  "title_memory": [
+    {"title": "Projektbesprechung", "count": 1, "last_used_at": "2026-08-27T01:45:00+02:00"}
+  ]
+}

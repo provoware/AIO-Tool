@@ -22,47 +22,71 @@ Getrackte Projekt-Historie und lokale Runtime-Registry mit Status, Commit-SHA, �
 
 ### EventRegistry
 
-Persistente wichtige Ereignisse mit eigenem verständlichem Meldungstext und getrennten technischen Details. Das spätere Dashboard zeigt davon standardmäßig die letzten fünf.
+Persistente wichtige Ereignisse mit eigenem verständlichem Meldungstext und getrennten technischen Details. Dashboard V2 zeigt davon standardmäßig die letzten fünf.
 
 ### TODO-Core
 
 Persistente TODOs mit Titelgedächtnis, optionalem Datum/Kalenderbezug und Erledigt-Archiv mit Zeitstempel. Die nächsten drei offenen TODOs können serverseitig ermittelt werden.
 
-## Robustheitskern 0.2.1
+### Calendar-Core 0.3.0
+
+Persistente Kalendertermine auf demselben atomaren Datenvertrag wie die übrigen Domänenmodelle.
+
+Unterstützt werden:
+
+- Titel und Datum,
+- optionale Start-/Endzeit,
+- optionale Kategorie und Beschreibung,
+- optionale TODO-Verknüpfung,
+- Titelgedächtnis,
+- Monats-/Wochen-/Jahresperioden,
+- Reminder 0/10/30/60/1440 Minuten vorher,
+- fällige Reminder mit separater persistenter Quittierung,
+- lokale Systemzeitzone via `zoneinfo` für korrekte DST-Berechnung.
+
+Die sichtbare Kalender-/Reminderdarstellung wird bewusst im nachfolgenden Dashboard-Slice implementiert. Domänenlogik bleibt im Backend.
+
+## Robustheitskern
 
 AIO-Tool schützt nicht nur Nutzerdaten, sondern zunehmend auch den Entwicklungsprozess selbst.
 
 ### Mustervorlagen und Testdaten
 
-Jedes langlebige JSON-/Config-Format soll eine geprüfte Referenzdatei besitzen. Positive Testdaten müssen akzeptiert, bekannte negative Testfälle gezielt abgelehnt werden. Mustervorlagen sind Vergleichshilfen und dürfen niemals still über Nutzerdaten geschrieben werden.
+Jedes langlebige JSON-/Config-Format besitzt eine geprüfte Referenzdatei. Positive Testdaten müssen akzeptiert, bekannte negative Testfälle gezielt abgelehnt werden. Der Kalender folgt demselben Vertrag.
+
+Mustervorlagen sind Vergleichshilfen und dürfen niemals still über Nutzerdaten geschrieben werden.
 
 ### Versionierte Texte
 
-Wiederkehrende Nutzer- und Systemmeldungen werden in einem versionierten deutschen Textkatalog gepflegt. Dadurch lassen sich Sprache, Verständlichkeit und Konsistenz zentral testen und später erweitern.
+Wiederkehrende Nutzer- und Systemmeldungen werden in einem versionierten deutschen Textkatalog gepflegt. Dadurch lassen sich Sprache, Verständlichkeit und Konsistenz zentral testen und erweitern.
 
 ### Intelligente Fehlerhilfe
 
-Versionierte Fehlerregeln ordnen bekannte Fehlerfamilien einer verständlichen Erklärung, Ampelstufe und sicheren nächsten Handlung zu. Optional kann eine passende Mustervorlage genannt werden. Ein unbekannter Fehler behauptet keine automatische Recovery.
+Versionierte Fehlerregeln ordnen bekannte Fehlerfamilien einer verständlichen Erklärung, Ampelstufe und sicheren nächsten Handlung zu. Kalenderfehler wie ungültiges Datum, Reminder ohne Uhrzeit oder unzulässige Terminzeiten sind darin integriert.
 
 ### Entwicklungs-Lerngedächtnis
 
-`LEARNING_MEMORY.jsonl` bewahrt bestätigte Entwicklungslektionen. Der Learning Guard validiert diese Datei in CI. Strukturelle Fehler sollen künftig nicht nur lokal repariert, sondern als Regel + Regression dauerhaft gegen Wiederholung abgesichert werden.
+`LEARNING_MEMORY.jsonl` bewahrt bestätigte Entwicklungslektionen. Der Learning Guard validiert diese Datei in CI. Aktuelle Strukturlektionen betreffen unter anderem optionale Felder, Fehlerklassifikation, Zeit-/DST-Verträge, Reminder-Quittierung und versionierte Metadaten.
 
 ### Codesparendes Patchen
 
 Vor breiten Umbauten wird die kleinste verantwortliche Codezone bestimmt: Datei, Funktion/Klasse, Zeilenbereich und passender Test. Lokale Fixes mit Regression werden bevorzugt.
 
-## Geplanter Organisationsbereich
+## Nächster Organisationsschritt: Dashboard V2
 
-Als nächster Schritt entsteht der Kalender-Core:
+Der nächste Slice verändert möglichst keine Domänenlogik, sondern macht die vorhandenen getesteten Daten nutzbar sichtbar:
 
-- Termine persistent speichern,
-- Titel merken und wieder anbieten,
-- Erinnerungen verwalten,
-- Monats-/Wochen-/Jahresdaten erzeugen,
-- TODO-Verknüpfung optional halten.
-
-Danach folgt Dashboard V2 mit nächsten drei TODOs, Terminen, letzten fünf Ereignissen und Debug-Zugang.
+- Monatskalender als dauerhafte Übersicht,
+- nächste Termine,
+- nächste drei TODOs,
+- letzte fünf Ereignisse,
+- Version/Registry-/Gesundheitsstatus,
+- fällige Reminder mit Quittierung erst nach sichtbarer Darstellung,
+- direkter Debug-/Diagnosezugang,
+- kleiner ein-/ausblendbarer Entwicklungsbereich,
+- häufig genutzte Funktionen getrennt von „Alle“,
+- linker modularer Kachelbereich,
+- responsive Dichte und Zoom-/Tastaturfreundlichkeit.
 
 ## Sicherheitsphilosophie
 
@@ -72,6 +96,10 @@ Für verändernde Operationen gilt grundsätzlich:
 
 Prüfungen bleiben seiteneffektfrei. Ein sekundärer Protokollfehler darf eine bereits sicher gespeicherte Hauptaktion nicht rückwirkend als fehlgeschlagen darstellen.
 
+Für Reminder gilt zusätzlich:
+
+`fällig → sichtbar darstellen → erst danach quittieren`
+
 ## Technische Richtung
 
 - Linux/Kubuntu zuerst,
@@ -80,6 +108,7 @@ Prüfungen bleiben seiteneffektfrei. Ein sekundärer Protokollfehler darf eine b
 - Standardbibliothek bevorzugt,
 - keine Telemetrie,
 - atomare Persistenz,
+- `zoneinfo` für lokale zukünftige Zeitregeln,
 - versionierte Schemata/Text-/Fehlerverträge,
 - reproduzierbare Tests und Releases,
 - Release-ZIP als automatisch geprüftes CI-Artefakt.

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "catalog_version": "1.0.0",
+  "catalog_version": "1.1.0",
   "language": "de",
   "messages": {
     "error.generic": "Die Aktion konnte nicht sicher abgeschlossen werden.",
@@ -15,6 +15,12 @@
     "action.request.json": "Verwende eine geprüfte Mustervorlage oder die Oberfläche statt freier JSON-Eingabe.",
     "error.todo.title": "Für das TODO fehlt ein verständlicher Titel.",
     "action.todo.title": "Wähle zuerst einen gemerkten oder vorgeschlagenen Titel. Eigene Eingabe ist nur der Fallback.",
+    "error.calendar.title": "Für den Termin fehlt ein verständlicher Titel.",
+    "action.calendar.title": "Wähle zuerst einen gemerkten oder vorgeschlagenen Termintitel. Eigene Eingabe bleibt der Fallback.",
+    "error.calendar.date": "Datum oder Uhrzeit des Termins sind nicht gültig.",
+    "action.calendar.date": "Wähle Datum und Uhrzeit über die Kalender- und Zeitbuttons statt sie frei einzutippen.",
+    "error.calendar.reminder": "Die gewählte Erinnerung passt nicht zum Termin.",
+    "action.calendar.reminder": "Wähle eine der angebotenen Erinnerungen: Terminzeit, 10 Min., 30 Min., 1 Std. oder 1 Tag vorher. Erinnerungen benötigen eine Uhrzeit.",
     "error.version.drift": "Versionsangaben passen nicht zueinander.",
     "action.version.drift": "Vergleiche VERSION, VERSION_REGISTRY.json, CHANGELOG und Manifest, bevor ein Release markiert wird.",
     "error.template.invalid": "Eine interne Muster- oder Testdatei entspricht nicht mehr ihrem Datenvertrag.",
@@ -26,6 +32,8 @@
     "server.event_warning": "Die Aktion wurde gespeichert, aber das Ereignisprotokoll konnte nicht aktualisiert werden.",
     "event.version_registered": "Version {version} wurde als neuer Entwicklungsstand registriert.",
     "event.todo_created": "TODO „{title}“ wurde angelegt.",
-    "event.todo_completed": "TODO „{title}“ wurde erledigt und ins Archiv verschoben."
+    "event.todo_completed": "TODO „{title}“ wurde erledigt und ins Archiv verschoben.",
+    "event.calendar_created": "Termin „{title}“ wurde für {date} angelegt.",
+    "event.reminder_ack": "Erinnerung für „{title}“ wurde als angezeigt bestätigt."
   }
 }
