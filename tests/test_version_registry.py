@@ -2,7 +2,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from app.version_registry import VersionRegistry, VersionRegistryError
+from app.version_registry import VersionRegistry, VersionRegistryError, validate_registry
 
 
 class VersionRegistryTests(unittest.TestCase):
@@ -66,7 +66,45 @@ class VersionRegistryTests(unittest.TestCase):
             registry.set_status("0.2.0", status="tested", regression_status="passed")
             item = registry.load()["versions"][0]
             self.assertEqual(item["status"], "tested")
+            self.assertEqual(item["release_status"], "draft")
             self.assertEqual(item["regression_status"], "passed")
+
+    def test_release_candidate_uses_candidate_release_status(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            registry = VersionRegistry(Path(tmp) / "versions.json")
+            registry.ensure_current("0.3.0")
+            registry.record_evidence("0.3.0", kind="ci", reference="run-rc")
+            registry.set_status("0.3.0", status="release-candidate", regression_status="passed")
+            item = registry.load()["versions"][0]
+            self.assertEqual((item["status"], item["release_status"]), ("release-candidate", "candidate"))
+
+    def test_blocked_status_is_explicit_and_fail_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            registry = VersionRegistry(Path(tmp) / "versions.json")
+            registry.ensure_current("0.3.1")
+            registry.set_status("0.3.1", status="blocked")
+            item = registry.load()["versions"][0]
+            self.assertEqual((item["status"], item["release_status"]), ("blocked", "blocked"))
+
+    def test_invalid_status_pair_is_rejected(self):
+        invalid = {
+            "schema_version": 1,
+            "current_version": "0.4.0",
+            "versions": [{
+                "version": "0.4.0",
+                "created_at": "2026-08-27T00:00:00+00:00",
+                "status": "tested",
+                "release_status": "released",
+                "commit_sha": None,
+                "summary": "inkonsistent",
+                "changes": [],
+                "known_issues": [],
+                "regression_status": "passed",
+                "evidence": [{"kind": "ci", "reference": "run-x"}],
+            }],
+        }
+        with self.assertRaises(VersionRegistryError):
+            validate_registry(invalid)
 
     def test_consistency_detects_version_drift(self):
         with tempfile.TemporaryDirectory() as tmp:
