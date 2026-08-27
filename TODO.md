@@ -13,8 +13,8 @@ Audit / Befundaufnahme          ████████████████
 Launcher-Instanzhärtung         ████████████████████ 100 %
 Runtime-Transportvertrag        ████████████████████ 100 %
 Statusmodell                    ████████████████████ 100 %
-Regressionstests                █████████████████░░░  85 %
-Dokumentationssynchronisierung  █████████████████░░░  85 %
+Regressionstests                ████████████████████ 100 %
+Dokumentationssynchronisierung  ████████████████████ 100 %
 Finale CI / Browser-Evidenz     ░░░░░░░░░░░░░░░░░░░░   0 %
 TESTED-Promotion                ░░░░░░░░░░░░░░░░░░░░   0 %
 ```
@@ -31,7 +31,7 @@ TESTED-Promotion                ░░░░░░░░░░░░░░░░
 - [x] Status- und Releasevokabular vereinheitlichen und widersprüchliche Paare ablehnen.
 - [x] gebautes Runtime-ZIP als End-to-End-Test entpacken und darin Preflight starten.
 - [x] README/AGENTS auf aktuellen Vertrag umbauen.
-- [ ] aktuelle TODO/CHANGELOG/MANIFEST/REGRESSIONS/LAIEN-ANLEITUNG vollständig synchronisieren.
+- [x] TODO/CHANGELOG/MANIFEST/REGRESSIONS/LAIEN-ANLEITUNG/TOOLBESCHREIBUNG synchronisiert.
 - [ ] komplette GitHub-CI auf finalem 0.4.3-Head grün.
 - [ ] Chromium + Firefox auf finalem 0.4.3-Head grün.
 - [ ] erst danach Evidenz in Registry eintragen und auf `tested / draft` setzen.
@@ -87,4 +87,4 @@ TESTED-Promotion                ░░░░░░░░░░░░░░░░
 
 ## Empfohlener nächster Schritt
 
-**Keine neue Nutzfunktion. Zuerst `0.4.3-integrity-hardening` vollständig dokumentieren, kompletten Core-/Release-/Browser-Gate ausführen und nur bei grünem Ergebnis zu TESTED promovieren.**
+**Keine neue Nutzfunktion. Jetzt den vollständigen Core-/Release-/Browser-Gate auf dem finalen 0.4.3-Entwicklungshead ausführen und nur bei grünem Ergebnis zu TESTED promovieren.**
