@@ -12,32 +12,32 @@ Historische Verträge **REG-001 bis REG-066** bleiben verbindlich. Die Runtime-B
 - **Risiko:** Repo-only Dokumentationscommits nach einem Squash-Merge lassen die Formulierung „Main-Commit“ mehrdeutig werden.
 - **Vertrag:** Statusdokumente verwenden **Runtime-Baseline-Commit** für den bewiesenen Programm-/Transportstand. `Repository-Head` und `Registry-Commit` sind davon getrennte Begriffe.
 - **Schutz:** `AGENTS.md`, `manifests/README.md`, `MANIFEST.md`, evidenzgetriebener Documentation Guard.
-- **Status:** **UMGESETZT** — Branch-Gate steht noch aus.
+- **Status:** **GEPRÜFT** — Branch-Gate `33051553524` vollständig grün.
 
 ### REG-082 — manuell duplizierte CI-/Hashdaten erzeugen selbstreferenziellen Dokumentationsdrift
 - **Risiko:** Ein Doku-Sync trägt „letzten CI-Lauf“ ein, erzeugt dadurch einen neuen Commit und einen neuen CI-Lauf und macht sich sofort wieder veraltet.
 - **Vertrag:** Kanonische Produkt-/Runtime-Evidenz liegt in `evidence/releases/<version>.json`. Statusdokumente dürfen stabile Baseline-Fakten wiedergeben, aber keinen flüchtigen Repository-Head als neue Produktwahrheit behandeln.
 - **Schutz:** `scripts/documentation_guard.py` prüft Runtime-Commit und Runtime-SHA direkt gegen die Release-Evidenz.
-- **Status:** **UMGESETZT** — Branch-Gate steht noch aus.
+- **Status:** **GEPRÜFT** — Branch-Gate `33051553524` vollständig grün.
 
 ### REG-083 — Runtime- und Development-Manifest klassifizieren dieselbe Datei widersprüchlich
 - **Risiko:** Eine Datei wird gleichzeitig transportiert und als repo-only geführt; oder ein repo-only Root-Dokument fehlt im Development-Inventar.
 - **Vertrag:** Runtime-Allowlist und Development-Klassifikation dürfen sich nicht überschneiden. Runtime-Manifest muss sich selbst transportieren, Development-Manifest bleibt repo-only.
 - **Test:** `tests/test_manifest_guard.py`.
 - **Schutz:** `scripts/manifest_guard.py` fail-closed.
-- **Status:** **UMGESETZT** — Branch-Gate steht noch aus.
+- **Status:** **GEPRÜFT** — fünf Manifest-Regressionsfälle + kompletter Branch-Gate `33051553524` grün.
 
 ### REG-084 — historisches `generated_files`-Feld wird falsch interpretiert
 - **Risiko:** Runtime-Manifest 1.3.0 listet Build-generiertes `MANIFEST_RELEASE.json` und erst nach Start entstehende lokale Dateien im selben Feld.
 - **Vertrag für eingefrorene 0.5.1:** `MANIFEST_RELEASE.json` wird beim Build erzeugt und transportiert; `web/.aio-instance-id` und `runtime/**` entstehen lokal und werden nicht als feste Runtime-Basis transportiert.
 - **Schutz:** `manifests/README.md` + Manifest Guard.
-- **Status:** **UMGESETZT** — strukturelle Schemaaufspaltung erst in neuer Runtime-Version zulässig.
+- **Status:** **GEPRÜFT** — Legacy-Semantik regressionsgesichert; strukturelle Schemaaufspaltung erst in neuer Runtime-Version zulässig.
 
 ### REG-085 — Native-L4-Fortschritt wird ohne reale Bestätigung hochgerechnet
 - **Risiko:** Implementierter Runner oder vorhandene CI wird fälschlich als Teilfortschritt der realen L4-Abnahme dargestellt.
 - **Vertrag:** Solange kein manueller Runner-Schritt bestätigt ist, gilt **0/18 = 0 %**. `skip` ist kein PASS.
 - **Schutz:** evidenzgetriebener Documentation Guard prüft bei offenen L4-Gates eine nicht aufgewertete README-Darstellung.
-- **Status:** **UMGESETZT** — Branch-Gate steht noch aus.
+- **Status:** **GEPRÜFT** — Documentation Guard im Branch-Gate `33051553524` grün.
 
 ## Runtime-Verträge — `0.5.1-audit-modern-ui`
 
@@ -115,5 +115,6 @@ Quelle: `evidence/releases/0.5.1-audit-modern-ui.json`.
 ## Aktuelle Evidenzgrenze
 
 - Runtime-Baseline `0.5.1-audit-modern-ui`: **BEWIESEN L0–L3**.
+- Repository-/Manifest-Härtung: **GEPRÜFT** — `33051553524`; finaler Status-Sync wird separat erneut gegatet.
 - Native Kubuntu L4: **OFFEN · 0/18 real bestätigt**.
 - SAFE-FILE reale Ausführung: **GESPERRT**.
