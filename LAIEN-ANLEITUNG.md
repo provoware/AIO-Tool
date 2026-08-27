@@ -1,127 +1,116 @@
-# LAIEN-ANLEITUNG
+# LAIEN-ANLEITUNG — AIO-Tool
 
-## AIO-Tool 0.4.0-dashboard-v2
+## Welchen Stand soll ich benutzen?
 
-AIO-Tool ist ein lokaler Arbeitsplatz für wiederkehrende Aufgaben. Die aktuelle Version bringt die vorhandenen Kalender-, TODO-, Ereignis- und Systemdaten erstmals gemeinsam in eine kompakte Hauptansicht.
+- 🟢 **Bewiesen:** `0.4.2-ui-acceptance-TESTED`
+- 🟠 **In Entwicklung:** `0.4.3-integrity-hardening-DEV`
 
-## Was sehe ich direkt nach dem Start?
+Für normale Nutzung ist ein `TESTED`-Paket der sichere Zwischenstand. `DEV` bedeutet: Änderungen sind eingebaut, aber die vollständige neue Evidenz ist noch nicht abgeschlossen.
 
-### 1. Oben: Systemzustand
+## Start in 4 Schritten
 
-Du siehst:
+1. ZIP vollständig in einen eigenen Ordner entpacken.
+2. `start_tool.desktop` doppelklicken oder `start_tool.sh` starten.
+3. Die Startkonsole zeigt 9 Prüfschritte.
+4. Bei Erfolg öffnet sich das Dashboard automatisch.
 
-- aktuelle Version,
-- ob das lokale Backend bereit ist,
-- ob die Versionsdaten zusammenpassen,
-- einen Button **Neu prüfen**.
+## Was bedeutet die Ampel?
 
-🟢 **bereit** bedeutet: Die geladenen Kernbereiche melden keinen Fehler.  
-🟠 **teilweise** bedeutet: Das Grundsystem läuft, aber mindestens ein Bereich konnte nicht vollständig geladen werden.  
-🔴 **Eingriff** bedeutet: Der Systemstatus selbst konnte nicht sicher geladen werden.
+- 🟢 **PASS** — geprüft und in Ordnung.
+- 🟡 **WARN** — Hinweis; Start kann trotzdem möglich sein.
+- 🔴 **FAIL** — sicherer Abbruch. Die Ursache wird erklärt.
+- 🔵 **INFO** — normaler Zwischenzustand.
 
-## 2. Nächster sinnvoller Schritt
+Die Farbe ist nur Zusatzhilfe. Der Status steht immer auch als Text dabei.
 
-Das Dashboard versucht nicht, dir möglichst viele Meldungen gleichzeitig zu zeigen. Es hebt zuerst hervor:
+## Die 9 Start-Checkpoints
 
-1. eine fällige Erinnerung,
-2. sonst die nächste offene Aufgabe,
-3. sonst den nächsten Termin.
+1. Toolordner erkannt.
+2. Python vorhanden.
+3. Diagnose und Installationskennung vorbereitet.
+4. laufende Instanz/Port geprüft.
+5. lokale Python-Umgebung geprüft.
+6. Runtime-Basis geprüft.
+7. Backendprozess gestartet.
+8. Backend als passende Instanz verifiziert.
+9. Browseroberfläche geöffnet.
 
-## 3. Monatskalender
+Wenn der Standardport durch eine andere oder ältere lokale Anwendung belegt ist, übernimmt AIO-Tool diese **nicht**. Es sucht einen freien lokalen Ausweichport und zeigt das als gelben Hinweis.
 
-Der Kalender bleibt in der Hauptansicht sichtbar.
+## Wenn der Start fehlschlägt
 
-- Woche: **Montag bis Sonntag**.
-- **‹ / ›** wechselt den Monat.
-- **Heute** springt zurück zum aktuellen Monat.
-- Der heutige Tag wird hervorgehoben.
-- An Tagen mit Terminen wird eine kleine Anzahl angezeigt.
+Die Konsole bleibt offen und zeigt eine eindeutige Fehler-ID, zum Beispiel:
 
-Auf kleinen Bildschirmen werden Details im Monatsraster reduziert, damit der Monat trotzdem übersichtlich bleibt. Die nächsten Termine stehen zusätzlich unter dem Kalender.
+- `LAUNCH-E102` — Python fehlt.
+- `LAUNCH-E205` — lokale Python-Umgebung konnte nicht erstellt werden.
+- `LAUNCH-E303` — Installationskennung konnte nicht vorbereitet werden.
+- `LAUNCH-E306` — Runtime-Vorprüfung fehlgeschlagen.
+- `LAUNCH-E404` — kein freier lokaler Ausweichport.
+- `LAUNCH-E407` — Backendprozess wurde direkt beendet.
+- `LAUNCH-E508` — Backend wurde nicht als passende Instanz bereit.
 
-## 4. Nächste TODOs
+Unter `runtime/` liegen dann lokale Diagnose-Dateien. Diese Dateien werden **nicht** ins Release-ZIP aufgenommen.
 
-Rechts erscheinen höchstens die nächsten drei Aufgaben aus der bereits getesteten TODO-Reihenfolge.
+## Was sehe ich im Dashboard?
 
-Mit **✓** wird eine Aufgabe erledigt. Sie wird dabei nicht einfach gelöscht, sondern vom Backend ins Erledigt-Archiv verschoben.
+### Monatskalender
 
-## 5. Letzte Ereignisse
+- Montag bis Sonntag.
+- vorheriger/nächster Monat über Pfeile.
+- **Heute** springt zum aktuellen Monat.
+- Termine werden im Kalender und zusätzlich kompakt darunter gezeigt.
 
-Das Dashboard zeigt die letzten fünf wichtigen Ereignisse in verständlichen Sätzen. Technische Rohdetails bleiben vom normalen Verlauf getrennt.
+### Nächste Aufgaben
 
-## 6. Erinnerungen
+Rechts erscheinen höchstens die nächsten drei TODOs. Mit **✓** wird eine Aufgabe nicht einfach gelöscht, sondern mit Zeitstempel ins Erledigt-Archiv verschoben.
 
-Eine fällige Erinnerung erscheint deutlich oberhalb des Dashboards.
+### Letzte Ereignisse
 
-Wichtig:
+Die letzten fünf wichtigen Ereignisse erscheinen in verständlicher Sprache. Technische Rohdetails bleiben im Diagnosebereich.
 
-> Nur weil das Tool nach Erinnerungen fragt, gilt eine Erinnerung noch nicht als gesehen.
+### Erinnerungen
 
-Der Ablauf ist:
+Ablauf:
 
 `fällig → sichtbar anzeigen → du klickst „Gesehen“ → erst dann speichern`
 
-Ist der Browser-Tab gerade nicht sichtbar, quittiert das Dashboard keine Erinnerung.
+Ein unsichtbarer Tab oder bloßes Nachfragen im Hintergrund quittiert keine Erinnerung.
 
-## 7. Schnellzugriff
+### Module
 
-Links findest du Module zunächst unter **Häufig**. Mit **Alle** werden zusätzliche Bereiche eingeblendet.
+Links zeigt **Häufig** die wichtigsten Module. **Alle** blendet weitere Bereiche ein. Der Datei-Bereich bleibt absichtlich noch ohne echte Dateiänderungen, bis der Sicherheits-Slice SAFE-FILE-CORE entwickelt ist.
 
-Der Datei-Bereich ist absichtlich noch deaktiviert. Echte Dateiänderungen werden erst nach den offenen Zielsystemprüfungen als eigener Sicherheits-Slice ergänzt.
+## Darstellung
 
-## 8. Entwicklerbereich
-
-Unter **Darstellung** kannst du den Entwicklerbereich freischalten. Danach erscheint ein kleiner Diagnose-Button.
-
-Die Diagnose zeigt nur technische Zustände wie Version, Registrystatus und Zähler. Sie zeigt bewusst nicht die vollständige Konfiguration, den aktiven Projektpfad oder deine Favoritenliste.
-
-## 9. Darstellung
-
-Vier Themes bleiben verfügbar:
-
-- Trash Neon,
-- Steel Night,
-- Clean Light,
-- High Contrast.
-
-Schriftgrößen: 90 / 100 / 110 / 120 / 130 / 140 %.
-
-Zusätzlich passt das Dashboard seine Dichte automatisch an Fenstergröße und Schriftgröße an: **kompakt / normal / weit**.
-
-## Barriereärmere Bedienung
-
-Vorbereitet und automatisiert geprüft sind:
-
-- sichtbare Tastatur-Fokusrahmen,
+- vier Themes,
+- Schriftgrößen-Presets,
+- automatische Dichte,
+- Tastatur-Fokusrahmen,
 - Sprunglink zum Hauptinhalt,
-- Status-/Reminder-Livebereiche für assistive Technik,
-- Reduced-Motion-Regel,
-- responsive Layoutstufen.
+- Reduced-Motion-Schutz,
+- Browser-Reflow bis 320 CSS-px automatisiert geprüft.
 
-Die reale Bedienung mit Firefox/Chrome und 125–200 % Zoom ist noch ein eigener offener Test und wird nicht als bestanden ausgegeben.
+Chromium und Firefox werden in CI real gerendert und bedient. Die **native** Kubuntu-/KDE-/DPI-/100–200-%-Zoom-Abnahme bleibt trotzdem ein eigener offener Praxistest.
 
 ## Datenschutz
 
 - kein Internetzwang,
 - Backend nur lokal auf `127.0.0.1`,
 - keine Telemetrie,
-- keine externen Python-Pakete,
-- lokale Config-, TODO-, Event- und Kalenderdaten werden nicht ins Release-ZIP übernommen.
+- keine externen Runtime-Pakete,
+- lokale Config/TODO/Kalender/Ereignisse/Logs werden nicht ins Release übernommen.
 
-## Was wurde automatisch geprüft?
+## Was bedeutet der ZIP-Dateiname?
 
-GitHub Actions Run `33026823914` war grün:
-
-- 77 Tests,
-- Dashboard-/Foundation-Validierung,
-- Learning Guard,
-- Launcher,
-- JavaScript,
-- Release-Builder,
-- vollständiges ZIP-Artefakt.
+- `DEV` — Entwicklung.
+- `TESTED` — automatisiert geprüft.
+- `RC` — Release Candidate.
+- `RELEASED` — offiziell freigegeben.
+- `BLOCKED` — bekannter Blocker.
+- `ARCHIVED` — historischer Stand.
 
 ## Was kommt als Nächstes?
 
-Zuerst wird genau dieses ZIP auf dem echten Kubuntu-Zielsystem mit Firefox, Chrome/Chromium, mehreren Zoomstufen und Tastaturbedienung geprüft.
-
-Erst danach beginnt **SAFE-FILE-CORE**: Kopieren mit Vorprüfung, Vorschau, Nachprüfung und Undo-/Recovery-Vertrag.
+1. `0.4.3-integrity-hardening` vollständig prüfen und nur bei grünem Gate auf TESTED setzen.
+2. Danach natives Kubuntu-/Zoom-/Tastatur-Gate.
+3. Erst danach SAFE-FILE-CORE mit **Copy** als erster kontrollierter Dateioperation.
