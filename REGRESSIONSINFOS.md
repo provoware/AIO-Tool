@@ -4,45 +4,91 @@ Grundsatz: **Fehler → reproduzierbarer Auslöser → kleinste Codezone → Fix
 
 Statussprache: OFFEN / UMGESETZT / GEPRÜFT / BEWIESEN.
 
-Historische Verträge REG-001 bis REG-056 bleiben verbindlich.
+Historische Verträge **REG-001 bis REG-066** bleiben verbindlich.
 
-## 0.5.0-native-acceptance-safe-file-sim
+## Neue Verträge — `0.5.1-audit-modern-ui`
 
-DEV-Head `6cf6754dcf5da88edb13ee34f2e99b4e22bca593`, Run `33038051967`: **113/113 Tests + L0–L3 vollständig grün**.
+### REG-067 — parallele HTTP-Schreibvorgänge verlieren Persistenzupdates
+- Risiko: `ThreadingHTTPServer` führt zwei Read→Mutate→Write-Zyklen gleichzeitig aus.
+- Vertrag: `AtomicJsonStore.update()` hält einen pro Store gemeinsamen `RLock` über den vollständigen Zyklus.
+- Test: 120 parallele Inkremente müssen exakt 120 ergeben.
+- Status: **GEPRÜFT** — Runs `33045348341`, `33045669222`.
 
-### REG-057 — L4-Schritt wird ohne reale Prüfung automatisch PASS
-Vertrag: 18 Schritte starten OFFEN; nur explizites PASS/FAIL/SKIP. Test: `NativeAcceptanceTests.test_no_step_is_auto_passed_and_reports_are_persistent`. **BEWIESEN.**
+### REG-068 — Backup wird während Aktualisierung beschädigt
+- Vertrag: auch `.bak` wird über temporäre Datei + fsync + `os.replace` erneuert; stale eigene Tempdatei wird entfernt.
+- Status: **GEPRÜFT** — Promotion-Core grün.
 
-### REG-058 — Firefox-/Chromium-Abnahme trennt dieselbe Sitzung
-Vertrag: gemeinsamer versionsgebundener AtomicJsonStore; Firefox sieht die zuvor in Chromium gespeicherte Bewertung. Zusätzlicher echter Browser-Gate: `scripts/aux_ui_acceptance.py`. **BEWIESEN.**
+### REG-069 — ConfigStore driftet vom allgemeinen Persistenzvertrag
+- Vertrag: Konfiguration nutzt `AtomicJsonStore` statt eigener Kopie der Schreiblogik.
+- Status: **GEPRÜFT** — Config-/Persistence-Tests grün.
 
-### REG-059 — TESTED-Version fehlt/doppelt im Evidenzindex
-Vertrag: exakt eine Datei pro TESTED/RC/RELEASED-Version; Masterindex = Registry-Menge. Gate: Evidence Guard + Tests. **BEWIESEN.**
+### REG-070 — Hauptbackend akzeptiert schwächeren Hostvertrag als Hilfsserver
+- Vertrag: zentraler `app.loopback_security`-Vertrag; Host muss Loopback **mit exakt passendem Port** sein, Cross-Port-Origin wird blockiert.
+- Test: `tests/test_server.py`.
+- Status: **GEPRÜFT**.
 
-### REG-060 — historischer Artefakthash wird geraten
-Vertrag: nicht belegter Wert = `status:not-recorded`, `sha256:null`. Evidence Guard blockiert Widerspruch. **BEWIESEN.**
+### REG-071 — Kalender/Termine zeigen nach Ladefehler alte oder scheinbar leere Daten
+- Vertrag: fehlgeschlagener Monatsreload setzt `state.calendar=null`; kommende Termine analog auf `state.upcoming=null`. Die Oberfläche zeigt **nicht verfügbar** statt alte Daten oder ein falsches „keine Termine“.
+- Test: `test_failed_loads_do_not_reuse_stale_or_fake_empty_data`.
+- Status: **GEPRÜFT**.
 
-### REG-061 — SAFE-FILE-Simulation besitzt echte Copy-Ausführung
-Vertrag: kein `/api/execute`, keine Copy-/Move-/Delete-Primitive, `EXECUTION_ENABLED=False`. Statischer Capability-Test + Runtime-Gate. **BEWIESEN.**
+### REG-072 — alter TODO-Aktionsfehler hält Dashboard auf „teilweise“
+- Vertrag: erfolgreicher Retry löscht `todo-action` vor Refresh.
+- Test: `test_successful_todo_retry_clears_action_error`.
+- Status: **GEPRÜFT**.
 
-### REG-062 — Preview behauptet Mutation/Ausführung
-Vertrag: `validate_preview_contract()` verlangt `simulation_only=true`, `execution_enabled=false`, `mutation_performed=false`; positive Vorlage + Negativfixture. **BEWIESEN.**
+### REG-073 — Oberfläche scheitert beim Boot ohne eindeutiges sichtbares Feedback
+- Vertrag: Boot-Guard besitzt expliziten READY- und ERROR-Pfad; Top-Level-Bootfehler wird abgefangen.
+- Test: `test_boot_guard_has_success_and_failure_paths`.
+- Status: **GEPRÜFT**.
 
-### REG-063 — SAFE-FILE-Fehlerfall bleibt unentdeckt
-Vertrag: SF-001..010 mit Tests für missing/not-file/symlink/target/permissions/space/conflict/same-target. **BEWIESEN für die Simulation.**
+### REG-074 — Theme-/Modulzustand nur farblich bzw. über CSS-Klasse erkennbar
+- Vertrag: Auswahlbuttons synchronisieren `.selected` **und** `aria-pressed`; High Contrast bleibt eigener harter Modus.
+- Status: **GEPRÜFT** — Unit/Contract + Chromium/Firefox.
 
-### REG-064 — spätere Copy ohne Recovery-/Nachvalidierungsvertrag
-Vertrag ist in der Simulation festgeschrieben: Journal vor Mutation, Postvalidation vor DONE, Undo nur bei unverändertem Ziel. **BEWIESEN als Vorvertrag; echte Copy bleibt gesperrt.**
+### REG-075 — Helper-UIs benötigen Inline-CSS/DOM-innerHTML
+- Vertrag: gemeinsames `web/helper-ui.css`, CSP `style-src 'self'`, keine Inline-Styles, keine dynamische `innerHTML`-Erzeugung, gültiger Download-Link statt verschachtelter Interaktion.
+- Test: `tests/test_helper_ui_contract.py`.
+- Status: **GEPRÜFT** — Helper-UI-Gate Chromium/Firefox grün.
 
-### REG-065 — lokaler Hilfsserver akzeptiert anderen Loopback-Port
-Vertrag: Host und Origin müssen Loopback **und exakt denselben Port** verwenden. `LoopbackSecurityTests`. **BEWIESEN.**
+### REG-076 — Browser-Acceptance driftet vom Produkt-Assetvertrag
+- Auslöser 1: Dashboard wurde auf `dashboard-v2.3` erhöht, während der Browser-Harness fest kodierte v2.2-Asset-Signaturen ersetzte.
+- Auslöser 2: `scripts/ui_acceptance_ci.py` enthielt zusätzlich eine zweite nahezu vollständige Harness-Implementierung. Der erste Fix traf deshalb nur `ui_acceptance.py`, nicht den tatsächlich von CI ausgeführten Duplikatpfad.
+- Wirkung: beide Browser meldeten gleichzeitig fehlende Rasterspannen, zu kleine Ziele, 1-spaltigen Kalender und Boot-Timeout.
+- Vertrag: **eine kanonische Harness-Implementierung** in `scripts/ui_acceptance.py`; lokale Stylesheets werden aus dem aktuellen `index.html` abgeleitet und nur über Allowlist eingebettet; Fixture-Skript wird **vor** Produkt-JavaScript eingefügt; verbleibende lokale Assetreferenzen blockieren den Test. `ui_acceptance_ci.py` bleibt ausschließlich dünner Entry-Point ohne eigene Render-/Assetlogik.
+- Test: `tests/test_ui_acceptance_harness.py`, inklusive Verbot einer zweiten `run_browser`-/Inlining-Implementierung im CI-Wrapper.
+- Status: **GEPRÜFT** — DEV `33045348341` und Promotion `33045669222`, jeweils Chromium+Firefox erfolgreich.
 
-### REG-066 — neue Runtime-Assistenten fehlen im ZIP
-Vertrag: Runtime-Manifest 1.2.1 + Release-End-to-End-Test + frischer Runtime-Preflight aus dem ZIP. **BEWIESEN.**
+### REG-077 — mehrfaches „Neu prüfen“ oder Theme-Klicken erzeugt konkurrierende UI-Aktionen
+- Vertrag: Refresh und Config-Speichern laufen single-flight. Währenddessen werden konkurrierende Controls gesperrt und mit `aria-busy` markiert.
+- Test: `test_refresh_has_single_flight_busy_feedback`, `test_config_save_is_serialized_and_rolls_back_preview_on_failure`.
+- Status: **GEPRÜFT**.
 
-## Evidenzstatus
+### REG-078 — lokales Backend antwortet nicht und Oberfläche bleibt unbegrenzt in Zwischenzustand
+- Vertrag: API-Anfragen besitzen einen begrenzten 8-Sekunden-Timeout. Timeout und Nichterreichbarkeit liefern verständliche Hinweise auf die Startkonsole.
+- Test: `test_requests_have_timeout_and_clear_user_guidance`.
+- Status: **GEPRÜFT**.
 
-- `0.4.3-integrity-hardening`: BEWIESEN, Main-CI `33036217621`.
-- `0.5.0-native-acceptance-safe-file-sim`: L0–L3 **BEWIESEN auf DEV-Head** durch Run `33038051967`; Registry zu TESTED promoviert. Promotion-Commit wird nochmals vollständig geprüft.
-- L4 bleibt ausdrücklich **OFFEN**, bis der Native Acceptance Runner auf echtem Kubuntu ausgeführt wurde.
-- echte SAFE-FILE Copy bleibt **NICHT IMPLEMENTIERT / GESPERRT**.
+### REG-079 — fehlgeschlagene TODO-/Ereignis-/Terminabfrage wird wie „keine Daten vorhanden“ dargestellt
+- Vertrag: `null` bedeutet technisch **nicht verfügbar**; `[]` bedeutet erfolgreich geladen und leer. Renderfunktionen unterscheiden beide Zustände sichtbar.
+- Test: `test_failed_loads_do_not_reuse_stale_or_fake_empty_data`.
+- Status: **GEPRÜFT**.
+
+### REG-080 — Theme-Vorschau bleibt nach gescheitertem Speichern optisch aktiv
+- Vertrag: Darstellung darf sofort als Vorschau reagieren, muss bei Config-Fehler aber auf die vorherige bestätigte Konfiguration zurückrollen und den Fehlerstatus anzeigen.
+- Test: `test_config_save_is_serialized_and_rolls_back_preview_on_failure`.
+- Status: **GEPRÜFT**.
+
+## Evidenz 0.5.1
+
+- DEV-Gate: `33045348341` — Core/Release + Chromium + Firefox + Helper-UIs **SUCCESS**.
+- TESTED-Promotion: `33045669222` — 138 Tests, Guards, Runtime-ZIP + Chromium + Firefox + Helper-UIs **SUCCESS**.
+- TESTED-Runtime-ZIP SHA256: `a7ab6d64e978e27c1fa550c549e12dc7ee21e24a17a55fd9c160c19cd3001b72`.
+- GitHub-Artefakt-Wrapper-Digest: `62cc0787280328c1bfe5ff08628ea87ed1ec251bf718bf82178e2cfca88a85e0`.
+
+## Aktuelle Evidenzgrenze
+
+- `0.5.0-native-acceptance-safe-file-sim`: **BEWIESEN L0–L3 auf main**, Main-CI `33040664746`.
+- `0.5.1-audit-modern-ui`: **GEPRÜFT / tested / draft** auf dem Feature-Branch; Evidence-Sync und Main-Merge noch offen.
+- Native Kubuntu L4 bleibt separat offen.
+- SAFE-FILE echte Mutation bleibt technisch gesperrt.

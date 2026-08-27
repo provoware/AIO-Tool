@@ -2,17 +2,20 @@ const state={
   config:null,
   status:null,
   todos:null,
-  events:[],
+  events:null,
   calendar:null,
-  upcoming:[],
+  upcoming:null,
   texts:{},
   errors:{},
   visibleReminderKeys:new Set(),
   monthAnchor:null,
-  lastRefresh:null
+  lastRefresh:null,
+  refreshing:false,
+  configSaving:false
 };
 
 const REMINDER_POLL_MS=60000;
+const REQUEST_TIMEOUT_MS=8000;
 const $=(selector)=>document.querySelector(selector);
 const $$=(selector)=>Array.from(document.querySelectorAll(selector));
 
@@ -36,36 +39,12 @@ function t(key,fallback=''){
   return state.texts[key]??fallback??key;
 }
 
-async function loadTexts(){
-  try{
-    const res=await fetch('/dashboard-texts.de.v1.json',{cache:'no-store'});
-    const data=await res.json();
-    if(!res.ok||data.schema_version!==1||data.language!=='de'||typeof data.messages!=='object') throw new Error('Textkatalog ungültig');
-    state.texts=data.messages;
-  }catch(err){
-    state.errors.texts=String(err.message||err);
-  }
-  $$('[data-i18n]').forEach(node=>{
-    const value=t(node.dataset.i18n,'');
-    if(value) node.textContent=value;
+function setPressed(nodes,matcher){
+  nodes.forEach(node=>{
+    const selected=matcher(node);
+    node.classList.toggle('selected',selected);
+    node.setAttribute('aria-pressed',String(selected));
   });
-}
-
-async function api(path,options={}){
-  const headers={...(options.headers||{})};
-  if(options.body!==undefined) headers['Content-Type']='application/json';
-  const res=await fetch(path,{...options,headers});
-  let data;
-  try{data=await res.json();}
-  catch{throw new Error(`Ungültige Serverantwort (HTTP ${res.status})`);}
-  if(!res.ok||!data.ok){
-    const error=new Error(data.error||`HTTP ${res.status}`);
-    error.help=data.help||null;
-    error.detail=data.detail||null;
-    error.status=res.status;
-    throw error;
-  }
-  return data;
 }
 
 function recordError(area,err){
@@ -76,7 +55,15 @@ function recordError(area,err){
   };
 }
 
-function clearError(area){delete state.errors[area];}
+function clearError(area){
+  delete state.errors[area];
+}
+
+function humanError(area){
+  const entry=state.errors[area];
+  if(!entry) return area;
+  return entry.action?`${entry.message} ${entry.action}`:entry.message;
+}
 
 async function safeLoad(area,loader){
   try{
@@ -87,6 +74,67 @@ async function safeLoad(area,loader){
     recordError(area,err);
     return null;
   }
+}
+
+async function loadTexts(){
+  try{
+    const res=await fetch('/dashboard-texts.de.v1.json',{cache:'no-store'});
+    const data=await res.json();
+    if(!res.ok||data.schema_version!==1||data.language!=='de'||typeof data.messages!=='object') throw new Error('Textkatalog ungültig');
+    state.texts=data.messages;
+    clearError('texts');
+  }catch(err){
+    recordError('texts',err);
+  }
+  $$('[data-i18n]').forEach(node=>{
+    const value=t(node.dataset.i18n,'');
+    if(value) node.textContent=value;
+  });
+}
+
+async function api(path,options={}){
+  const headers={...(options.headers||{})};
+  if(options.body!==undefined) headers['Content-Type']='application/json';
+  const controller=new AbortController();
+  const timeout=window.setTimeout(()=>controller.abort(),REQUEST_TIMEOUT_MS);
+  let res;
+  try{
+    res=await fetch(path,{...options,headers,signal:options.signal||controller.signal});
+  }catch(err){
+    if(err?.name==='AbortError') throw new Error('Zeitüberschreitung: Das lokale Backend antwortet nicht rechtzeitig. Prüfe die Startkonsole.');
+    throw new Error('Lokales Backend nicht erreichbar. Prüfe die Startkonsole.');
+  }finally{
+    window.clearTimeout(timeout);
+  }
+  let data;
+  try{
+    data=await res.json();
+  }catch{
+    throw new Error(`Ungültige Serverantwort (HTTP ${res.status})`);
+  }
+  if(!res.ok||!data.ok){
+    const error=new Error(data.error||`HTTP ${res.status}`);
+    error.help=data.help||null;
+    error.detail=data.detail||null;
+    error.status=res.status;
+    throw error;
+  }
+  return data;
+}
+
+function setRefreshBusy(busy){
+  state.refreshing=busy;
+  const button=$('#refreshBtn');
+  button.disabled=busy;
+  button.setAttribute('aria-busy',String(busy));
+  button.textContent=busy?'Prüfe …':t('action.refresh','Neu prüfen');
+  $('#mainContent').setAttribute('aria-busy',String(busy));
+}
+
+function setSettingsBusy(busy){
+  state.configSaving=busy;
+  $('#settingsPanel').setAttribute('aria-busy',String(busy));
+  $$('#themeButtons button,#fontButtons button,#expertToggle').forEach(control=>{control.disabled=busy;});
 }
 
 function applyConfig(config){
@@ -100,9 +148,18 @@ function applyConfig(config){
     $('#developerPanel').hidden=true;
     $('#developerToggle').setAttribute('aria-expanded','false');
   }
-  $$('[data-theme]').forEach(button=>button.classList.toggle('selected',button.dataset.theme===config.theme));
-  $$('[data-font]').forEach(button=>button.classList.toggle('selected',Number(button.dataset.font)===Number(config.font_scale)));
+  setPressed($$('[data-theme]'),button=>button.dataset.theme===config.theme);
+  setPressed($$('[data-font]'),button=>Number(button.dataset.font)===Number(config.font_scale));
   updateDensity();
+}
+
+function normalStatusText(){
+  return state.status?`Version ${state.status.version} · lokal auf ${state.status.bind} · Internet nicht erforderlich`:'Systemstatus nicht verfügbar.';
+}
+
+function clearStatusView(){
+  state.status=null;
+  ['#versionChip','#systemVersion','#systemBind','#systemPackages','#systemRegistry','#registryBadge','#openTodoMetric','#calendarMetric','#historyMetric'].forEach(selector=>{$(selector).textContent='—';});
 }
 
 function applyStatus(status){
@@ -119,29 +176,29 @@ function applyStatus(status){
   $('#openTodoMetric').textContent=String(status.core?.todos_open??0);
   $('#calendarMetric').textContent=String(status.core?.calendar_events??0);
   $('#historyMetric').textContent=String(status.core?.events??0);
-  $('#statusText').textContent=`Version ${status.version} · lokal auf ${status.bind} · Internet nicht erforderlich`;
+  $('#statusText').textContent=normalStatusText();
   renderDiagnostics();
 }
 
 function updateReadyState(){
   const areas=Object.keys(state.errors);
+  const pill=$('#readyPill');
   if(!state.status){
-    $('#readyPill').textContent='🔴 Eingriff';
+    pill.textContent='🔴 Eingriff';
+    pill.title=areas.map(area=>humanError(area)).join('\n');
     $('#statusText').textContent=areas.length?`Systemstatus nicht vollständig: ${humanError(areas[0])}`:'Systemstatus nicht verfügbar.';
     return;
   }
   if(areas.length){
-    $('#readyPill').textContent='🟠 teilweise';
-    $('#statusText').textContent=`Grundsystem bereit · ${areas.length} Bereich(e) konnten nicht vollständig geladen werden.`;
+    const extra=areas.length>1?` · +${areas.length-1} weitere`:'';
+    pill.textContent='🟠 teilweise';
+    pill.title=areas.map(area=>`${area}: ${humanError(area)}`).join('\n');
+    $('#statusText').textContent=`Grundsystem bereit · Hinweis: ${humanError(areas[0])}${extra}`;
   }else{
-    $('#readyPill').textContent='🟢 bereit';
+    pill.textContent='🟢 bereit';
+    pill.removeAttribute('title');
+    $('#statusText').textContent=normalStatusText();
   }
-}
-
-function humanError(area){
-  const entry=state.errors[area];
-  if(!entry) return area;
-  return entry.action?`${entry.message} ${entry.action}`:entry.message;
 }
 
 function updateDensity(){
@@ -152,8 +209,7 @@ function updateDensity(){
   if(width>=1500&&height>=850&&font<=120) density='wide';
   if(width<1120||height<720||font>=130) density='compact';
   document.documentElement.dataset.density=density;
-  const labels={compact:'kompakt',normal:'normal',wide:'weit'};
-  $('#densityChip').textContent=`Ansicht: ${labels[density]}`;
+  $('#densityChip').textContent=`Ansicht: ${{compact:'kompakt',normal:'normal',wide:'weit'}[density]}`;
 }
 
 function formatDate(iso,options={day:'2-digit',month:'2-digit'}){
@@ -170,20 +226,23 @@ function monthLabel(anchor){
   return new Intl.DateTimeFormat('de-DE',{month:'long',year:'numeric'}).format(anchor);
 }
 
+function emptyMessage(text,className='empty-message'){
+  const node=document.createElement('p');
+  node.className=className;
+  node.textContent=text;
+  return node;
+}
+
 function renderCalendar(){
   const calendar=state.calendar;
   const grid=$('#monthGrid');
   grid.replaceChildren();
   $('#monthTitle').textContent=monthLabel(state.monthAnchor);
   if(!calendar){
-    const error=document.createElement('p');
-    error.className='inline-error';
-    error.textContent=humanError('calendar')||'Kalender konnte nicht geladen werden.';
-    grid.append(error);
+    grid.append(emptyMessage(humanError('calendar')||'Kalender konnte nicht geladen werden.','inline-error'));
     $('#calendarEmpty').hidden=true;
     return;
   }
-
   const start=parseLocalDate(calendar.start);
   const end=parseLocalDate(calendar.end);
   const leading=(start.getDay()+6)%7;
@@ -193,7 +252,6 @@ function renderCalendar(){
     blank.setAttribute('aria-hidden','true');
     grid.append(blank);
   }
-
   const today=localIsoDate();
   let eventCount=0;
   for(let day=1;day<=end.getDate();day++){
@@ -204,11 +262,9 @@ function renderCalendar(){
     const cell=document.createElement('div');
     cell.className='day-cell';
     cell.setAttribute('role','gridcell');
-    cell.tabIndex=0;
+    cell.setAttribute('aria-label',`${formatDate(iso,{weekday:'long',day:'2-digit',month:'long'})}${events.length?` · ${events.length} Termine`:''}`);
     if(iso===today) cell.classList.add('today');
-    const weekday=(date.getDay()+6)%7;
-    if(weekday>=5) cell.classList.add('weekend');
-
+    if((date.getDay()+6)%7>=5) cell.classList.add('weekend');
     const head=document.createElement('div');
     head.className='day-number';
     const number=document.createElement('span');
@@ -221,7 +277,6 @@ function renderCalendar(){
       head.append(badge);
     }
     cell.append(head);
-
     const list=document.createElement('div');
     list.className='day-events';
     events.slice(0,3).forEach(event=>{
@@ -246,11 +301,13 @@ function renderCalendar(){
 function renderUpcoming(){
   const container=$('#upcomingList');
   container.replaceChildren();
+  if(state.upcoming===null){
+    container.append(emptyMessage(`Termine konnten nicht geladen werden: ${humanError('upcoming')}`,'inline-error'));
+    $('#upcomingCount').textContent='—';
+    return;
+  }
   const today=localIsoDate();
-  const items=(state.upcoming||[])
-    .filter(event=>event.date>=today)
-    .sort((a,b)=>(a.date.localeCompare(b.date)||(a.start_time||'00:00').localeCompare(b.start_time||'00:00')))
-    .slice(0,5);
+  const items=state.upcoming.filter(event=>event.date>=today).sort((a,b)=>(a.date.localeCompare(b.date)||(a.start_time||'00:00').localeCompare(b.start_time||'00:00'))).slice(0,5);
   $('#upcomingCount').textContent=String(items.length);
   if(!items.length){
     container.append(emptyMessage(t('upcoming.empty','Keine kommenden Termine im geladenen Jahr.')));
@@ -261,7 +318,11 @@ function renderUpcoming(){
     row.className='list-row appointment-row';
     const date=document.createElement('div');
     date.className='date-block';
-    date.innerHTML=`<strong>${formatDate(event.date,{day:'2-digit'})}</strong><small>${formatDate(event.date,{month:'short'})}</small>`;
+    const day=document.createElement('strong');
+    day.textContent=formatDate(event.date,{day:'2-digit'});
+    const month=document.createElement('small');
+    month.textContent=formatDate(event.date,{month:'short'});
+    date.append(day,month);
     const text=document.createElement('div');
     text.className='list-main';
     const title=document.createElement('strong');
@@ -274,18 +335,16 @@ function renderUpcoming(){
   });
 }
 
-function emptyMessage(text){
-  const node=document.createElement('p');
-  node.className='empty-message';
-  node.textContent=text;
-  return node;
-}
-
 function renderTodos(){
   const container=$('#todoList');
   container.replaceChildren();
-  const next=state.todos?.next||[];
-  const open=state.todos?.items?.length??state.status?.core?.todos_open??0;
+  if(state.todos===null){
+    container.append(emptyMessage(`TODOs konnten nicht geladen werden: ${humanError('todos')}`,'inline-error'));
+    $('#todoCountBadge').textContent='—';
+    return;
+  }
+  const next=state.todos.next||[];
+  const open=state.todos.items?.length??state.status?.core?.todos_open??0;
   $('#todoCountBadge').textContent=String(open);
   if(!next.length){
     container.append(emptyMessage(t('todo.empty','Keine offenen TODOs.')));
@@ -316,26 +375,32 @@ function renderTodos(){
 
 async function completeTodo(id,button){
   button.disabled=true;
+  button.setAttribute('aria-busy','true');
   try{
     await api(`/api/todos/${encodeURIComponent(id)}/complete`,{method:'POST',body:'{}'});
+    clearError('todo-action');
     await refreshData({keepMonth:true});
   }catch(err){
     recordError('todo-action',err);
     button.disabled=false;
-    $('#statusText').textContent=`TODO konnte nicht erledigt werden: ${humanError('todo-action')}`;
     updateReadyState();
+  }finally{
+    button.removeAttribute('aria-busy');
   }
 }
 
 function renderEvents(){
   const container=$('#eventList');
   container.replaceChildren();
-  const events=state.events||[];
-  if(!events.length){
+  if(state.events===null){
+    container.append(emptyMessage(`Ereignisse konnten nicht geladen werden: ${humanError('events')}`,'inline-error'));
+    return;
+  }
+  if(!state.events.length){
     container.append(emptyMessage(t('events.empty','Noch keine Ereignisse vorhanden.')));
     return;
   }
-  events.slice(0,5).forEach(event=>{
+  state.events.slice(0,5).forEach(event=>{
     const row=document.createElement('div');
     row.className=`timeline-row level-${event.level||'info'}`;
     const dot=document.createElement('span');
@@ -353,16 +418,17 @@ function renderEvents(){
 }
 
 function renderDiagnostics(){
-  if(!state.status) return;
-  const core=state.status.core||{};
+  const core=state.status?.core||{};
   const diagnostic={
-    version:state.status.version,
-    ready:state.status.ready,
-    bind:state.status.bind,
+    version:state.status?.version??null,
+    ready:state.status?.ready??false,
+    bind:state.status?.bind??null,
     registry_ok:Boolean(core.version_registry?.ok),
     todos_open:core.todos_open??null,
     calendar_events:core.calendar_events??null,
     events:core.events??null,
+    refreshing:state.refreshing,
+    config_saving:state.configSaving,
     error_rule_version:core.error_help?.rules_version??null,
     text_catalog_version:core.error_help?.text_catalog?.catalog_version??null,
     dashboard_errors:Object.fromEntries(Object.entries(state.errors).map(([key,value])=>[key,{message:value.message,rule_id:value.rule_id}]))
@@ -371,8 +437,7 @@ function renderDiagnostics(){
 }
 
 function renderNextStep(){
-  const reminderCount=$('#reminderRegion').childElementCount;
-  if(reminderCount){
+  if($('#reminderRegion').childElementCount){
     $('#nextTitle').textContent=t('next.reminder','Erinnerung prüfen');
     $('#nextText').textContent=t('next.reminder.help','Eine fällige Erinnerung wartet oben auf Bestätigung.');
     return;
@@ -389,13 +454,27 @@ function renderNextStep(){
     $('#nextText').textContent=`${formatDate(appointment.date,{weekday:'short',day:'2-digit',month:'2-digit'})}${appointment.start_time?' · '+appointment.start_time:''}`;
     return;
   }
+  if(state.todos===null||state.upcoming===null){
+    $('#nextTitle').textContent='Datenstatus prüfen';
+    $('#nextText').textContent='Mindestens ein Bereich ist aktuell nicht verfügbar. Der orange Status oben zeigt den ersten Hinweis.';
+    return;
+  }
   $('#nextTitle').textContent=t('next.clear','Alles ruhig');
   $('#nextText').textContent=t('next.clear.help','Aktuell gibt es keine offenen TODOs oder kommenden Termine im geladenen Zeitraum.');
 }
 
-function reminderKey(reminder){return `${reminder.event_id}:${reminder.minutes_before}`;}
+function reminderKey(reminder){
+  return `${reminder.event_id}:${reminder.minutes_before}`;
+}
 
 function renderReminders(reminders){
+  const active=new Set(reminders.map(reminderKey));
+  $$('#reminderRegion [data-reminder-key]').forEach(node=>{
+    if(!active.has(node.dataset.reminderKey)){
+      state.visibleReminderKeys.delete(node.dataset.reminderKey);
+      node.remove();
+    }
+  });
   reminders.forEach(reminder=>{
     const key=reminderKey(reminder);
     if(state.visibleReminderKeys.has(key)) return;
@@ -404,7 +483,6 @@ function renderReminders(reminders){
     alert.className='reminder-card';
     alert.dataset.reminderKey=key;
     alert.setAttribute('role','alert');
-
     const icon=document.createElement('span');
     icon.className='reminder-icon';
     icon.textContent='⏰';
@@ -430,6 +508,7 @@ function renderReminders(reminders){
 async function ackReminder(reminder,node,button){
   if(document.visibilityState!=='visible') return;
   button.disabled=true;
+  button.setAttribute('aria-busy','true');
   try{
     await api(`/api/calendar/${encodeURIComponent(reminder.event_id)}/reminders/${reminder.minutes_before}/ack`,{method:'POST',body:'{}'});
     node.remove();
@@ -437,12 +516,14 @@ async function ackReminder(reminder,node,button){
     clearError('reminders');
     renderNextStep();
     const events=await safeLoad('events',()=>api('/api/events?limit=5'));
-    if(events){state.events=events.events||[];renderEvents();}
+    state.events=events?.events||null;
+    renderEvents();
   }catch(err){
     recordError('reminders',err);
     button.disabled=false;
-    $('#statusText').textContent=`Erinnerung konnte nicht quittiert werden: ${humanError('reminders')}`;
     updateReadyState();
+  }finally{
+    button.removeAttribute('aria-busy');
   }
 }
 
@@ -457,59 +538,80 @@ async function checkReminders(){
 async function loadMonth(){
   const anchor=localIsoDate(state.monthAnchor);
   const result=await safeLoad('calendar',()=>api(`/api/calendar?view=month&date=${encodeURIComponent(anchor)}`));
-  if(result) state.calendar=result.calendar;
+  state.calendar=result?.calendar||null;
   renderCalendar();
 }
 
 async function loadUpcoming(){
   const anchor=localIsoDate(new Date());
   const result=await safeLoad('upcoming',()=>api(`/api/calendar?view=year&date=${encodeURIComponent(anchor)}`));
-  if(result) state.upcoming=result.calendar?.events||[];
+  state.upcoming=result?.calendar?.events||null;
   renderUpcoming();
 }
 
 async function refreshData({keepMonth=false}={}){
-  $('#readyPill').textContent='🟠 prüfen';
+  if(state.refreshing) return false;
+  setRefreshBusy(true);
+  $('#readyPill').textContent='🔵 lädt';
+  $('#statusText').textContent='Lokale Daten werden aktualisiert …';
   if(!keepMonth) state.monthAnchor=monthAnchor(new Date());
-
-  const [statusResult,todoResult,eventResult]=await Promise.all([
-    safeLoad('status',()=>api('/api/status')),
-    safeLoad('todos',()=>api('/api/todos')),
-    safeLoad('events',()=>api('/api/events?limit=5'))
-  ]);
-  if(statusResult) applyStatus(statusResult);
-  if(todoResult){state.todos=todoResult;renderTodos();}
-  if(eventResult){state.events=eventResult.events||[];renderEvents();}
-  await Promise.all([loadMonth(),loadUpcoming(),checkReminders()]);
-
-  state.lastRefresh=new Date();
-  $('#lastRefresh').textContent=`Aktualisiert ${new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit'}).format(state.lastRefresh)}`;
-  renderNextStep();
-  renderDiagnostics();
-  updateReadyState();
+  try{
+    const [statusResult,todoResult,eventResult]=await Promise.all([
+      safeLoad('status',()=>api('/api/status')),
+      safeLoad('todos',()=>api('/api/todos')),
+      safeLoad('events',()=>api('/api/events?limit=5'))
+    ]);
+    if(statusResult) applyStatus(statusResult); else clearStatusView();
+    state.todos=todoResult||null;
+    renderTodos();
+    state.events=eventResult?.events||null;
+    renderEvents();
+    await Promise.all([loadMonth(),loadUpcoming(),checkReminders()]);
+    state.lastRefresh=new Date();
+    const time=new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(state.lastRefresh);
+    $('#lastRefresh').textContent=`Prüfung beendet ${time}`;
+    renderNextStep();
+    updateReadyState();
+    return Object.keys(state.errors).length===0;
+  }finally{
+    setRefreshBusy(false);
+    renderDiagnostics();
+  }
 }
 
 async function updateConfig(changes){
+  if(state.configSaving) return;
+  const previous=state.config?{...state.config,favorites:[...(state.config.favorites||[])]}:null;
+  if(previous) applyConfig({...previous,...changes});
+  setSettingsBusy(true);
+  $('#readyPill').textContent='🔵 speichert';
+  $('#statusText').textContent='Darstellung wird lokal gespeichert …';
   try{
     const data=await api('/api/config',{method:'POST',body:JSON.stringify(changes)});
     applyConfig(data.config);
     clearError('config');
   }catch(err){
+    if(previous) applyConfig(previous);
     recordError('config',err);
-    $('#statusText').textContent=`Einstellung konnte nicht gespeichert werden: ${humanError('config')}`;
+  }finally{
+    setSettingsBusy(false);
+    updateReadyState();
+    renderDiagnostics();
   }
-  updateReadyState();
 }
 
-function shiftMonth(delta){
+async function shiftMonth(delta){
+  if(state.refreshing) return;
   state.monthAnchor=new Date(state.monthAnchor.getFullYear(),state.monthAnchor.getMonth()+delta,1,12,0,0,0);
-  loadMonth().then(()=>{renderNextStep();updateReadyState();});
+  await loadMonth();
+  renderNextStep();
+  updateReadyState();
 }
 
 function setSettings(open){
   $('#settingsPanel').hidden=!open;
   $('#settingsToggle').setAttribute('aria-expanded',String(open));
-  if(open) $('#settingsTitle').focus?.();
+  if(open) $('#settingsTitle').focus(); else $('#settingsToggle').focus();
 }
 
 function setDeveloper(open){
@@ -535,7 +637,7 @@ function bindEvents(){
   $('#refreshBtn').addEventListener('click',()=>refreshData({keepMonth:true}));
   $('#prevMonthBtn').addEventListener('click',()=>shiftMonth(-1));
   $('#nextMonthBtn').addEventListener('click',()=>shiftMonth(1));
-  $('#todayBtn').addEventListener('click',()=>{state.monthAnchor=monthAnchor(new Date());loadMonth();});
+  $('#todayBtn').addEventListener('click',async()=>{state.monthAnchor=monthAnchor(new Date());await loadMonth();renderNextStep();updateReadyState();});
   $('#settingsToggle').addEventListener('click',()=>setSettings($('#settingsPanel').hidden));
   $('#settingsClose').addEventListener('click',()=>setSettings(false));
   $('#developerToggle').addEventListener('click',()=>setDeveloper($('#developerPanel').hidden));
@@ -544,7 +646,7 @@ function bindEvents(){
   $$('[data-font]').forEach(button=>button.addEventListener('click',()=>updateConfig({font_scale:Number(button.dataset.font)})));
   $('#expertToggle').addEventListener('change',event=>updateConfig({expert_visible:event.target.checked}));
   $$('[data-module-mode]').forEach(button=>button.addEventListener('click',()=>{
-    $$('[data-module-mode]').forEach(item=>item.classList.toggle('selected',item===button));
+    setPressed($$('[data-module-mode]'),item=>item===button);
     $('#moduleGrid').dataset.mode=button.dataset.moduleMode;
   }));
   window.addEventListener('resize',updateDensity,{passive:true});
@@ -552,12 +654,24 @@ function bindEvents(){
 }
 
 async function boot(){
+  const guard=$('#bootGuard');
   state.monthAnchor=monthAnchor(new Date());
   $('#moduleGrid').dataset.mode='frequent';
+  setPressed($$('[data-module-mode]'),button=>button.dataset.moduleMode==='frequent');
   await loadTexts();
   bindEvents();
   await refreshData();
+  guard.textContent=Object.keys(state.errors).length?'🟠 Oberfläche bereit, aber Hinweise sind vorhanden.':'🟢 Oberfläche bereit.';
+  guard.classList.add('ready');
   window.setInterval(checkReminders,REMINDER_POLL_MS);
 }
 
-boot();
+boot().catch(err=>{
+  recordError('boot',err);
+  const guard=$('#bootGuard');
+  guard.classList.add('error');
+  guard.textContent=`🔴 Oberfläche konnte nicht vollständig starten: ${err?.message||err}`;
+  $('#readyPill').textContent='🔴 Eingriff';
+  $('#statusText').textContent='Startfehler. Bitte Diagnose/Startkonsole prüfen.';
+  renderDiagnostics();
+});

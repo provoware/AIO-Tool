@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
-UI_CONTRACT_VERSION = "dashboard-v2.2"
+UI_CONTRACT_VERSION = "dashboard-v2.3"
 INSTANCE_ID_LENGTH = 16
 
 

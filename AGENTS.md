@@ -196,3 +196,20 @@ Ein neuer Versionsslice muss mindestens beweisen:
 - Undo nur nach Verifikation, dass das erzeugte Ziel unverändert ist.
 
 Erste reale Operation ausschließlich **Copy einer normalen Datei**. Move/Rename/Delete bleiben gesperrt, bis Copy separat bewiesen ist.
+
+## 23. Parallelität und UI-Zustandswahrheit
+
+- Jeder Persistenzstore, der aus `ThreadingHTTPServer` oder anderen Threads erreichbar ist, muss den vollständigen Read→Mutate→Write-Zyklus serialisieren. Atomare Dateiumbenennung allein verhindert keine verlorenen Updates.
+- Backup-/Temp-Dateien dürfen bei Parallelzugriff nicht denselben ungeschützten Schreibpfad konkurrierend verwenden.
+- UI-Ladevorgänge laufen single-flight, wenn parallele Ausführung keinen Nutzwert hat (z. B. Refresh oder Config-Speichern).
+- Ein fehlgeschlagener Reload darf keine alten Daten als aktuelle Daten weiterzeigen und keinen Ladefehler als „leer“ darstellen. Stattdessen explizit `nicht verfügbar`/Fehlerzustand rendern.
+- Busy-Zustände müssen sichtbar und mit `aria-busy`/deaktivierten konkurrierenden Controls gekoppelt sein.
+- Netzwerk-/Backend-Wartezeiten brauchen ein begrenztes Timeout und eine verständliche nächste Handlung.
+
+## 24. Testharness folgt dem Produktvertrag
+
+- Browser-Fixtures müssen **vor** Produkt-JavaScript aktiv sein.
+- Der Acceptance-Harness leitet lokale CSS-/JS-Assets aus dem aktuellen Produkt-HTML ab; Query-/Contract-Versionsstrings nicht redundant im Harness hardcoden.
+- Wird ein neuer lokaler Stylesheet-Vertrag eingeführt, muss der Harness ihn entweder automatisch aufnehmen oder fail-closed melden.
+- Ein grüner Harness darf nicht dadurch entstehen, dass Produktassets fehlen oder durch vereinfachte Testassets ersetzt werden.
+- Asset-Inlining, Fixture-Reihenfolge und Ready-Zustand besitzen eigene Regressionstests.

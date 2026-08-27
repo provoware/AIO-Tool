@@ -1,54 +1,52 @@
 # LAIEN-ANLEITUNG — AIO-Tool
 
-Aktueller Stand: **`0.5.0-native-acceptance-safe-file-sim` — TESTED für automatische Prüfungen L0–L3.** Die echte Kubuntu-Abnahme L4 ist noch offen. SAFE-FILE ist weiterhin **nur Simulation** und kann keine Datei verändern.
+Aktueller Kandidat: **🟢 `0.5.1-audit-modern-ui` — TESTED für automatische Prüfungen L0–L3.** Die echte Kubuntu-Abnahme L4 bleibt offen. SAFE-FILE bleibt reine Simulation und kann keine Datei verändern.
 
-## Welche Datei starte ich?
+## AIO-Tool starten
 
-### AIO-Tool normal
+Doppelklick auf `start_tool.desktop` oder `./start_tool.sh` ausführen. Die Startkonsole zeigt ihre Checkpoints mit Ampelstatus. Das Dashboard öffnet ausschließlich einen lokalen Loopback-Dienst.
 
-Doppelklick auf `start_tool.desktop`.
+## Wenn das Dashboard lädt
 
-### Oberfläche auf deinem echten Rechner prüfen
+- **🔵 lädt / Prüfe …** bedeutet: Das Tool liest gerade die lokalen Daten.
+- Der Button **Neu prüfen** wird währenddessen kurz gesperrt, damit dieselbe Prüfung nicht mehrfach gleichzeitig startet.
+- Antwortet das lokale Backend länger als ungefähr 8 Sekunden nicht, erscheint ein verständlicher Hinweis auf die Startkonsole statt eines endlosen Ladezustands.
+- **Keine Daten vorhanden** und **Daten konnten nicht geladen werden** werden ausdrücklich unterschieden.
 
-Doppelklick auf `native_acceptance.desktop`.
+## Neue Darstellung
 
-Es öffnet sich ein Prüfassistent. Oben siehst du den Fortschritt, links den aktuellen Schritt und rechts alle 18 Prüfschritte.
+Unter **⚙ Darstellung** stehen fünf klar beschriebene Designs zur Auswahl:
 
-Für jeden Schritt gibt es nur drei eindeutige Entscheidungen:
+- **Aurora Glass** — modern, ruhig, Cyan/Violett.
+- **Steel Night** — technisch, klar, dunkles Blau.
+- **Trash Neon** — kräftiger Neon-/Subkulturstil.
+- **Clean Light** — helle Arbeitsansicht.
+- **High Contrast** — besonders deutliche Kontraste ohne dekorative Schatten.
 
-- 🟢 **PASS** — ich habe es wirklich geprüft und es funktioniert.
-- 🔴 **FAIL** — ich habe es geprüft und etwas stimmt nicht.
-- ⚪ **Überspringen** — jetzt nicht geprüft; gilt nicht als bestanden.
+Ein Theme reagiert sofort als Vorschau. Während es lokal gespeichert wird, sind konkurrierende Darstellungsschalter kurz gesperrt. Scheitert das Speichern, stellt AIO-Tool automatisch die vorher bestätigte Darstellung wieder her.
 
-Bei Browser-Schritten steht genau dabei, welchen Browser und welchen Zoom du einstellen sollst. Der Assistent speichert technische Größen automatisch, aber du bestätigst selbst, ob die Darstellung korrekt war. **Er setzt niemals selbst PASS.**
+Farbe ist nie das einzige Statussignal; Ampeltext und Symbole bleiben zusätzlich sichtbar. Tastaturfokus und größere Bedienziele bleiben in allen Themes erhalten.
 
-Berichte entstehen automatisch unter `runtime/reports/` und können zusätzlich als JSON/TXT heruntergeladen werden.
+## Wenn etwas nicht geladen werden kann
 
-## SAFE-FILE gefahrlos ausprobieren
+Das Dashboard zeigt absichtlich **keine alten Kalender-/Terminwerte als wären sie aktuell**. Der betroffene Bereich zeigt stattdessen einen klaren Fehler-/Nicht-verfügbar-Hinweis. **Neu prüfen** versucht den Bereich erneut zu laden. Nach erfolgreichem Retry verschwindet ein alter Aktionsfehler wieder.
 
-Doppelklick auf `safe_file_simulation.desktop`.
+## Oberfläche real prüfen
 
-Oben muss deutlich stehen:
+Doppelklick auf `native_acceptance.desktop`. Der Assistent führt durch 18 Schritte und setzt keinen Schritt automatisch auf PASS. Wähle PASS nur nach echter Prüfung auf deinem Kubuntu-System.
 
-**🔒 AUSFÜHRUNG TECHNISCH GESPERRT**
+## SAFE-FILE gefahrlos testen
 
-Dann:
+Doppelklick auf `safe_file_simulation.desktop`. Quelle und Ziel werden nur geprüft. Es existiert weiterhin **keine echte Copy-/Move-/Delete-Ausführung**.
 
-1. „Quelldatei auswählen“ klicken.
-2. „Zielordner auswählen“ klicken.
-3. Konfliktoption wählen; empfohlen ist **Sicher: überspringen**.
-4. „Sichere Vorschau erstellen“ klicken.
+Der Sicherheitsvertrag bleibt:
 
-Du erhältst eine Ampelprüfung für Quelle, Ziel, Speicherplatz und Konflikte.
+```text
+simulation_only=true
+execution_enabled=false
+mutation_performed=false
+```
 
-### Kann dabei eine Datei kopiert, verschoben oder gelöscht werden?
+## Stand der automatischen Prüfung
 
-**Nein.** Diese Version besitzt absichtlich keine Ausführungsfunktion. Sie kann nur lesen, prüfen und anzeigen, was eine spätere Copy tun würde. Auch der Status TESTED ändert diese Sperre nicht.
-
-## Wenn ein Prüfschritt FAIL ist
-
-Nicht einfach PASS wählen. Schreibe optional eine kurze Notiz und lasse FAIL gespeichert. Dieser reale Befund soll anschließend als Regressionstest in die Entwicklung zurückfließen.
-
-## Datenschutz
-
-Alle Sitzungs-/Simulationsdaten bleiben lokal. Es gibt keine Telemetrie. Der Release-Evidenzindex liegt im Entwicklungsrepository und wird nicht in dein Runtime-Paket übernommen.
+DEV-Run `33045348341` und TESTED-Promotion `33045669222` haben Core/Release, Chromium, Firefox sowie Native-/SAFE-FILE-Hilfsoberflächen bestanden. **Das ersetzt die reale Kubuntu-L4-Prüfung nicht.**

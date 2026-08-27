@@ -3,80 +3,37 @@
 ## Projekt
 
 - **Name:** AIO-Tool
-- **Aktueller automatisiert bewiesener Stand:** `0.5.0-native-acceptance-safe-file-sim` — 🟢 `tested / draft` für L0–L3
-- **Native L4:** 🟡 offen und nur über reale Nutzerabnahme beweisbar
+- **Aktueller Kandidat:** `0.5.1-audit-modern-ui` — 🟢 `tested / draft` für L0–L3
+- **TESTED-Evidenz:** DEV `33045348341`, Promotion `33045669222`
+- **Letzter auf `main` bewiesener Stand:** `0.5.0-native-acceptance-safe-file-sim` — 🟢 `tested / draft` für L0–L3
+- **Native L4:** 🟡 weiterhin real offen
 - **Backend:** Python-Standardbibliothek, Loopback-only
 - **Telemetrie:** keine
 - **SAFE-FILE-Ausführung:** technisch gesperrt (`EXECUTION_ENABLED=False`)
 
-## Runtime-Architektur
+## Audit-Härtung 0.5.1
 
-### Produktkern
+- `app/persistence.py` — atomare und innerhalb eines Prozesses thread-sichere JSON-Transaktionen; atomarer Backup-Refresh.
+- `app/config.py` — gemeinsame Persistence-Implementierung statt duplizierter Schreiblogik; fünf Theme-IDs inkl. `aurora-glass`.
+- `app/loopback_security.py` + `app/server.py` — ein kanonischer exakter Loopback-Host-/Port-Vertrag.
+- `web/styles.css` — semantische Surface-/Accent-Tokens und fünf moderne Themes.
+- `web/helper-ui.css` — gemeinsame moderne Oberfläche für Native Runner und SAFE-FILE Simulator.
+- `web/app.js` — Timeout, Single-Flight, Nicht-verfügbar-/Leer-Trennung, Retry-, Boot-, Fokus- und ARIA-Härtung.
+- `scripts/ui_acceptance.py` — einzige kanonische Browser-Acceptance-Implementierung mit Produktasset-Erkennung.
+- `scripts/ui_acceptance_ci.py` — absichtlich nur dünner CI-Entry-Point.
+- `tests/test_persistence.py` — parallele Update-Regression.
+- `tests/test_dashboard_contract.py`, `tests/test_helper_ui_contract.py`, `tests/test_ui_acceptance_harness.py` — UI-/A11y-/DOM-/Theme-/Harness-Verträge.
 
-- `app/persistence.py` — atomare JSON-Persistenz.
-- `app/version_registry.py` — Version/Status/Evidenzpflicht.
-- `app/event_registry.py`, `app/todo_store.py`, `app/calendar_store.py` — bestehender Kern.
-- `app/loopback_security.py` — Host/Origin müssen Loopback und denselben Port verwenden.
+## Runtime-Transport
 
-### Native Acceptance
+Verbindliche positive Allowlist: `manifests/RUNTIME_MANIFEST.json` Version `1.3.0`. Dokumentation, Tests, Evidenz und Logs bleiben Repo-/lokal. Das Runtime-ZIP enthält weiterhin nur die vollständige Betriebsbasis plus generiertes `MANIFEST_RELEASE.json`.
 
-- `app/native_acceptance.py` — 18-Schritt-Modell, Validierung, persistente Sitzung, Berichte.
-- `scripts/native_acceptance_runner.py` — lokaler Runner auf Standardport 8778.
-- `web/native-acceptance.html` + `.js` — geführte Oberfläche.
-- `start_native_acceptance.sh` + `native_acceptance.desktop` — Laienstart.
-- lokale Berichte unter `runtime/`.
-- kein Auto-PASS; nur explizites PASS/FAIL/SKIP.
+## TESTED-Artefakt
 
-### SAFE-FILE Simulation
+- Runtime-ZIP: `AIO-Tool-0.5.1-audit-modern-ui-TESTED.zip`
+- SHA256: `a7ab6d64e978e27c1fa550c549e12dc7ee21e24a17a55fd9c160c19cd3001b72`
+- GitHub-Artefakt-Digest: `62cc0787280328c1bfe5ff08628ea87ed1ec251bf718bf82178e2cfca88a85e0`
 
-- `app/safe_file_sim.py` — rein lesende Vorprüfung, Failure-Matrix, Recovery-Vertrag.
-- `scripts/safe_file_simulator.py` — lokaler Simulator auf Standardport 8779 mit kdialog/zenity.
-- `web/safe-file-sim.html` + `.js` — Quelle → Ziel → Konflikt → Vorschau.
-- `start_safe_file_simulation.sh` + `.desktop` — Laienstart.
-- **keine Ausführungs-API und keine Copy-/Move-/Delete-Primitive**.
+## Statusgrenzen
 
-## SAFE-FILE-Sicherheitsvertrag
-
-- `SIMULATION_ONLY=True`
-- `EXECUTION_ENABLED=False`
-- `mutation_performed=false`
-- Symlink-Quellen/-Ziele gesperrt.
-- einzelne normale Datei als simuliertes Quellmodell.
-- Standard-Konfliktpolicy `skip`.
-- spätere echte Copy benötigt Journal, Staging, Postvalidation, Crash-Recovery und verifiziertes Undo.
-
-## Failure-Matrix
-
-`SF-001` source_missing · `SF-002` source_not_file · `SF-003` source_symlink · `SF-004` target_missing · `SF-005` target_not_directory · `SF-006` target_symlink · `SF-007` target_not_writable · `SF-008` insufficient_space · `SF-009` destination_exists · `SF-010` same_source_destination.
-
-## Release-Evidenz
-
-Repository-only:
-
-- `evidence/RELEASE_EVIDENCE_INDEX.json`
-- `evidence/releases/<version>.json`
-- `scripts/evidence_guard.py`
-
-Jede TESTED-/höhere Registry-Version besitzt exakt eine Evidenzdatei. Historisch fehlende Werte werden `not-recorded`, niemals geraten.
-
-## Transportvertrag
-
-`manifests/RUNTIME_MANIFEST.json` Version **1.2.1** ist die positive Runtime-Allowlist.
-
-Transportiert werden die neuen Native-Acceptance- und SAFE-FILE-Simulationsmodule, Starter, Webdateien und Referenzvorlagen. Nicht transportiert werden `evidence/`, Tests/Testdaten, Repository-Dokumentation, CI-Evidenz oder lokale Reports.
-
-## Qualitätsebenen / Evidenz
-
-- **L0:** Syntax/Schema — 🟢
-- **L1:** Unit/Contract/Failure-Matrix/Evidence Guard — 🟢 DEV-Run `33038051967`, 113 Tests
-- **L2:** Runtime-ZIP + frischer Runtime-Preflight — 🟢 DEV-Run `33038051967`
-- **L3:** Dashboard + Native Runner + SAFE-FILE in Chromium/Firefox — 🟢 DEV-Run `33038051967`
-- **L4:** echtes Kubuntu/Zoom/DPI/Tastatur — 🟡 offen
-
-## Aktuell offen
-
-- TESTED-Promotion-Commit erneut durch L0–L3,
-- reale L4-Sitzung,
-- persistentes Copy-Jobjournal,
-- Staging/Postvalidation/Undo für echte Copy,
-- jede echte Dateioperation.
+`0.5.1-audit-modern-ui` ist für L0–L3 **GEPRÜFT / tested / draft**. Der aktuelle verbleibende Abschlussweg enthält ausschließlich Metadaten- und Integrationsschritte: Evidence-/Dokumentations-Sync prüfen, PR per Squash nach `main`, Main-CI und abschließenden Main-Runtime-ZIP-Hashvergleich. Native L4 wird daraus ausdrücklich nicht abgeleitet. SAFE-FILE Copy/Move/Delete bleibt gesperrt.
