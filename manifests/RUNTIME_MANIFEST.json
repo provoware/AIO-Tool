@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "manifest_version": "1.2.1",
+  "manifest_version": "1.3.0",
   "name": "AIO-Tool Runtime-Basis",
   "purpose": "Explizite Allowlist aller Dateien, die ein lauffähiges Transport-/Release-ZIP enthalten darf und muss.",
   "files": [
@@ -8,7 +8,7 @@
     "start_native_acceptance.sh", "native_acceptance.desktop", "start_safe_file_simulation.sh", "safe_file_simulation.desktop",
     "app/__init__.py", "app/calendar_store.py", "app/config.py", "app/error_advisor.py", "app/event_registry.py", "app/instance_identity.py", "app/loopback_security.py", "app/native_acceptance.py", "app/persistence.py", "app/safe_file_sim.py", "app/server.py", "app/text_catalog.py", "app/todo_store.py", "app/version_registry.py",
     "scripts/launcher_probe.py", "scripts/runtime_preflight.py", "scripts/native_acceptance_runner.py", "scripts/safe_file_simulator.py",
-    "web/index.html", "web/app.js", "web/styles.css", "web/acceptance.css", "web/dashboard-texts.de.v1.json", "web/native-acceptance.html", "web/native-acceptance.js", "web/safe-file-sim.html", "web/safe-file-sim.js",
+    "web/index.html", "web/app.js", "web/styles.css", "web/acceptance.css", "web/helper-ui.css", "web/dashboard-texts.de.v1.json", "web/native-acceptance.html", "web/native-acceptance.js", "web/safe-file-sim.html", "web/safe-file-sim.js",
     "resources/error_rules/v1.json", "resources/texts/de/v1.json",
     "resources/templates/calendar/calendar.v1.example.json", "resources/templates/config/config.v1.example.json", "resources/templates/events/events.v1.example.json", "resources/templates/native_acceptance/native_acceptance.v1.example.json", "resources/templates/safe_file_sim/safe_file_preview.v1.example.json", "resources/templates/todos/todos.v1.example.json", "resources/templates/version_registry/version_registry.v1.example.json",
     "manifests/RUNTIME_MANIFEST.json"
