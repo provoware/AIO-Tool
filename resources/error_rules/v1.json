@@ -1,76 +1,47 @@
 {
   "schema_version": 1,
-  "rules_version": "1.0.0",
+  "rules_version": "1.1.0",
   "rules": [
     {
       "id": "ERR-PERSIST-001",
       "priority": 100,
-      "match": {
-        "exception_names": ["PersistenceError", "ConfigError", "VersionRegistryError", "EventRegistryError", "TodoStoreError"],
-        "contains_any": ["beschädigt", "backup", "nicht sicher gelesen"]
-      },
-      "category": "integrity",
-      "severity": "red",
-      "message_key": "error.persistence.corrupt",
-      "action_key": "action.persistence.template",
-      "template_path": "resources/templates/config/config.v1.example.json",
-      "retry_safe": false
+      "match": {"exception_names": ["PersistenceError", "ConfigError", "VersionRegistryError", "EventRegistryError", "TodoStoreError", "CalendarStoreError"], "contains_any": ["beschädigt", "backup", "nicht sicher gelesen"]},
+      "category": "integrity", "severity": "red", "message_key": "error.persistence.corrupt", "action_key": "action.persistence.template", "template_path": "resources/templates/config/config.v1.example.json", "retry_safe": false
     },
     {
-      "id": "ERR-CONFIG-THEME-001",
-      "priority": 90,
-      "match": {
-        "exception_names": ["ConfigError"],
-        "contains_any": ["theme", "farbschema"]
-      },
-      "category": "input",
-      "severity": "orange",
-      "message_key": "error.config.theme",
-      "action_key": "action.config.theme",
-      "template_path": "resources/templates/config/config.v1.example.json",
-      "retry_safe": true
+      "id": "ERR-CONFIG-THEME-001", "priority": 90,
+      "match": {"exception_names": ["ConfigError"], "contains_any": ["theme", "farbschema"]},
+      "category": "input", "severity": "orange", "message_key": "error.config.theme", "action_key": "action.config.theme", "template_path": "resources/templates/config/config.v1.example.json", "retry_safe": true
     },
     {
-      "id": "ERR-CONFIG-FONT-001",
-      "priority": 90,
-      "match": {
-        "exception_names": ["ConfigError"],
-        "contains_any": ["schriftgröße", "font_scale"]
-      },
-      "category": "input",
-      "severity": "orange",
-      "message_key": "error.config.font",
-      "action_key": "action.config.font",
-      "template_path": "resources/templates/config/config.v1.example.json",
-      "retry_safe": true
+      "id": "ERR-CONFIG-FONT-001", "priority": 90,
+      "match": {"exception_names": ["ConfigError"], "contains_any": ["schriftgröße", "font_scale"]},
+      "category": "input", "severity": "orange", "message_key": "error.config.font", "action_key": "action.config.font", "template_path": "resources/templates/config/config.v1.example.json", "retry_safe": true
     },
     {
-      "id": "ERR-REQUEST-JSON-001",
-      "priority": 80,
-      "match": {
-        "exception_names": ["RequestError"],
-        "contains_any": ["json", "anfrage"]
-      },
-      "category": "input",
-      "severity": "orange",
-      "message_key": "error.request.json",
-      "action_key": "action.request.json",
-      "template_path": "resources/templates/config/config.v1.example.json",
-      "retry_safe": true
+      "id": "ERR-CALENDAR-REMINDER-001", "priority": 88,
+      "match": {"exception_names": ["CalendarStoreError"], "contains_any": ["erinnerung", "reminder"]},
+      "category": "input", "severity": "yellow", "message_key": "error.calendar.reminder", "action_key": "action.calendar.reminder", "template_path": "resources/templates/calendar/calendar.v1.example.json", "retry_safe": true
     },
     {
-      "id": "ERR-TODO-TITLE-001",
-      "priority": 80,
-      "match": {
-        "exception_names": ["RequestError", "TodoStoreError"],
-        "contains_any": ["titel fehlt", "title darf nicht leer", "title muss text"]
-      },
-      "category": "input",
-      "severity": "yellow",
-      "message_key": "error.todo.title",
-      "action_key": "action.todo.title",
-      "template_path": "resources/templates/todos/todos.v1.example.json",
-      "retry_safe": true
+      "id": "ERR-CALENDAR-DATE-001", "priority": 87,
+      "match": {"exception_names": ["CalendarStoreError"], "contains_any": ["date", "datum", "startzeit", "endzeit", "hh:mm", "yyyy-mm-dd"]},
+      "category": "input", "severity": "yellow", "message_key": "error.calendar.date", "action_key": "action.calendar.date", "template_path": "resources/templates/calendar/calendar.v1.example.json", "retry_safe": true
+    },
+    {
+      "id": "ERR-CALENDAR-TITLE-001", "priority": 86,
+      "match": {"exception_names": ["RequestError", "CalendarStoreError"], "contains_any": ["titel fehlt", "title darf nicht leer", "title muss text"]},
+      "category": "input", "severity": "yellow", "message_key": "error.calendar.title", "action_key": "action.calendar.title", "template_path": "resources/templates/calendar/calendar.v1.example.json", "retry_safe": true
+    },
+    {
+      "id": "ERR-REQUEST-JSON-001", "priority": 80,
+      "match": {"exception_names": ["RequestError"], "contains_any": ["json", "anfrage"]},
+      "category": "input", "severity": "orange", "message_key": "error.request.json", "action_key": "action.request.json", "template_path": "resources/templates/config/config.v1.example.json", "retry_safe": true
+    },
+    {
+      "id": "ERR-TODO-TITLE-001", "priority": 80,
+      "match": {"exception_names": ["RequestError", "TodoStoreError"], "contains_any": ["titel fehlt", "title darf nicht leer", "title muss text"]},
+      "category": "input", "severity": "yellow", "message_key": "error.todo.title", "action_key": "action.todo.title", "template_path": "resources/templates/todos/todos.v1.example.json", "retry_safe": true
     }
   ]
 }
