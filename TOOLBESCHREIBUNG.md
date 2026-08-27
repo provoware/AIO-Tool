@@ -1,122 +1,82 @@
-# TOOLBESCHREIBUNG
-
-## Produktname
-
-**AIO-Tool**
+# TOOLBESCHREIBUNG — AIO-Tool
 
 ## Produktidee
 
-AIO-Tool ist ein lokaler, modularer All-in-One-Arbeitsplatz für Organisations-, Datei-, Projekt- und Automatisierungsaufgaben. Die Oberfläche richtet sich zuerst an Nutzer ohne technisches Spezialwissen und trennt einfache Bedienung von optionaler Diagnose.
+AIO-Tool ist ein lokaler, modularer All-in-One-Arbeitsplatz für Organisations-, Projekt-, Kalender-, TODO- und später sichere Datei-/Automatisierungsaufgaben. Die Oberfläche richtet sich zuerst an Nutzer ohne technisches Spezialwissen.
 
-## Leitregel
+## Leitregeln
 
-**Auswahl vor Zeicheneingabe. Sichtbarkeit vor Automatisierung. Sicherheit vor Bequemlichkeit.**
+**Auswahl vor Zeicheneingabe. Sichtbarkeit vor Automatisierung. Sicherheit vor Bequemlichkeit. Evidenz vor Status.**
 
-## Aktueller Stand: 0.4.0-dashboard-v2
+## Versionsstand
 
-Dashboard V2 ist die erste zusammenhängende sichtbare Integration der zuvor getrennt getesteten Core-Bausteine.
+- 🟢 letzter bewiesener Stand: `0.4.2-ui-acceptance-TESTED`
+- 🟠 aktuelle Entwicklung: `0.4.3-integrity-hardening-DEV`
 
-### Sichtbare Informationsarchitektur
+`0.4.3` verbessert Robustheit und Wartbarkeit, ohne neue Nutzerfunktion einzuführen.
 
-**Linke Spalte**
-- Schnellmodule,
-- Häufig / Alle,
-- optionaler Entwickler-/Diagnosebereich.
+## Informationsarchitektur
 
-**Mitte**
-- dauerhaft sichtbarer Monatskalender,
-- kommende Termine.
-
-**Rechte Spalte**
-- nächste drei TODOs,
-- letzte fünf Ereignisse,
-- System-/Registry-/Versionsstatus.
-
-**Darüber**
-- globaler Systemstatus,
-- nächster sinnvoller Schritt,
-- fällige Reminder.
-
-## Dashboard-Prinzipien
-
-### 1. Backend bleibt Quelle der Fachlogik
-
-JavaScript berechnet nicht selbst, welches TODO fachlich das nächste ist oder wann ein Reminder fällig wird. Es visualisiert die getesteten API-Antworten.
-
-### 2. Reminder erst nach Sichtbarkeit quittieren
-
-`fällig → sichtbar darstellen → Nutzer bestätigt → ACK persistieren`
-
-Ein Hintergrund-Poll oder unsichtbarer Tab darf keinen gesehenen Zustand erzeugen.
-
-### 3. Progressive Informationsdichte
-
-Das Dashboard zeigt zuerst häufige Module. Zusatzmodule erscheinen über **Alle**. Entwicklerdiagnose ist standardmäßig nur verfügbar, wenn sie in den Einstellungen freigeschaltet wurde.
-
-### 4. Responsive Dichte
-
-Fensterbreite, Fensterhöhe und gewählte Schriftgröße bestimmen den Darstellungsmodus `kompakt`, `normal` oder `weit`. Dies ist eine Präsentationsentscheidung; Fachlogik bleibt unverändert.
-
-### 5. Datensparsame Diagnose
-
-Die Diagnose zeigt technische Kernzustände, keine vollständige Nutzerkonfiguration, Projektpfade oder Favoriten.
+**Links:** Schnellmodule, Häufig/Alle, optional Diagnose.  
+**Mitte:** Monatskalender und kommende Termine.  
+**Rechts:** nächste drei TODOs, letzte fünf Ereignisse, System-/Versionsstatus.  
+**Darüber:** globaler Zustand, nächster sinnvoller Schritt und fällige Reminder.
 
 ## Technischer Kern
 
-### VersionRegistry
+- `AtomicJsonStore` — atomare Persistenz + Backup-Fallback.
+- `VersionRegistry` — Version, Status, Evidenz und zulässige Statuskombinationen.
+- `EventRegistry` — verständliche Ereignisse.
+- `TodoStore` — Aufgaben, Titelgedächtnis, Erledigt-Archiv.
+- `CalendarStore` — Termine, Perioden, Reminder, `zoneinfo`/DST.
+- `ErrorAdvisor` — versionierte Fehlerhilfe.
+- `instance_identity.py` + `launcher_probe.py` — sichere Erkennung der konkreten lokalen Installation.
 
-Getrackte Historie + lokale Runtime-Registry mit Evidenzvertrag.
+## Startphilosophie
 
-### EventRegistry
+Die Startroutine zeigt neun Checkpoints mit Ampelstatus und Fehler-IDs. Eine vorhandene Instanz wird nur wiederverwendet, wenn Version, Loopback-/Ready-Zustand und Installationskennung zusammenpassen. Fremd belegte Ports werden nicht still übernommen.
 
-Persistente menschenlesbare Ereignisse; technische Details getrennt.
+Normaler Nutzerstart prüft ausschließlich die transportierte Runtime-Basis über `scripts/runtime_preflight.py`; Repositorytests und Dokumentation sind keine Laufzeitabhängigkeit.
 
-### TODO-Core
+## UI-Qualitätsvertrag
 
-Persistente Aufgaben, Titelgedächtnis, Priorität, nächste drei TODOs und Erledigt-Archiv.
+Dashboarddarstellung wird mehrstufig geprüft:
 
-### Calendar-Core
+1. statische Struktur-/API-Verträge,
+2. maschinenlesbarer 12-Spalten-Rastervertrag,
+3. echte Chromium-/Firefox-Läufe,
+4. Viewport-/Reflow-Matrix bis 320 CSS-px,
+5. Geometrie, Zielgrößen und Interaktionen,
+6. Screenshot-/JSON-Evidenz.
 
-Persistente Termine, Monats/Wochen/Jahr, Titelgedächtnis, Reminder-Quittierung, optionale TODO-Verknüpfung und lokale `zoneinfo`-/DST-Berechnung.
+Die native Kubuntu-/KDE-/DPI-/Zoom-Abnahme bleibt davon getrennt.
 
-### Robustheitskern
+## Reminder-Vertrag
 
-- atomare Persistenz,
-- geprüfte Mustervorlagen,
-- positive/negative Testdaten,
-- versionierte Core-Texte,
-- versionierte Fehlerregeln,
-- intelligente Fehlerhilfe,
-- `LEARNING_MEMORY.jsonl`,
-- Learning Guard,
-- reproduzierbarer Release-Builder.
+`fällig → sichtbar darstellen → Nutzer bestätigt → ACK persistieren`
 
-## Dashboard-Textvertrag
+Polling oder ein unsichtbarer Tab erzeugen keinen gesehenen Zustand.
 
-`web/dashboard-texts.de.v1.json` lagert wiederkehrende UI-Texte aus. Fehlende oder leere `data-i18n`-Texte werden automatisiert erkannt.
+## Transportphilosophie
 
-## Dashboard-Regressionsvertrag
+Runtime und Repository sind getrennte Produktebenen.
 
-`tests/test_dashboard_contract.py` sichert Kernbereiche, API-Verwendung, Reminder-Sicherheit, Textausgabe, Diagnose-Datensparsamkeit, Responsive- und A11y-Marker.
+**Runtime-ZIP:** nur positive Allowlist aus `manifests/RUNTIME_MANIFEST.json` + generiertes `MANIFEST_RELEASE.json`.  
+**Repository/lokal:** Dokumentation, Tests, Testdaten, CI, Learning Memory, Browserreports und Logs.
+
+Status ist am Dateinamen sichtbar: `DEV`, `TESTED`, `RC`, `RELEASED`, `BLOCKED`, `ARCHIVED`.
 
 ## Sicherheitsphilosophie für spätere Dateioperationen
 
 `Vorprüfung → Vorschau → Bestätigung → Aktion → Nachprüfung → Protokoll → Undo/Recovery`
 
-Dateioperationen sind in Dashboard V2 noch bewusst deaktiviert. Sie folgen erst nach realer UI-/Zielsystemabnahme.
+Echte Dateioperationen sind noch bewusst nicht aktiv. SAFE-FILE-CORE beginnt später ausschließlich mit **Copy** und erweitert erst nach bewiesener Stabilität auf Move/Rename/Papierkorb.
 
-## Nachweis
+## Noch offen
 
-Code-Gate `33026823914`: 77 Tests + vollständige CI erfolgreich; Release `AIO-Tool-0.4.0-dashboard-v2.zip` wurde erzeugt.
-
-## Noch nicht als bestanden behauptet
-
-- reale Kubuntu-Bedienung,
-- Firefox/Chrome/Chromium,
-- 125–200 % Zoom,
-- echte Tastatur-/Fokusreihenfolge,
-- unterschiedliche reale Displaygrößen.
-
-## Nächste Produktstufe
-
-Nach erfolgreicher Zielsystemabnahme beginnt SAFE-FILE-CORE mit **Copy** als erster kontrollierter Dateioperation. Erst wenn Copy inklusive Vorschau, Nachprüfung, Abbruch und Recovery stabil ist, folgen Move, Rename und Papierkorb/Delete.
+- native Kubuntu-Klick-&-Start-Abnahme,
+- KDE-/HiDPI-Skalierung,
+- 100–200 % realer Browserzoom,
+- realer Tastatur-/Screenreader-Durchlauf,
+- SAFE-FILE-CORE,
+- persistente Job-/Recovery-Queue.
