@@ -6,7 +6,7 @@ from threading import Thread
 import unittest
 from unittest.mock import patch
 
-from app import VERSION
+from app import ROOT_DIR, VERSION
 from app.config import ConfigStore
 from app.event_registry import EventRegistry
 from app.todo_store import TodoStore
@@ -61,6 +61,13 @@ class CoreApiTests(unittest.TestCase):
                     self._stop_server(httpd, thread)
 
     def test_help_metadata_is_versioned(self):
+        expected_rules = json.loads(
+            (ROOT_DIR / "resources" / "error_rules" / "v1.json").read_text(encoding="utf-8")
+        )["rules_version"]
+        expected_texts = json.loads(
+            (ROOT_DIR / "resources" / "texts" / "de" / "v1.json").read_text(encoding="utf-8")
+        )["catalog_version"]
+
         with tempfile.TemporaryDirectory() as tmp:
             runtime = Path(tmp)
             with self._patched_server(
@@ -74,8 +81,8 @@ class CoreApiTests(unittest.TestCase):
                 try:
                     status, payload = self._request(port, "GET", "/api/help/meta")
                     self.assertEqual(status, 200)
-                    self.assertEqual(payload["help"]["rules_version"], "1.0.0")
-                    self.assertEqual(payload["help"]["text_catalog"]["catalog_version"], "1.0.0")
+                    self.assertEqual(payload["help"]["rules_version"], expected_rules)
+                    self.assertEqual(payload["help"]["text_catalog"]["catalog_version"], expected_texts)
                 finally:
                     self._stop_server(httpd, thread)
 
