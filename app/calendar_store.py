@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import calendar as calendar_lib
+import os
 from copy import deepcopy
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, time, timedelta, tzinfo
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from .persistence import AtomicJsonStore, PersistenceError
 
@@ -25,8 +27,37 @@ class CalendarStoreError(PersistenceError):
     pass
 
 
+def system_timezone() -> tzinfo:
+    """Best effort IANA system timezone with a safe local-offset fallback."""
+    candidates: list[str] = []
+    env_tz = os.environ.get("TZ")
+    if env_tz:
+        candidates.append(env_tz)
+    timezone_file = Path("/etc/timezone")
+    if timezone_file.is_file():
+        try:
+            value = timezone_file.read_text(encoding="utf-8").strip()
+            if value:
+                candidates.append(value)
+        except OSError:
+            pass
+    try:
+        resolved = Path("/etc/localtime").resolve().as_posix()
+        marker = "/zoneinfo/"
+        if marker in resolved:
+            candidates.append(resolved.split(marker, 1)[1])
+    except OSError:
+        pass
+    for key in candidates:
+        try:
+            return ZoneInfo(key)
+        except ZoneInfoNotFoundError:
+            continue
+    return datetime.now().astimezone().tzinfo or ZoneInfo("UTC")
+
+
 def local_now() -> datetime:
-    return datetime.now().astimezone()
+    return datetime.now(system_timezone())
 
 
 def iso_now() -> str:
@@ -121,6 +152,9 @@ def _validate_event(raw: Any) -> dict[str, Any]:
         raise CalendarStoreError("Eine Endzeit benötigt eine Startzeit.")
     if start_time is not None and end_time is not None and end_time <= start_time:
         raise CalendarStoreError("Endzeit muss nach der Startzeit liegen.")
+    timezone_mode = _text(raw.get("timezone", "local"), "timezone", max_length=20)
+    if timezone_mode != "local":
+        raise CalendarStoreError("timezone muss derzeit 'local' sein.")
     return {
         "id": _text(raw.get("id"), "id", max_length=80),
         "title": _text(raw.get("title"), "title", max_length=160),
@@ -130,7 +164,7 @@ def _validate_event(raw: Any) -> dict[str, Any]:
         "category": _optional_text(raw.get("category"), "category", 80),
         "description": _optional_text(raw.get("description"), "description", 2000),
         "todo_id": _optional_text(raw.get("todo_id"), "todo_id", 100),
-        "timezone": "local",
+        "timezone": timezone_mode,
         "reminders": _reminders(raw.get("reminders", []), start_time=start_time),
         "created_at": _timestamp(raw.get("created_at"), "created_at"),
         "updated_at": _timestamp(raw.get("updated_at"), "updated_at"),
@@ -203,6 +237,7 @@ class CalendarStore:
             "category": category,
             "description": description,
             "todo_id": todo_id,
+            "timezone": "local",
             "reminders": reminders or [],
             "created_at": now,
             "updated_at": now,
@@ -226,11 +261,7 @@ class CalendarStore:
     def title_suggestions(self, limit: int = 12) -> list[dict[str, Any]]:
         if not isinstance(limit, int) or limit < 1 or limit > 50:
             raise CalendarStoreError("limit muss zwischen 1 und 50 liegen.")
-        ranked = sorted(
-            self.load()["title_memory"],
-            key=lambda item: (item["count"], item["last_used_at"]),
-            reverse=True,
-        )
+        ranked = sorted(self.load()["title_memory"], key=lambda item: (item["count"], item["last_used_at"]), reverse=True)
         return deepcopy(ranked[:limit])
 
     def period(self, view: str, anchor: str) -> dict[str, Any]:
@@ -248,22 +279,12 @@ class CalendarStore:
         else:
             raise CalendarStoreError("view muss month, week oder year sein.")
 
-        events = [
-            item for item in self.load()["events"]
-            if start.isoformat() <= item["date"] <= end.isoformat()
-        ]
+        events = [item for item in self.load()["events"] if start.isoformat() <= item["date"] <= end.isoformat()]
         events.sort(key=lambda item: (item["date"], item["start_time"] or "00:00", item["title"].casefold()))
         by_date: dict[str, list[dict[str, Any]]] = {}
         for event in events:
             by_date.setdefault(event["date"], []).append(deepcopy(event))
-        return {
-            "view": view,
-            "anchor": anchor_date.isoformat(),
-            "start": start.isoformat(),
-            "end": end.isoformat(),
-            "events": deepcopy(events),
-            "by_date": by_date,
-        }
+        return {"view": view, "anchor": anchor_date.isoformat(), "start": start.isoformat(), "end": end.isoformat(), "events": deepcopy(events), "by_date": by_date}
 
     def due_reminders(self, now: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
         if not isinstance(limit, int) or limit < 1 or limit > 500:
@@ -273,7 +294,7 @@ class CalendarStore:
         for event in self.load()["events"]:
             if event["start_time"] is None:
                 continue
-            event_start = self._event_datetime(event, current)
+            event_start = self._event_datetime(event)
             for reminder in event["reminders"]:
                 if reminder["notified_at"] is not None:
                     continue
@@ -324,13 +345,13 @@ class CalendarStore:
         except ValueError as exc:
             raise CalendarStoreError(f"{field} muss ein ISO-Zeitstempel sein.") from exc
         if parsed.tzinfo is None:
-            parsed = parsed.astimezone()
+            parsed = parsed.replace(tzinfo=system_timezone())
         return parsed
 
     @staticmethod
-    def _event_datetime(event: dict[str, Any], reference: datetime) -> datetime:
+    def _event_datetime(event: dict[str, Any]) -> datetime:
         naive = datetime.fromisoformat(f"{event['date']}T{event['start_time']}:00")
-        return naive.replace(tzinfo=reference.tzinfo)
+        return naive.replace(tzinfo=system_timezone())
 
     @staticmethod
     def _remember_title(data: dict[str, Any], title: str, when: str) -> None:
@@ -342,6 +363,4 @@ class CalendarStore:
             existing["title"] = title
             existing["count"] += 1
             existing["last_used_at"] = when
-        data["title_memory"] = sorted(
-            data["title_memory"], key=lambda item: item["last_used_at"]
-        )[-MAX_TITLE_MEMORY:]
+        data["title_memory"] = sorted(data["title_memory"], key=lambda item: item["last_used_at"])[-MAX_TITLE_MEMORY:]
