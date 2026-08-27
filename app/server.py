@@ -10,6 +10,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from . import ROOT_DIR, VERSION
+from .calendar_store import CalendarStore, CalendarStoreError, local_now
 from .config import ConfigError, ConfigIntegrityError, ConfigStore
 from .error_advisor import ErrorAdvisor
 from .event_registry import EventRegistry, EventRegistryError
@@ -25,11 +26,13 @@ VERSION_SEED = validate_registry(json.loads(VERSION_SEED_PATH.read_text(encoding
 VERSION_REGISTRY = VersionRegistry(RUNTIME_DIR / "versions.json", default=VERSION_SEED)
 EVENT_REGISTRY = EventRegistry(RUNTIME_DIR / "events.json")
 TODO_STORE = TodoStore(RUNTIME_DIR / "todos.json")
+CALENDAR_STORE = CalendarStore(RUNTIME_DIR / "calendar.json")
 ERROR_ADVISOR = ErrorAdvisor()
 TEXTS = ERROR_ADVISOR.catalog
 MAX_BODY_BYTES = 64 * 1024
 ALLOWED_CONFIG_KEYS = {"theme", "font_scale", "expert_visible", "setup_complete", "active_project", "favorites"}
 TODO_ALLOWED_KEYS = {"title", "category", "due_date", "due_time", "priority", "note", "calendar_event_id"}
+CALENDAR_ALLOWED_KEYS = {"title", "date", "start_time", "end_time", "category", "description", "reminders", "todo_id"}
 
 
 class RequestError(ValueError):
@@ -55,12 +58,13 @@ def ensure_core_state() -> None:
     known = {item["version"] for item in VERSION_REGISTRY.load()["versions"]}
     VERSION_REGISTRY.ensure_current(
         VERSION,
-        summary="Robustheitskern mit versionierten Vorlagen, Texten, Fehlerhilfe und Entwicklungs-Lerngedächtnis.",
+        summary="Kalender-Core mit persistenten Terminen, Ansichten, Titelgedächtnis und Reminder-Quittierung.",
         changes=[
-            "versionierte Config-/JSON-Mustervorlagen",
-            "versionierter deutscher Textkatalog",
-            "regelbasierte sichere Fehlerhilfe",
-            "validiertes LEARNING_MEMORY.jsonl",
+            "persistenter Kalender-Core",
+            "Monats-, Wochen- und Jahresperioden",
+            "Erinnerungs-Presets und fällige Reminder",
+            "optionale TODO-Verknüpfung",
+            "Kalender-Vorlagen und negative Testdaten",
         ],
     )
     if VERSION not in known:
@@ -98,6 +102,11 @@ def _advice_for(exc: Exception, *, area: str) -> dict:
             "retry_safe": False,
             "area": area,
         }
+
+
+def _todo_exists(todo_id: str) -> bool:
+    data = TODO_STORE.load()
+    return any(item["id"] == todo_id for item in data["items"]) or any(item["id"] == todo_id for item in data["archive"])
 
 
 class AIORequestHandler(BaseHTTPRequestHandler):
@@ -168,13 +177,12 @@ class AIORequestHandler(BaseHTTPRequestHandler):
     def _respond_error(self, exc: Exception, *, area: str, default_status: int) -> None:
         help_info = _advice_for(exc, area=area)
         status = HTTPStatus.INTERNAL_SERVER_ERROR if help_info.get("category") == "integrity" else default_status
-        payload = {
+        self._json(status, {
             "ok": False,
             "error": help_info["message"],
             "detail": str(exc),
             "help": help_info,
-        }
-        self._json(status, payload)
+        })
 
     def do_GET(self) -> None:
         if self._reject_if_untrusted():
@@ -186,6 +194,7 @@ class AIORequestHandler(BaseHTTPRequestHandler):
                 config = CONFIG_STORE.load()
                 versions = VERSION_REGISTRY.consistency(VERSION)
                 todos = TODO_STORE.load()
+                calendar_data = CALENDAR_STORE.load()
                 self._json(HTTPStatus.OK, {
                     "ok": True,
                     "version": VERSION,
@@ -199,6 +208,7 @@ class AIORequestHandler(BaseHTTPRequestHandler):
                         "events": EVENT_REGISTRY.count(),
                         "todos_open": len(todos["items"]),
                         "todos_archived": len(todos["archive"]),
+                        "calendar_events": len(calendar_data["events"]),
                         "error_help": ERROR_ADVISOR.metadata(),
                     },
                 })
@@ -235,11 +245,30 @@ class AIORequestHandler(BaseHTTPRequestHandler):
                 limit = self._query_limit(parsed, 12, 50)
                 self._json(HTTPStatus.OK, {"ok": True, "titles": TODO_STORE.title_suggestions(limit)})
                 return
+            if path == "/api/calendar":
+                query = parse_qs(parsed.query)
+                view = query.get("view", ["month"])[0]
+                anchor = query.get("date", [local_now().date().isoformat()])[0]
+                self._json(HTTPStatus.OK, {"ok": True, "calendar": CALENDAR_STORE.period(view, anchor)})
+                return
+            if path == "/api/calendar/suggestions":
+                limit = self._query_limit(parsed, 12, 50)
+                self._json(HTTPStatus.OK, {"ok": True, "titles": CALENDAR_STORE.title_suggestions(limit)})
+                return
+            if path == "/api/calendar/reminders/due":
+                query = parse_qs(parsed.query)
+                now = query.get("now", [None])[0]
+                limit = self._query_limit(parsed, 100, 500)
+                self._json(HTTPStatus.OK, {"ok": True, "reminders": CALENDAR_STORE.due_reminders(now, limit)})
+                return
             if path == "/api/help/meta":
                 self._json(HTTPStatus.OK, {"ok": True, "help": ERROR_ADVISOR.metadata()})
                 return
         except RequestError as exc:
             self._respond_error(exc, area="API", default_status=HTTPStatus.BAD_REQUEST)
+            return
+        except CalendarStoreError as exc:
+            self._respond_error(exc, area="Kalender", default_status=HTTPStatus.BAD_REQUEST)
             return
         except (ConfigError, PersistenceError, VersionRegistryError, EventRegistryError, TodoStoreError, OSError) as exc:
             self._respond_error(exc, area="Persistenz", default_status=HTTPStatus.INTERNAL_SERVER_ERROR)
@@ -299,11 +328,65 @@ class AIORequestHandler(BaseHTTPRequestHandler):
                     response["warning"] = warning
                 self._json(HTTPStatus.OK, response)
                 return
+
+            if path == "/api/calendar":
+                payload = self._read_json()
+                unknown = set(payload) - CALENDAR_ALLOWED_KEYS
+                if unknown:
+                    raise RequestError("Nicht erlaubtes Kalender-Feld: " + ", ".join(sorted(unknown)))
+                if "title" not in payload:
+                    raise RequestError("Titel fehlt.")
+                if "date" not in payload:
+                    raise RequestError("Datum fehlt.")
+                todo_id = payload.get("todo_id")
+                if todo_id is not None and (not isinstance(todo_id, str) or not todo_id.strip() or not _todo_exists(todo_id.strip())):
+                    raise RequestError("Das ausgewählte TODO wurde nicht gefunden.")
+                event = CALENDAR_STORE.create(**payload)
+                warning = _safe_event(
+                    kind="calendar_created",
+                    area="Kalender",
+                    level="green",
+                    message=TEXTS.get("event.calendar_created", title=event["title"], date=event["date"]),
+                    details={"calendar_event_id": event["id"], "todo_id": event["todo_id"]},
+                )
+                response = {"ok": True, "event": event}
+                if warning:
+                    response["warning"] = warning
+                self._json(HTTPStatus.CREATED, response)
+                return
+
+            parts = [part for part in path.split("/") if part]
+            if len(parts) == 6 and parts[0:2] == ["api", "calendar"] and parts[3] == "reminders" and parts[5] == "ack":
+                event_id = parts[2]
+                try:
+                    minutes = int(parts[4])
+                except ValueError as exc:
+                    raise RequestError("Erinnerungswert muss eine Zahl sein.") from exc
+                payload = self._read_json(required=False)
+                unknown = set(payload) - {"when"}
+                if unknown:
+                    raise RequestError("Nicht erlaubtes Erinnerungs-Feld: " + ", ".join(sorted(unknown)))
+                event = CALENDAR_STORE.acknowledge_reminder(event_id, minutes, when=payload.get("when"))
+                warning = _safe_event(
+                    kind="calendar_reminder_ack",
+                    area="Kalender",
+                    level="info",
+                    message=TEXTS.get("event.reminder_ack", title=event["title"]),
+                    details={"calendar_event_id": event["id"], "minutes_before": minutes},
+                )
+                response = {"ok": True, "event": event}
+                if warning:
+                    response["warning"] = warning
+                self._json(HTTPStatus.OK, response)
+                return
         except RequestError as exc:
             self._respond_error(exc, area="Eingabe", default_status=HTTPStatus.BAD_REQUEST)
             return
         except ConfigIntegrityError as exc:
             self._respond_error(exc, area="Konfiguration", default_status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            return
+        except CalendarStoreError as exc:
+            self._respond_error(exc, area="Kalender", default_status=HTTPStatus.BAD_REQUEST)
             return
         except (ConfigError, TodoStoreError) as exc:
             self._respond_error(exc, area="Eingabe", default_status=HTTPStatus.BAD_REQUEST)
