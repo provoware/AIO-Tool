@@ -51,11 +51,12 @@ Historische Verträge **REG-001 bis REG-066** bleiben verbindlich.
 - Test: `tests/test_helper_ui_contract.py`.
 - Status: **UMGESETZT**.
 
-### REG-076 — Browser-Acceptance hängt an alter Contract-Query und verliert Produktassets
-- Auslöser: Dashboard wurde auf `dashboard-v2.3` erhöht, der Harness ersetzte aber nur die fest kodierte v2.2-Signatur; `acceptance.css` wurde ebenfalls nicht eingebettet.
+### REG-076 — Browser-Acceptance driftet vom Produkt-Assetvertrag
+- Auslöser 1: Dashboard wurde auf `dashboard-v2.3` erhöht, während der Browser-Harness fest kodierte v2.2-Asset-Signaturen ersetzte.
+- Auslöser 2: `scripts/ui_acceptance_ci.py` enthielt zusätzlich eine zweite nahezu vollständige Harness-Implementierung. Der erste Fix traf deshalb nur `ui_acceptance.py`, nicht den tatsächlich von CI ausgeführten Duplikatpfad.
 - Wirkung: beide Browser meldeten gleichzeitig fehlende Rasterspannen, zu kleine Ziele, 1-spaltigen Kalender und Boot-Timeout.
-- Vertrag: lokale Stylesheets werden aus dem aktuellen `index.html` abgeleitet und nur über Allowlist eingebettet; Fixture-Skript wird **vor** Produkt-JavaScript eingefügt; verbleibende lokale Assetreferenzen blockieren den Test.
-- Test: `tests/test_ui_acceptance_harness.py`.
+- Vertrag: **eine kanonische Harness-Implementierung** in `scripts/ui_acceptance.py`; lokale Stylesheets werden aus dem aktuellen `index.html` abgeleitet und nur über Allowlist eingebettet; Fixture-Skript wird **vor** Produkt-JavaScript eingefügt; verbleibende lokale Assetreferenzen blockieren den Test. `ui_acceptance_ci.py` bleibt ausschließlich dünner Entry-Point ohne eigene Render-/Assetlogik.
+- Test: `tests/test_ui_acceptance_harness.py`, inklusive Verbot einer zweiten `run_browser`-/Inlining-Implementierung im CI-Wrapper.
 - Status: **UMGESETZT**, erneuter Chromium-/Firefox-Nachweis offen.
 
 ### REG-077 — mehrfaches „Neu prüfen“ oder Theme-Klicken erzeugt konkurrierende UI-Aktionen
