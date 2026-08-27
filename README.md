@@ -1,190 +1,203 @@
 # AIO-Tool
 
-> **Lokales, modulares und laienfreundliches All-in-One-Tool.** Python-Backend nur auf dem eigenen Rechner, Browseroberfläche ohne Internetzwang.
+> **Lokales, modulares und laienfreundliches All-in-One-Tool für Kubuntu/Linux.** Kernfunktionen laufen offline auf dem eigenen Rechner; das Backend bindet ausschließlich an Loopback.
 
 ## 🧭 Status auf einen Blick
 
 | Bereich | Zustand | Bedeutung |
 |---|---|---|
-| Aktuelle Version | 🟢 `0.4.3-integrity-hardening-TESTED` | vollständiger Entwicklungshead hat Core/Release + Chromium + Firefox bestanden |
-| Evidenzlauf | 🟢 Run `33034359454` | beide CI-Jobs erfolgreich |
-| Release-Status | 🟢 `tested / draft` | automatisiert geprüft, noch keine offizielle Freigabe |
-| Internet | 🟢 nicht nötig | offline-first |
-| Backend | 🟢 `127.0.0.1` | nicht im LAN/Internet veröffentlicht |
+| Letzter vollständig bewiesener Stand | 🟢 `0.4.3-integrity-hardening-TESTED` | Core/Release + Chromium + Firefox + Main-CI grün |
+| Aktuelle Entwicklung | 🟠 `0.5.0-native-acceptance-safe-file-sim-DEV` | Native Abnahme, Evidenzindex und SAFE-FILE-Simulation werden neu geprüft |
+| Internet für Kernfunktionen | 🟢 nicht nötig | offline-first |
 | Telemetrie | 🟢 keine | keine automatische Nutzungsübertragung |
-| Externe Runtime-Pakete | 🟢 keine | Python-Standardbibliothek |
-| Native Kubuntu-/DPI-Abnahme | 🟡 offen | automatisierte Browser-CI ersetzt kein echtes Zielsystem |
-| SAFE-FILE-CORE | ⚪ noch nicht begonnen | echte Dateioperationen bleiben gesperrt |
+| SAFE-FILE-Ausführung | 🔒 gesperrt | aktuelle Version simuliert nur; keine Copy-/Move-/Delete-Funktion vorhanden |
 
-### Fortschritt
+### Fortschritt des aktuellen Slices
 
 ```text
-Foundation / Persistenz       ████████████████████ 100 % 🟢
-Kalender / TODO / Ereignisse  ████████████████████ 100 % 🟢
-Dashboard V2                  ████████████████████ 100 % 🟢
-Browser-Acceptance            ████████████████████ 100 % 🟢
-Runtime-Transport             ████████████████████ 100 % 🟢
-Integritätshärtung 0.4.3      ████████████████████ 100 % 🟢
-Promotion-Revalidierung       ████████████████░░░░  80 % 🟡 läuft auf TESTED-Status
-Native Kubuntu-Abnahme        ██████░░░░░░░░░░░░░░  30 % 🟡 vorbereitet
-SAFE-FILE-CORE                ░░░░░░░░░░░░░░░░░░░░   0 % ⚪
+Native-Acceptance-Datenmodell      ████████████████████ 100 %  🟢 umgesetzt
+Native-Acceptance-UI/Runner        ████████████████████ 100 %  🟢 umgesetzt
+Release-Evidenzdateien             ████████████████████ 100 %  🟢 umgesetzt
+Evidence Guard                     ████████████████████ 100 %  🟢 umgesetzt
+SAFE-FILE-Vorprüfung               ████████████████████ 100 %  🟢 umgesetzt
+Failure-Matrix                     ████████████████████ 100 %  🟢 umgesetzt
+Recovery-Vertrag                   ████████████████████ 100 %  🟢 umgesetzt
+Echte Datei-Ausführung             ░░░░░░░░░░░░░░░░░░░░   0 %  🔒 absichtlich gesperrt
+Finale CI / Browser-Evidenz        ░░░░░░░░░░░░░░░░░░░░   0 %  🟠 noch auszuführen
+Native L4-Ergebnisse auf Kubuntu   ░░░░░░░░░░░░░░░░░░░░   0 %  🟡 müssen real bestätigt werden
 ```
 
-> Prozentwerte zeigen Arbeitsfortschritt. **TESTED** entsteht nur durch den zugehörigen Evidenzvertrag.
+> Prozentwerte zeigen Arbeitsfortschritt. **TESTED** entsteht ausschließlich durch den definierten Evidenzvertrag.
 
 ---
 
-## ▶️ Start für Laien
+## ▶️ Die drei Startdateien
 
-1. TESTED-ZIP vollständig in einen eigenen Ordner entpacken.
-2. `start_tool.desktop` doppelklicken oder `start_tool.sh` starten.
-3. Die Konsole zeigt **9 Checkpoints** mit Ampelstatus.
-4. Bei Erfolg öffnet sich die Browseroberfläche automatisch.
-5. Bei Fehler bleibt die Konsole offen und zeigt Fehler-ID, Ursache, Logs und nächsten Prüfschritt.
+### 1. Normales AIO-Tool
 
-### Ampel
+`start_tool.desktop` oder `start_tool.sh`
 
-- 🟢 **PASS** — geprüft und bestanden
-- 🟡 **WARN** — Start möglich, Hinweis beachten
-- 🔴 **FAIL** — sicherer Abbruch mit Diagnose
-- 🔵 **INFO** — normaler Zwischenzustand
+Die bekannte 9-Checkpoint-Startroutine prüft Runtime, Instanzidentität, Backend und Browserstart.
 
----
+### 2. Native Acceptance Runner
 
-## 🛡️ Was wurde in 0.4.3 gehärtet?
+`native_acceptance.desktop` oder `start_native_acceptance.sh`
 
-### Sichere Instanzprüfung
+Der Assistent führt durch **18 reale L4-Prüfschritte**:
 
-Ein bloßes `HTTP 200` reicht nicht mehr zur Wiederverwendung einer laufenden Instanz.
+- Kubuntu Desktop-Starter,
+- Shell-Starter,
+- Wiederverwendung einer passenden Instanz,
+- fremd belegter Standardport,
+- kleines / Full-HD / großes Fenster,
+- reiner Tastaturdurchlauf,
+- Firefox bei 100 / 125 / 150 / 175 / 200 %,
+- Chrome/Chromium bei 100 / 125 / 150 / 175 / 200 %.
 
-Geprüft werden:
+### Ganz wichtig
 
-`Version → Loopback → Ready → konkrete Installationskennung`
+Der Runner setzt **nichts automatisch auf PASS**.
 
-Eine alte/fremde lokale Instanz wird nicht übernommen. Bei belegtem Standardport sucht das Tool transparent einen freien lokalen Ausweichport.
+Jeder Schritt startet als **🟡 OFFEN** und wird nur durch eine ausdrückliche Auswahl:
 
-### Runtime bleibt unabhängig vom Repository
+- 🟢 PASS,
+- 🔴 FAIL,
+- ⚪ SKIP
 
-Der normale Start verwendet nur:
+bewertet.
 
-`scripts/runtime_preflight.py`
+Die gemeinsame Sitzung liegt lokal in `runtime/native_acceptance.json`. Dadurch können Firefox und Chromium dieselbe Abnahme fortsetzen. Nach jeder Bewertung werden automatisch aktualisiert:
 
-Repository-Dokumente, Tests und `scripts/validate.py` sind für ein Nutzer-ZIP nicht erforderlich.
+- `runtime/reports/native-acceptance-latest.json`
+- `runtime/reports/native-acceptance-latest.txt`
 
-### Release-End-to-End-Vertrag
+Der Bericht enthält auch gemessene Browserdaten wie Viewport, Bildschirmgröße und Device-Pixel-Ratio. Er behauptet aber **nicht**, einen Zoomwert automatisch sicher erkannt zu haben; der Zielzoom muss real eingestellt und bestätigt werden.
 
-CI prüft nicht nur das ZIP-Manifest, sondern:
+### 3. SAFE-FILE Simulation
 
-`bauen → Hashes prüfen → entpacken → Runtime-Preflight aus dem entpackten ZIP`
+`safe_file_simulation.desktop` oder `start_safe_file_simulation.sh`
 
-### Dokumentationsschutz
+Ablauf:
 
-`scripts/documentation_guard.py` stoppt CI, wenn VERSION, Registry, README, TODO, CHANGELOG, MANIFEST, REGRESSIONSINFOS, LAIEN-ANLEITUNG oder TOOLBESCHREIBUNG auseinanderlaufen.
+1. **Quelldatei auswählen** – auf Kubuntu bevorzugt über `kdialog`.
+2. **Zielordner auswählen**.
+3. Konfliktverhalten nur für die Vorschau wählen:
+   - sicher überspringen,
+   - neuen Namen vorschlagen,
+   - Ersetzen nur simulieren.
+4. **Sichere Vorschau erstellen**.
 
-### Logwartung
+Geprüft werden unter anderem:
 
-Launcherlogs werden lokal begrenzt/rotiert und gehören nie ins Runtime-ZIP.
+- Quelle vorhanden/lesbar/normale Datei,
+- Symlinks gesperrt,
+- Ziel vorhanden/Ordner/beschreibbar,
+- freier Speicher plus Reserve,
+- Quelle und Ziel verschieden,
+- bestehende Zieldatei / Konflikt.
 
----
+### 🔒 Warum wirklich nichts kopiert werden kann
 
-## 🧩 Aktuell nutzbare Bereiche
+Der aktuelle SAFE-FILE-Slice besitzt absichtlich:
 
-- Monatskalender sowie Backend-Perioden für Monat/Woche/Jahr
-- Termine + Reminder
-- nächste drei TODOs + Erledigt-Archiv
-- Titelgedächtnis
-- letzte fünf verständliche Ereignisse
-- Versions-/Registry-/Systemstatus
-- vier Themes + Schriftgrößen-Presets
-- responsive 12-Spalten-Struktur mit Reflow bis 320 CSS-px
-- optionaler Diagnosebereich
+- `simulation_only = true`,
+- `execution_enabled = false`,
+- **keinen `/api/execute`-Endpunkt**,
+- keine Copy-/Move-/Delete-Primitive im Simulator,
+- `mutation_performed = false` im Vorschauvertrag.
 
-Echte Dateioperationen sind weiterhin bewusst deaktiviert.
-
----
-
-## 📦 Runtime-ZIP vs. Repository
-
-### Im Runtime-ZIP
-
-Nur die positive Allowlist aus `manifests/RUNTIME_MANIFEST.json` plus `MANIFEST_RELEASE.json`:
-
-- Startdateien
-- notwendiger Python-Code
-- Weboberfläche
-- Runtime-Preflight + Instanzprobe
-- notwendige Text-/Fehlerdaten
-- geprüfte Referenzvorlagen
-
-### Nur im Repository/lokal
-
-- README / AGENTS / TODO / CHANGELOG
-- Regressionen / Learning Memory
-- Tests / Testdaten
-- CI-Konfiguration
-- Browser-Screenshots und Reports
-- lokale Logs und Nutzerdaten
+Damit hängt die Sperre nicht nur an einem deaktivierten Button.
 
 ---
 
-## 🏷️ Dateinamenstatus
+## 🧯 Failure-Matrix SAFE-FILE
 
-| Suffix | Bedeutung |
-|---|---|
-| `-DEV.zip` | 🟠 Entwicklung |
-| `-TESTED.zip` | 🟢 automatisiert geprüft |
-| `-RC.zip` | 🟡 Release Candidate |
-| `-RELEASED.zip` | 🟢 offiziell freigegeben |
-| `-BLOCKED.zip` | 🔴 Blocker |
-| `-ARCHIVED.zip` | ⚪ historisch |
+Der erste Sicherheitsvertrag enthält zehn definierte Fehlerklassen:
 
-Der Suffix wird ausschließlich aus der validierten Versionsregistry abgeleitet.
+`SF-001` Quelle fehlt · `SF-002` Quelle keine Datei · `SF-003` Source-Symlink · `SF-004` Ziel fehlt · `SF-005` Ziel kein Ordner · `SF-006` Target-Symlink · `SF-007` Ziel nicht beschreibbar · `SF-008` zu wenig Speicher · `SF-009` Zielkonflikt · `SF-010` Quelle = Ziel.
+
+Eine spätere echte Copy-Funktion darf erst entstehen, wenn diese Matrix und der Recovery-Vertrag vollständig grün sind.
 
 ---
 
-## 🧪 Prüfstufen
+## ↩️ Recovery-Vertrag für die spätere Copy-Stufe
+
+Da die aktuelle Simulation **nichts verändert**, ist heute kein Rollback notwendig. Sie definiert aber bereits verbindlich, was vor einer echten Copy-Freigabe vorhanden sein muss:
+
+- persistentes Journal/Jobprotokoll **vor** der ersten Mutation,
+- `DONE` erst nach Nachvalidierung,
+- Undo darf ein Ziel nur entfernen, wenn verifiziert wurde, dass es seit der Copy nicht verändert wurde,
+- unterbrochene `.part`-/Staging-Zustände müssen als Recovery-Fall sichtbar werden.
+
+---
+
+## 🧾 Release-Evidenzindex
+
+Repository-only:
+
+`evidence/RELEASE_EVIDENCE_INDEX.json`
+
+Dieser verweist auf **genau eine Datei je bewiesener Version**, zum Beispiel:
+
+`evidence/releases/0.4.3-integrity-hardening.json`
+
+Jede Datei enthält maschinenlesbar:
+
+- Registry-Commit,
+- Promotion-/Main-Commit soweit vorhanden,
+- CI-Run-IDs,
+- Artefakt-SHA256 bzw. ausdrücklich `not-recorded`,
+- Chromium-/Firefox-Matrix,
+- weiterhin offene L4-Gates.
+
+`scripts/evidence_guard.py` vergleicht den Index mit `VERSION_REGISTRY.json`. Eine TESTED-Version ohne Evidenzdatei macht CI rot.
+
+Historische Lücken werden **nicht erfunden**. Ein nicht mehr belegbarer alter Artefakthash wird als `not-recorded` dokumentiert.
+
+---
+
+## 🛡️ Datenschutz und Sicherheit
+
+- Kernbackend nur `127.0.0.1` / `localhost`.
+- Native Runner und SAFE-FILE-Simulator verlangen zusätzlich **denselben lokalen Port** für Host/Origin.
+- Keine Telemetrie.
+- Native Abnahmeberichte bleiben lokal unter `runtime/`.
+- Release-Evidenz bleibt im Repository und wird nicht ins Runtime-ZIP gepackt.
+- SAFE-FILE liest nur Metadaten/Dateigröße und führt keine Mutation aus.
+
+---
+
+## 🧪 Qualitätsebenen
 
 - **L0:** Syntax / Schema
-- **L1:** Unit-, Integrations- und Vertragsprüfungen
-- **L2:** echtes Runtime-ZIP inklusive Preflight aus frischer Entpackung
-- **L3:** Chromium + Firefox, Raster, Reflow und Interaktionen
-- **L4:** echtes Kubuntu-Zielsystem, DPI/Zoom/Tastatur — noch offen
+- **L1:** Unit / Contract / Failure-Matrix
+- **L2:** vollständiges Runtime-ZIP frisch entpacken und Preflight daraus starten
+- **L3:** echte Chromium-/Firefox-Render-/Interaktionsmatrix
+- **L4:** reale Kubuntu-/Zoom-/DPI-/Tastaturabnahme über den neuen Runner
 
-Run `33034359454` hat den finalen Entwicklungshead von `0.4.3-integrity-hardening` auf L0–L3 vollständig bestanden. Danach wurde der Status regelkonform auf `tested / draft` promoviert. Der Promotion-Commit wird erneut durch dieselbe Pipeline geprüft.
-
----
-
-## 🔧 Entwicklerprüfung
-
-```bash
-python3 -m unittest discover -s tests -v
-python3 scripts/validate.py
-python3 scripts/learning_guard.py
-python3 scripts/documentation_guard.py
-bash -n start_tool.sh
-node --check web/app.js
-python3 scripts/release.py --check
-```
-
-Browser-Gate:
-
-```bash
-python3 scripts/ui_acceptance_ci.py --browser chromium --browser firefox --strict
-```
+Eine niedrigere Ebene darf niemals eine höhere als bestanden darstellen.
 
 ---
 
-## ⚠️ Noch offen
+## 📦 Runtime vs. Repository
 
-- native Kubuntu-Klick-&-Start-Abnahme
-- KDE-/HiDPI-Skalierung
-- 100 / 125 / 150 / 175 / 200 % Browserzoom auf dem Zielsystem
-- kompletter Tastatur-/Screenreader-Praxistest
-- SAFE-FILE-CORE
-- persistente Job-/Recovery-Queue
+Im Nutzer-ZIP liegen nur Dateien aus `manifests/RUNTIME_MANIFEST.json` plus `MANIFEST_RELEASE.json`.
+
+Der Runtime-Bestand enthält jetzt zusätzlich die beiden lokalen Assistenten und ihre benötigten Module/Webseiten. Nicht transportiert werden weiterhin:
+
+- README / AGENTS / TODO / Changelog,
+- Tests/Testdaten,
+- `evidence/`,
+- Learning Memory,
+- CI-Dateien,
+- Screenshots/Reports,
+- lokale Runtime-/Nutzerdaten.
+
+---
 
 ## ➜ Nächste logische Reihenfolge
 
-1. **Promotion-Commit von `0.4.3-integrity-hardening-TESTED` nochmals vollständig grün prüfen.**
-2. **Danach TESTED-ZIP auf echtem Kubuntu mit Zoom/DPI/Tastatur abnehmen.**
-3. Erst danach **SAFE-FILE-CORE**, zunächst ausschließlich Copy mit Vorschau, Nachprüfung und Recovery.
+1. `0.5.0-native-acceptance-safe-file-sim` vollständig durch Unit/Failure-/Evidence-/Release-/Cross-Browser-Gates prüfen.
+2. Danach Native Acceptance Runner **real auf Kubuntu** ausführen und L4-Bericht erzeugen.
+3. Nur wenn SAFE-FILE Failure-Matrix + Recovery + reale Basisgates grün sind, einen neuen Versionsslice für echte **Copy-only**-Ausführung beginnen.
+4. Move, Rename und Delete bleiben weiterhin später.

@@ -11,73 +11,58 @@ Diese Regeln gelten für Menschen, KI-Agenten und automatisierte Entwicklungswer
 - Keine neue Nutzfunktion beginnen, solange ein P0/P1-Gate des aktuellen Slices rot ist.
 - Ein Fix ist erst abgeschlossen, wenn der zugehörige Fehlervertrag erneut geprüft wurde.
 
-## 2. Quellenhierarchie — welche Datei ist wofür Wahrheit?
+## 2. Quellenhierarchie
 
-Bei Widersprüchen gilt diese Reihenfolge:
+Bei Widersprüchen gilt:
 
-1. **Produktvalidatoren / ausführbarer Code** — tatsächlicher Daten- und Laufzeitvertrag.
-2. **`VERSION` + validierte `VERSION_REGISTRY.json`** — Versions- und Statuswahrheit.
-3. **`manifests/RUNTIME_MANIFEST.json`** — einzige Allowlist für transportierte Runtime-Dateien.
-4. **Automatisierte Tests / CI-Evidenz** — Nachweis, nicht Produktdefinition.
-5. **README / TODO / CHANGELOG / MANIFEST / LAIEN-ANLEITUNG / TOOLBESCHREIBUNG** — Erklärung des bewiesenen Zustands.
+1. Produktvalidatoren / ausführbarer Code.
+2. `VERSION` + validierte `VERSION_REGISTRY.json`.
+3. `manifests/RUNTIME_MANIFEST.json` für transportierte Runtime-Dateien.
+4. Automatisierte Tests / CI-Evidenz.
+5. `evidence/RELEASE_EVIDENCE_INDEX.json` + versionierte Einzelevidenzdateien für bewiesene Stände.
+6. README / TODO / CHANGELOG / MANIFEST / LAIEN-ANLEITUNG / TOOLBESCHREIBUNG.
 
-Dokumentation darf niemals einen besseren Zustand behaupten als Registry + Evidenz.
+Dokumentation und Evidenzindex dürfen keinen besseren Zustand behaupten als Registry + tatsächlich ausgeführte Gates.
 
-## 3. Versionszustände und erlaubte Übergänge
+## 3. Versionszustände
 
-Kanonische Versionsstatus:
+Kanonisch:
 
-- `development` → Dateisuffix `DEV`
-- `tested` → `TESTED`
-- `release-candidate` → `RC`
-- `released` → `RELEASED`
-- `blocked` → `BLOCKED`
-- `deprecated` → `ARCHIVED`
+- `development / draft` → `DEV`
+- `tested / draft` → `TESTED`
+- `release-candidate / candidate` → `RC`
+- `released / released` → `RELEASED`
+- `blocked / blocked` → `BLOCKED`
+- `deprecated / deprecated` → `ARCHIVED`
 
-Kanonische Release-Statuspaare:
-
-- `development / draft`
-- `tested / draft`
-- `release-candidate / candidate`
-- `released / released`
-- `blocked / blocked`
-- `deprecated / deprecated`
-
-Unbekannte oder widersprüchliche Kombinationen müssen **fail-closed** abgelehnt werden.
+Unbekannte/widersprüchliche Kombinationen fail-closed ablehnen.
 
 ### Unveränderlichkeit bewiesener Versionen
 
-Sobald eine Version `tested`, `release-candidate` oder `released` ist, darf Produktcode dieses Versionsstandes nicht weiter verändert werden. Jeder weitere Codepatch erzeugt eine **neue Version als `development`**. Die alte Evidenz bleibt historisch reproduzierbar.
+Sobald eine Version `tested`, `release-candidate` oder `released` ist, wird sie eingefroren. Jeder Produktpatch startet eine **neue Version als development**. Alte Evidenz bleibt historisch reproduzierbar.
 
 ## 4. Statussprache
 
-- **UMGESETZT** = Code/Artefakt vorhanden.
+- **UMGESETZT** = vorhanden.
 - **GEPRÜFT** = Test tatsächlich ausgeführt.
 - **BEWIESEN** = reproduzierbare Evidenz einem konkreten Commit zugeordnet.
 
-`tested`, `release-candidate` und `released` benötigen Evidenz. Nicht geprüfte Zielsysteme bleiben ausdrücklich offen.
+Nicht geprüfte Zielsysteme bleiben ausdrücklich offen.
 
 ## 5. Laien zuerst
 
-- Standardsprache der Nutzeroberfläche: Deutsch.
+- Standardsprache Deutsch.
 - Alltagssprache vor Fachsprache.
-- Fachbegriffe nur ergänzend und verständlich erklärt.
 - Pro Ansicht möglichst 3–6 Hauptentscheidungen.
-- Ein klarer nächster Schritt muss sichtbar sein.
+- Ein klarer nächster Schritt sichtbar.
 - Expertenoptionen standardmäßig einklappen.
-- Farbe unterstützt die Orientierung, ist aber nie die einzige Information; Status benötigt zusätzlich Text/Icon.
+- Farbe nie als einzige Information; immer Text/Icon ergänzen.
 
 ## 6. Auswahl vor Zeicheneingabe
 
-Neue Eingabefelder sind begründungspflichtig. Reihenfolge:
+Reihenfolge: **Button → Auswahldialog → Preset/zuletzt verwendet → intelligente Empfehlung → Freitext-Fallback**.
 
-1. Button
-2. Auswahldialog
-3. Preset / zuletzt verwendet
-4. intelligente Empfehlung
-5. erst dann Freitext-Fallback
-
-Ausnahmen: Inhalte, die naturgemäß frei eingegeben werden müssen, z. B. Notiztext oder PIN. Wiederkehrende sichere Eingaben sollen gespeichert und später als Auswahl angeboten werden. Keine sensiblen Inhalte automatisch als Vorschläge übernehmen.
+Neue freie Eingabefelder sind begründungspflichtig. Sensible Inhalte nicht automatisch vorschlagen.
 
 ## 7. Sicherheit und Integrität
 
@@ -92,142 +77,122 @@ Ausnahmen: Inhalte, die naturgemäß frei eingegeben werden müssen, z. B. Notiz
 
 ## 8. Launcher- und Instanzvertrag
 
-Eine Antwort `HTTP 200` beweist **keine** passende Toolinstanz.
-
-Vor Wiederverwendung müssen mindestens übereinstimmen:
-
-- erwartete Toolversion,
-- Loopback-Bindung,
-- Ready-Zustand,
-- konkrete lokale Installationskennung.
-
-Ein fremd oder alt belegter Port wird niemals still übernommen. Der Launcher darf einen freien Loopback-Ausweichport wählen und muss dies sichtbar melden. Startdiagnose und Backendlog bleiben getrennt.
+`HTTP 200` beweist keine passende Instanz. Vor Wiederverwendung müssen mindestens Toolversion, Loopback-Bindung, Ready-Zustand und konkrete Installationskennung übereinstimmen. Fremd/alt belegte Ports nie still übernehmen; freier Loopback-Ausweichport ist erlaubt und sichtbar zu melden.
 
 ## 9. Offline-first und Datenschutz
 
-- Kernfunktionen funktionieren ohne Internet.
-- Keine Telemetrie ohne ausdrücklich dokumentierte Produktentscheidung.
-- Lokales Backend nur auf Loopback binden, sofern kein anderer Vertrag beschlossen wurde.
-- So wenig personenbezogene/nutzerspezifische Daten speichern wie möglich.
-- Keine Secrets, PINs oder Passwörter im Klartext protokollieren.
-- Diagnoseausgaben dürfen keine vollständige Config oder unnötige lokale Pfade ausgeben.
+- Kernfunktionen ohne Internet.
+- Keine Telemetrie ohne explizite Produktentscheidung.
+- Lokales Backend nur Loopback.
+- Keine Secrets/PINs/Passwörter in Klartextlogs.
+- Diagnose so datensparsam wie möglich.
 
 ## 10. Architektur und Wartbarkeit
 
-- UI, Domänenlogik, Persistenz, Launcher, Transport und Testharness klar trennen.
-- Wiederverwendbare Verträge in kleinen Modulen zentralisieren statt in Shell/JS/Python mehrfach nachzubauen.
-- Zentrale Quellmodule möglichst unter ca. 800 Zeilen halten; vorher Verantwortlichkeiten prüfen.
-- Keine neue externe Runtime-Abhängigkeit, wenn Standardbibliothek oder bestehende Abhängigkeit robust genügt.
-- Externe Entwicklungsabhängigkeiten müssen gepinnt und vom Runtime-Transport getrennt sein.
+- UI, Domänenlogik, Persistenz, Launcher, Transport und Testharness trennen.
+- Wiederverwendbare Verträge zentralisieren statt in Shell/JS/Python mehrfach nachzubauen.
+- Zentrale Module möglichst unter ca. 800 Zeilen halten.
+- Keine neue externe Runtime-Abhängigkeit, wenn Standardbibliothek robust genügt.
+- Entwicklungsabhängigkeiten pinnen und vom Runtime-Transport trennen.
 
 ## 11. Runtime ≠ Repository
 
-Das Runtime-ZIP enthält **nur** die explizite Allowlist aus `manifests/RUNTIME_MANIFEST.json` plus generiertes `MANIFEST_RELEASE.json`.
+Runtime-ZIP = ausschließlich `manifests/RUNTIME_MANIFEST.json` + generiertes `MANIFEST_RELEASE.json`.
 
-Repository-/Entwicklungsbestand bleibt außerhalb des Transportpakets, insbesondere:
-
-- README/AGENTS/TODO/CHANGELOG/Regressionen/Learning Memory,
-- Tests und Testdaten,
-- CI-Konfiguration,
-- Screenshots/Reports,
-- Entwicklungslogs.
-
-Der Launcher darf beim normalen Betrieb **nur Runtime-Dateien voraussetzen**. `scripts/runtime_preflight.py` ist der Startvertrag; `scripts/validate.py` ist eine Repository-Vollprüfung und darf im Runtime-ZIP fehlen.
+Repository-only bleiben insbesondere Dokumentation, Regressionen/Learning Memory, Tests/Testdaten, `evidence/`, CI-Dateien, Screenshots/Reports und Entwicklungslogs. Lokale Runtime-/Nutzerdaten werden weder versioniert noch transportiert.
 
 ## 12. Persistenz
 
-- Relevante Zustände atomar schreiben.
-- Unterbrochene Prozesse dürfen nach Neustart nicht als „läuft“ erscheinen.
-- Backups/Recovery-Metadaten konsistent halten.
-- Konfigurationsänderungen dürfen nicht als Nebeneffekt einer Prüfung entstehen.
-- Schemaänderung → Validator + Vorlage + gültige/ungültige Testdaten + Regression gemeinsam aktualisieren.
+- relevante Zustände atomar schreiben,
+- unterbrochene Prozesse nach Neustart nicht als „läuft“ darstellen,
+- Backups/Recovery-Metadaten konsistent halten,
+- Prüfungen verändern keine produktive Config,
+- Schemaänderung → Validator + Vorlage + positive/negative Testdaten + Regression gemeinsam.
 
 ## 13. Tests und Regressionserkennung
 
-Jeder bestätigte Fehler erhält soweit möglich:
+Jeder bestätigte Fehler erhält soweit möglich reproduzierbaren Auslöser, Soll/Ist, minimalen Fix, Regressionstest und erneuten Nachweis.
 
-- reproduzierbaren Auslöser,
-- erwartetes Verhalten,
-- tatsächliches Fehlverhalten,
-- minimalen Fix,
-- Regressionstest,
-- erneuten Nachweis.
+Qualitätsebenen:
 
-### Erkennungsebenen
+- **L0:** Syntax/Schema.
+- **L1:** Unit/Contract/Failure-Matrix.
+- **L2:** Integration/echtes Runtime-ZIP.
+- **L3:** echte Chromium-/Firefox-Render-/Interaktion.
+- **L4:** reales Kubuntu/DPI/Browserzoom/Tastatur.
 
-1. **L0 Syntax/Schema** — schnell, billig.
-2. **L1 Unit/Contract** — Domänen- und Strukturvertrag.
-3. **L2 Integration/Runtime-ZIP** — transportierter Bestand funktioniert zusammen.
-4. **L3 Browser-Render/Interaktion** — echte Chromium-/Firefox-Geometrie und Bedienung.
-5. **L4 Native Zielsystemabnahme** — reales Kubuntu/DPI/Browserzoom/Tastatur.
+Eine niedrigere Ebene darf keine höhere vortäuschen.
 
-Eine niedrigere Ebene darf keine Aussage einer höheren Ebene vortäuschen.
-
-### Priorisierung
-
-- **P0:** Datenverlust, falsche Instanz, Sicherheits-/Release-Integritätsbruch → sofort blockieren.
-- **P1:** Start, Persistenz, Kernbedienung, gravierende UI-Reflow-/A11y-Fehler → vor neuer Funktion beheben.
-- **P2:** relevante Nutzerfreundlichkeit/Wartbarkeit → im aktuellen oder nächsten Slice.
-- **P3:** Kosmetik/Komfort ohne Funktionsrisiko → planbar.
+Prioritäten: P0 Datenverlust/Sicherheit/Releaseintegrität; P1 Start/Persistenz/Kernbedienung/A11y; P2 Wartbarkeit/UX; P3 Komfort/Kosmetik.
 
 ## 14. UI-Acceptance
 
-Statische HTML/CSS-/DOM-Tests sind **kein Renderbeweis**.
-
-Für Aussagen zu Layout, Reflow, Überlappung, Zielgrößen oder Browserinteraktion gilt:
-
-- maschinenlesbarer Rastervertrag,
-- deterministische isolierte Fixtures,
-- messbarer Ready-Zustand,
-- echte Chromium- und Firefox-Läufe,
-- Viewport-/Reflow-Matrix einschließlich 320 CSS-px,
-- Screenshot + JSON-Report als Evidenz,
-- Fehlerartefakte auch bei rotem Gate.
-
-Screenshot-Baselines dürfen nicht einfach aktualisiert werden, um einen Fehler verschwinden zu lassen. Geometrie-/Interaktionsvertrag entscheidet zuerst.
+Statische HTML/CSS-/DOM-Tests sind kein Renderbeweis. Für Layout-/Reflow-/Zielgrößenaussagen gelten Rastervertrag, deterministische Fixtures, Ready-Zustand, Chromium+Firefox, Viewportmatrix inklusive 320 CSS-px und Screenshot/JSON-Evidenz. Baselines nicht einfach aktualisieren, um Fehler zu verstecken.
 
 ## 15. Musterdateien und Fehlerhilfe
 
-Für jedes persistente JSON-/Config-Format:
-
-- mindestens eine gültige versionierte Mustervorlage,
-- relevante absichtlich ungültige Testdaten,
-- dieselben Validatoren für Produktdaten, Vorlage und Tests,
-- Vorlagen niemals ungefragt über Nutzerdaten schreiben.
-
-Wiederkehrende sichtbare Systemtexte werden versioniert ausgelagert. Fehlerhilfe unterscheidet Nutzereingabe, Integrität/Persistenz und unbekannte Fehler. `retry_safe=true` nur bei tatsächlich sicherem Wiederholungsversuch.
+Für persistente JSON-/Config-Formate: gültige versionierte Mustervorlage, relevante negative Fixtures und dieselben Produktvalidatoren. Vorlagen niemals ungefragt über Nutzerdaten schreiben. Wiederkehrende sichtbare Systemtexte versioniert auslagern.
 
 ## 16. Entwicklungs-Lerngedächtnis
 
-`LEARNING_MEMORY.jsonl` hält bestätigte strukturelle Entwicklungslektionen dauerhaft fest. Ein Eintrag enthält Auslöser, Erkenntnis, neue Regel, Regression und Geltungsbereich. CI validiert Eindeutigkeit und Form. Ein Bericht darf keine Lernregel als vorhanden behaupten, die nicht im Repository steht.
+`LEARNING_MEMORY.jsonl` hält bestätigte strukturelle Lektionen mit Auslöser, Erkenntnis, Regel, Regression und Geltungsbereich. CI validiert Form/Eindeutigkeit. Berichte dürfen keine nicht vorhandene Lernregel behaupten.
 
 ## 17. Codesparendes Patchen
 
-Vor größeren Änderungen bestimmen:
-
-**Datei → Funktion/Klasse → Zeilenbereich → zugehöriger Test → Auswirkung auf Manifeste/Doku.**
-
-Lokaler Patch + Regression vor breitem Refactor. Größerer Umbau nur, wenn lokale Reparatur die Kopplung verschlimmern würde. Zeilenangaben in Abschlussberichten stammen aus dem tatsächlich geprüften finalen Stand.
+Vor größeren Änderungen bestimmen: **Datei → Funktion/Klasse → Zeilenbereich → Test → Manifest-/Doku-Auswirkung.** Erst lokaler Patch + Regression, breiter Refactor nur bei belegter Kopplungsreduktion. Zeilenangaben im Abschluss aus final geprüftem Stand.
 
 ## 18. Release-Gate
 
-Vor Statuspromotion mindestens:
-
-- Python-/Shell-/JavaScript-Syntax grün,
-- Unit-/Integrations-/Vertragstests grün,
-- Foundation-/Learning-Gate grün,
-- Runtime-ZIP gebaut und Manifest/Hashes geprüft,
-- gebautes ZIP frisch entpackt und `runtime_preflight.py` daraus erfolgreich ausgeführt,
-- für UI-Änderungen Chromium + Firefox Acceptance grün,
-- Dokumentations-/Manifeststatus synchron,
-- keine Runtime-/Nutzerdaten/Testartefakte im Transport.
-
-Erst danach Statuspromotion; **auf dem Promotion-Commit komplette CI erneut ausführen**.
+Vor Promotion mindestens Syntax, Unit/Integration, Foundation/Learning/Evidence/Documentation Guards, Runtime-ZIP + Manifest/Hashes + frischer Preflight, bei UI-Änderungen Chromium+Firefox, synchronisierte Dokumentation und sauberer Transport. Auf dem Promotion-Commit komplette CI erneut ausführen.
 
 ## 19. Dokumentationspflicht
 
-Änderungen mit Wirkung auf Verhalten, Architektur, Sicherheit, Bedienung, Status oder Transport müssen die relevanten Dateien gemeinsam synchronisieren:
+Verhaltens-/Architektur-/Sicherheits-/Statusänderungen synchronisieren mindestens `README.md`, `TODO.md`, `CHANGELOG.md`, `MANIFEST.md`, `REGRESSIONSINFOS.md`, `LAIEN-ANLEITUNG.md`, `TOOLBESCHREIBUNG.md`.
 
-`README.md`, `TODO.md`, `CHANGELOG.md`, `MANIFEST.md`, `REGRESSIONSINFOS.md`, `LAIEN-ANLEITUNG.md`, `TOOLBESCHREIBUNG.md`.
+## 20. Native Acceptance / L4
 
-README zeigt aktuellen Zustand und verständlichen Start; TODO nur tatsächlich offene Punkte; CHANGELOG zeitliche Änderung; MANIFEST Architektur/Transport; REGRESSIONSINFOS Fehlerverträge. Keine Datei darf einen alten Versionsstand als „aktuell“ ausgeben.
+L4 darf **niemals** aus L0–L3 abgeleitet werden.
+
+- Jeder Native-Acceptance-Schritt startet `pending/OFFEN`.
+- Automatisches PASS ist verboten.
+- Zulässige Nutzerentscheidungen: `pass`, `fail`, `skip`.
+- `skip` ist kein bestandenes Gate.
+- Browserzoom wird als Zielvorgabe dokumentiert; technische Browsermetriken dürfen eine reale Zoom-Bestätigung nicht ersetzen.
+- Firefox und Chromium sollen dieselbe persistente Sitzung verwenden.
+- FAIL-Befunde bleiben erhalten und werden vor Statusverbesserung analysiert.
+- Abnahmeberichte liegen lokal unter `runtime/`; sie gelangen nicht automatisch in Release-ZIPs oder Repository.
+
+## 21. Release-Evidenzdateien
+
+Für jede Registry-Version mit Status `tested`, `release-candidate` oder `released` muss exakt eine Datei unter `evidence/releases/<version>.json` existieren und vom Masterindex referenziert werden.
+
+Pflichtfelder: Registry-Commit, CI-Runs, Artefaktstatus/SHA256 soweit wirklich aufgezeichnet, Browsermatrix, offene L4-Gates. Promotion-/Main-Commit ergänzen, wenn vorhanden.
+
+Historisch fehlende Informationen werden **nicht rekonstruiert oder geraten**: `not-recorded` + `null`. `scripts/evidence_guard.py` ist ein blockierendes CI-Gate.
+
+## 22. SAFE-FILE-Stufenvertrag
+
+### V0 Simulation
+
+Die Simulation darf **keine echte Dateimutation technisch besitzen**:
+
+- `SIMULATION_ONLY=True`,
+- `EXECUTION_ENABLED=False`,
+- kein Execute-Endpunkt,
+- keine Copy-/Move-/Rename-/Delete-Primitive,
+- Preview meldet `mutation_performed=false`.
+
+Sie darf lesend Quelle/Ziel/Metadaten/Speicherplatz/Konflikte prüfen und einen Plan erzeugen.
+
+### Vor echter Copy
+
+Ein neuer Versionsslice muss mindestens beweisen:
+
+- Failure-Matrix vollständig grün,
+- persistentes Jobjournal **vor** Mutation,
+- Staging/Partial-State-Vertrag,
+- Nachvalidierung vor `DONE`,
+- Crash/Abbruch/Neustart-Recovery,
+- Undo nur nach Verifikation, dass das erzeugte Ziel unverändert ist.
+
+Erste reale Operation ausschließlich **Copy einer normalen Datei**. Move/Rename/Delete bleiben gesperrt, bis Copy separat bewiesen ist.

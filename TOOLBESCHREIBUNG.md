@@ -1,82 +1,51 @@
 # TOOLBESCHREIBUNG — AIO-Tool
 
-## Produktidee
+## Aktueller Entwicklungsstand
 
-AIO-Tool ist ein lokaler, modularer All-in-One-Arbeitsplatz für Organisations-, Projekt-, Kalender-, TODO- und später sichere Datei-/Automatisierungsaufgaben. Die Oberfläche richtet sich zuerst an Nutzer ohne technisches Spezialwissen.
+`0.5.0-native-acceptance-safe-file-sim` — 🟠 DEVELOPMENT / DEV.
 
-## Leitregeln
+AIO-Tool ist ein lokales, offline-first ausgelegtes Werkzeug mit Browseroberfläche und Python-Loopback-Backend. Der neue Slice ergänzt zwei bewusst getrennte Qualitäts-/Sicherheitswerkzeuge.
 
-**Auswahl vor Zeicheneingabe. Sichtbarkeit vor Automatisierung. Sicherheit vor Bequemlichkeit. Evidenz vor Status.**
+## Native Acceptance Runner
 
-## Versionsstand
+Zweck: Die Lücke zwischen automatisierter L3-Browser-CI und realem Kubuntu-Zielsystem schließen.
 
-- 🟢 letzter bewiesener Stand: `0.4.2-ui-acceptance-TESTED`
-- 🟠 aktuelle Entwicklung: `0.4.3-integrity-hardening-DEV`
+Eigenschaften:
 
-`0.4.3` verbessert Robustheit und Wartbarkeit, ohne neue Nutzerfunktion einzuführen.
+- 18 geführte Prüfschritte,
+- Kubuntu-Start-/Instanz-/Portfälle,
+- kleine/Full-HD/große Darstellung,
+- Tastatur-only,
+- Firefox und Chrome/Chromium jeweils 100/125/150/175/200 %,
+- persistente gemeinsame Sitzung,
+- explizites PASS/FAIL/SKIP,
+- automatische JSON-/TXT-Berichte,
+- keine automatische Hochstufung offener Schritte.
 
-## Informationsarchitektur
+## Release Evidence Index
 
-**Links:** Schnellmodule, Häufig/Alle, optional Diagnose.  
-**Mitte:** Monatskalender und kommende Termine.  
-**Rechts:** nächste drei TODOs, letzte fünf Ereignisse, System-/Versionsstatus.  
-**Darüber:** globaler Zustand, nächster sinnvoller Schritt und fällige Reminder.
+Zweck: TESTED-Evidenz nicht über README, Chatberichte und CI-Seiten verteilen.
 
-## Technischer Kern
+- Masterindex: `evidence/RELEASE_EVIDENCE_INDEX.json`.
+- je TESTED-/höherer Version eine eigene Datei unter `evidence/releases/`.
+- Inhalte: Commits, CI-Runs, Artefakthashstatus, Browsermatrix, offene L4-Gates.
+- CI-Guard prüft Mengen-/Commit-/Hash-/Browserkonsistenz gegen `VERSION_REGISTRY.json`.
+- historische Lücken werden als `not-recorded` festgehalten.
 
-- `AtomicJsonStore` — atomare Persistenz + Backup-Fallback.
-- `VersionRegistry` — Version, Status, Evidenz und zulässige Statuskombinationen.
-- `EventRegistry` — verständliche Ereignisse.
-- `TodoStore` — Aufgaben, Titelgedächtnis, Erledigt-Archiv.
-- `CalendarStore` — Termine, Perioden, Reminder, `zoneinfo`/DST.
-- `ErrorAdvisor` — versionierte Fehlerhilfe.
-- `instance_identity.py` + `launcher_probe.py` — sichere Erkennung der konkreten lokalen Installation.
+## SAFE-FILE Core V0 — Simulation
 
-## Startphilosophie
+Zweck: den vollständigen sicheren Copy-Entscheidungsweg entwickeln, **bevor** die erste Datei verändert werden darf.
 
-Die Startroutine zeigt neun Checkpoints mit Ampelstatus und Fehler-IDs. Eine vorhandene Instanz wird nur wiederverwendet, wenn Version, Loopback-/Ready-Zustand und Installationskennung zusammenpassen. Fremd belegte Ports werden nicht still übernommen.
+Workflow:
 
-Normaler Nutzerstart prüft ausschließlich die transportierte Runtime-Basis über `scripts/runtime_preflight.py`; Repositorytests und Dokumentation sind keine Laufzeitabhängigkeit.
+`Quelle auswählen → Ziel auswählen → Vorprüfen → Konfliktoption → Vorschau → Failure-/Recovery-Auswertung`
 
-## UI-Qualitätsvertrag
+Aktuelle technische Sperren:
 
-Dashboarddarstellung wird mehrstufig geprüft:
+- `SIMULATION_ONLY=True`
+- `EXECUTION_ENABLED=False`
+- kein Execute-Endpunkt
+- keine Copy-/Move-/Delete-Primitive
+- kein Schreibjournal nötig, weil noch keine Mutation existiert
 
-1. statische Struktur-/API-Verträge,
-2. maschinenlesbarer 12-Spalten-Rastervertrag,
-3. echte Chromium-/Firefox-Läufe,
-4. Viewport-/Reflow-Matrix bis 320 CSS-px,
-5. Geometrie, Zielgrößen und Interaktionen,
-6. Screenshot-/JSON-Evidenz.
-
-Die native Kubuntu-/KDE-/DPI-/Zoom-Abnahme bleibt davon getrennt.
-
-## Reminder-Vertrag
-
-`fällig → sichtbar darstellen → Nutzer bestätigt → ACK persistieren`
-
-Polling oder ein unsichtbarer Tab erzeugen keinen gesehenen Zustand.
-
-## Transportphilosophie
-
-Runtime und Repository sind getrennte Produktebenen.
-
-**Runtime-ZIP:** nur positive Allowlist aus `manifests/RUNTIME_MANIFEST.json` + generiertes `MANIFEST_RELEASE.json`.  
-**Repository/lokal:** Dokumentation, Tests, Testdaten, CI, Learning Memory, Browserreports und Logs.
-
-Status ist am Dateinamen sichtbar: `DEV`, `TESTED`, `RC`, `RELEASED`, `BLOCKED`, `ARCHIVED`.
-
-## Sicherheitsphilosophie für spätere Dateioperationen
-
-`Vorprüfung → Vorschau → Bestätigung → Aktion → Nachprüfung → Protokoll → Undo/Recovery`
-
-Echte Dateioperationen sind noch bewusst nicht aktiv. SAFE-FILE-CORE beginnt später ausschließlich mit **Copy** und erweitert erst nach bewiesener Stabilität auf Move/Rename/Papierkorb.
-
-## Noch offen
-
-- native Kubuntu-Klick-&-Start-Abnahme,
-- KDE-/HiDPI-Skalierung,
-- 100–200 % realer Browserzoom,
-- realer Tastatur-/Screenreader-Durchlauf,
-- SAFE-FILE-CORE,
-- persistente Job-/Recovery-Queue.
+Spätere echte Copy benötigt einen neuen evidenzgebundenen Versionsslice mit persistentem Journal, Staging, Postvalidation, Crash-/Recoverytests und sicherem Undo.

@@ -2,83 +2,77 @@
 
 ## Aktueller Stand
 
-**🟢 `0.4.3-integrity-hardening` — TESTED / DRAFT**
+**🟠 `0.5.0-native-acceptance-safe-file-sim` — DEVELOPMENT / DEV**
 
-Finaler Entwicklungshead: GitHub Actions Run `33034359454` — **Core/Release + Chromium + Firefox SUCCESS**.
+Letzter vollständig bewiesener Stand: **🟢 `0.4.3-integrity-hardening-TESTED`**.
 
-### Fortschritt 0.4.3
+### Fortschritt
 
 ```text
-Audit / Befundaufnahme          ████████████████████ 100 %
-Launcher-Instanzhärtung         ████████████████████ 100 %
-Runtime-Transportvertrag        ████████████████████ 100 %
-Statusmodell                    ████████████████████ 100 %
-Regressionstests                ████████████████████ 100 %
-Dokumentationssynchronisierung  ████████████████████ 100 %
-Finale CI / Browser-Evidenz     ████████████████████ 100 %
-TESTED-Promotion                ████████████████░░░░  80 %  Promotion-Revalidierung läuft
+Native Acceptance Runner       ████████████████████ 100 % umgesetzt
+Release Evidence Index         ████████████████████ 100 % umgesetzt
+Evidence Guard                 ████████████████████ 100 % umgesetzt
+SAFE-FILE Simulation           ████████████████████ 100 % umgesetzt
+Failure-Matrix SF-001..010      ████████████████████ 100 % umgesetzt
+Recovery-Vorvertrag            ████████████████████ 100 % umgesetzt
+Automatisierte Tests/CI        ░░░░░░░░░░░░░░░░░░░░   0 % final offen
+Native Kubuntu L4              ░░░░░░░░░░░░░░░░░░░░   0 % real offen
+Copy-Ausführung                ░░░░░░░░░░░░░░░░░░░░   0 % gesperrt
 ```
 
-## P0/P1 — Integritätshärtung
+## P0/P1 — aktueller Slice
 
-- [x] `0.4.2-TESTED` als historischen Evidenzstand einfrieren.
-- [x] neuen Patchstand als `0.4.3-integrity-hardening` führen.
-- [x] Launcher übernimmt nicht mehr jedes HTTP 200 als eigene Instanz.
-- [x] Version + Ready/Loopback + konkrete Installationskennung prüfen.
-- [x] fremd belegten Standardport transparent auf freien Loopback-Port umleiten.
-- [x] ungültigen Port / unbekannten Probe-Status fail-closed behandeln.
-- [x] normaler Runtime-Start nutzt `runtime_preflight.py`, nicht Repo-`validate.py`.
-- [x] Launcher-/Eventlogs lokal begrenzen/rotieren.
-- [x] Status-/Releasevokabular vereinheitlichen und widersprüchliche Paare ablehnen.
-- [x] Runtime-ZIP bauen → entpacken → Preflight aus dem ZIP ausführen.
-- [x] Documentation Guard gegen Versions-/Statusdrift.
-- [x] README/AGENTS/TODO/CHANGELOG/MANIFEST/REGRESSIONS/LAIEN-ANLEITUNG/TOOLBESCHREIBUNG synchronisieren.
-- [x] Core-/Release-Gate auf finalem Entwicklungshead grün.
-- [x] Chromium + Firefox auf finalem Entwicklungshead grün.
-- [x] Evidenz Run `33034359454` in Registry eintragen und auf `tested / draft` setzen.
-- [ ] Promotion-Commit erneut vollständig grün prüfen.
+- [x] neue Version nach eingefrorenem `0.4.3-TESTED` angelegt.
+- [x] Native Acceptance Runner mit 18 Prüfschritten.
+- [x] PASS/FAIL/SKIP nur durch explizite Nutzerentscheidung.
+- [x] gemeinsame persistente Sitzung für Firefox/Chromium.
+- [x] automatische JSON-/TXT-Abnahmeberichte.
+- [x] browserbezogene Umgebungsdaten erfassen, ohne Zoom automatisch vorzutäuschen.
+- [x] lokale Host-/Origin-Prüfung inklusive exaktem Port.
+- [x] Evidence Masterindex + Einzeldatei pro TESTED-Version.
+- [x] historische Evidenzlücken als `not-recorded`, nicht erfunden.
+- [x] Evidence Guard gegen Versionsregistry.
+- [x] SAFE-FILE Quelle/Ziel über Dialogadapter.
+- [x] Copy-Vorschau mit Speicherplatz, Konflikt, Symlink- und Same-Target-Prüfung.
+- [x] Failure-Matrix SF-001 bis SF-010.
+- [x] Recovery-Vorvertrag.
+- [x] `execution_enabled=false` und kein Execute-Endpunkt.
+- [ ] finale Unit-/Contract-/Failure-/Evidence-Tests grün.
+- [ ] Runtime-ZIP End-to-End-Preflight grün.
+- [ ] Chromium + Firefox L3 auf finalem Head grün.
+- [ ] erst dann `0.5.0` zu TESTED promoten, falls der Slice vollständig bewiesen ist.
 
-## Bereits bewiesene Basis
+## L4 — reale Native-Abnahme
 
-- [x] atomare Config + Backup-Fallback.
-- [x] Loopback Host-/Origin-Schutz.
-- [x] VersionRegistry + Evidenzpflicht.
-- [x] EventRegistry.
-- [x] TODO-Core + Titelgedächtnis + Erledigt-Archiv.
-- [x] Calendar-Core + Monat/Woche/Jahr + Reminder + `zoneinfo`/DST.
-- [x] Dashboard V2 mit Monatskalender, nächsten TODOs/Terminen und letzten Ereignissen.
-- [x] Reminder nur nach sichtbarer Nutzerquittierung.
-- [x] 12-Spalten-Raster + Browser-Reflow bis 320 CSS-px.
-- [x] Chromium-/Firefox-Acceptance-Pipeline.
-- [x] positive Runtime-Allowlist + `MANIFEST_RELEASE.json`.
-- [x] Status im Release-Dateinamen.
-- [x] versionierte Texte/Fehlerregeln und Mustervorlagen.
-- [x] `LEARNING_MEMORY.jsonl` + Guard.
+Nach grünem DEV-/TESTED-Build mit `native_acceptance.desktop`:
 
-## Native Zielsystemabnahme — nächster Slice
+- [ ] Kubuntu Desktop-Starter.
+- [ ] Shell-Starter.
+- [ ] passende Instanz wiederverwenden.
+- [ ] Fremdport/Fallback.
+- [ ] kleine Anzeige.
+- [ ] Full-HD.
+- [ ] große Anzeige.
+- [ ] Tastatur-only.
+- [ ] Firefox 100/125/150/175/200 %.
+- [ ] Chrome/Chromium 100/125/150/175/200 %.
+- [ ] JSON-/TXT-Bericht sichern.
+- [ ] reale FAIL-Befunde jeweils als Regression + Learning Memory übernehmen.
 
-- [ ] `AIO-Tool-0.4.3-integrity-hardening-TESTED.zip` in frischen Ordner auf Kubuntu entpacken.
-- [ ] `start_tool.desktop` und `start_tool.sh` real prüfen.
-- [ ] passende laufende Instanz wiederverwenden.
-- [ ] fremd belegten Port / sicheren Ausweichport real prüfen.
-- [ ] Firefox + Chrome/Chromium: Start, Kalender, TODO, Reminder, Einstellungen.
-- [ ] 100 / 125 / 150 / 175 / 200 % Browserzoom.
-- [ ] KDE-/DPI-Skalierung und kleine / Full-HD / große Fenster.
-- [ ] reiner Tastaturdurchlauf und Fokusreihenfolge.
-- [ ] reale Befunde als Regression + Learning Memory aufnehmen.
+## SAFE-FILE — Freigabebedingungen für echte Copy
 
-## SAFE-FILE-CORE — erst danach
+Vor einem späteren `execution_enabled=true` müssen in **neuem Versionsslice** bewiesen sein:
 
-- [ ] Copy als erste reale Dateioperation.
-- [ ] Quelle/Ziel möglichst über Auswahl statt Pfadeingabe.
-- [ ] Existenz, Lesbarkeit, Schreibbarkeit, freier Speicher und Konflikte vorab prüfen.
-- [ ] Vorschau und klare Auswirkung vor Änderung.
-- [ ] persistenter Jobstatus.
-- [ ] Nachprüfung gegen erwartetes Ergebnis.
-- [ ] Undo-/Recovery-Datensatz.
-- [ ] Abbruch/Neustart robust behandeln.
-- [ ] erst danach Move, Rename und Papierkorb/Delete.
+- [ ] alle SF-001..010 Tests grün auf finalem Head.
+- [ ] persistentes Jobjournal vor Mutation.
+- [ ] Staging-/Partial-Copy-Konzept.
+- [ ] Nachvalidierung Größe + optional Hash.
+- [ ] `DONE` erst nach persistierter Nachvalidierung.
+- [ ] Crash-/Abbruch-/Neustarttests.
+- [ ] Undo nur wenn Ziel seit Copy unverändert.
+- [ ] echte Copy zunächst nur einzelne normale Datei.
+- [ ] Move/Rename/Delete weiterhin gesperrt.
 
-## Empfohlener nächster Schritt
+## Nächster Schritt
 
-**Promotion-Commit vollständig durch Core/Release + Chromium/Firefox laufen lassen. Danach ohne neue Funktion direkt die native Kubuntu-/Zoom-/Tastaturabnahme aus dem TESTED-ZIP durchführen.**
+**Jetzt keine echte Dateioperation hinzufügen. Zuerst den vollständigen `0.5.0`-DEV-Slice automatisiert prüfen und jeden roten Befund minimal beheben.**
