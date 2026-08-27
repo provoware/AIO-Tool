@@ -1,89 +1,201 @@
 # AIO-Tool
 
-> Lokales, modulares und laienfreundliches All-in-One-Tool mit sicherem Python-Backend und Browseroberfläche.
+> **Lokales, modulares und laienfreundliches All-in-One-Tool.** Es läuft mit einem Python-Backend ausschließlich auf deinem eigenen Rechner und öffnet seine Oberfläche im Browser.
 
-## Status
+## 🧭 Projektstatus auf einen Blick
 
-- **Version:** `0.4.0-dashboard-v2`
-- **Phase:** P1 — Dashboard-Integration
-- **Stand:** 2026-08-27
-- **Automatischer Code-Gate:** GitHub Actions Run `33026823914` — SUCCESS
-- **Tests:** 77 Unit-/Integrations-/Vertragstests
-- **Release-Status:** `draft`; reale Kubuntu-/Browser-/Zoom-Gates bleiben offen
-- **Backend:** ausschließlich `127.0.0.1`, kein Internetzwang
-- **Externe Python-Pakete:** keine
+| Bereich | Zustand | Bedeutung |
+|---|---|---|
+| Letzter bewiesener Stand | 🟢 `0.4.2-ui-acceptance-TESTED` | Core + Runtime-ZIP + Chromium + Firefox erfolgreich geprüft |
+| Aktuelle Entwicklung | 🟠 `0.4.3-integrity-hardening-DEV` | Robustheits-/Wartbarkeitshärtung; neue Evidenz läuft separat |
+| Internet für Kernfunktionen | 🟢 nicht nötig | offline-first |
+| Backend | 🟢 nur `127.0.0.1` | nicht im LAN/Internet veröffentlicht |
+| Telemetrie | 🟢 keine | keine automatische Nutzungsübertragung |
+| Externe Runtime-Pakete | 🟢 keine | Python-Standardbibliothek |
+| Native Kubuntu-/DPI-Abnahme | 🟡 offen | automatisierte Browser-CI ersetzt kein echtes Zielsystem |
+| SAFE-FILE-CORE | ⚪ noch nicht begonnen | echte Dateioperationen bleiben bis zum Sicherheits-Slice gesperrt |
 
-## Was ist jetzt sichtbar nutzbar?
+### Fortschritt
 
-Dashboard V2 verbindet die bereits getesteten Core-APIs zu einer kompakten Arbeitsübersicht, ohne die Fachlogik in JavaScript zu duplizieren:
+```text
+Foundation / Persistenz       ████████████████████ 100 %  🟢
+Kalender / TODO / Ereignisse  ████████████████████ 100 %  🟢
+Dashboard V2                  ████████████████████ 100 %  🟢
+Browser-Acceptance            ████████████████████ 100 %  🟢
+Runtime-Transport             ████████████████████ 100 %  🟢
+Integritätshärtung 0.4.3      ███████████████░░░░░  75 %  🟠 CI/Promotion noch offen
+Native Kubuntu-Abnahme        ██████░░░░░░░░░░░░░░  30 %  🟡 automatisiert vorbereitet
+SAFE-FILE-CORE                ░░░░░░░░░░░░░░░░░░░░   0 %  ⚪ später
+```
+
+> **Wichtig:** Die Prozentwerte sind Roadmap-/Arbeitsfortschritt. Ein grüner Status entsteht nur durch den jeweiligen Test-/Evidenzvertrag.
+
+---
+
+## ▶️ Start für Laien
+
+1. ZIP vollständig in einen eigenen Ordner entpacken.
+2. `start_tool.desktop` doppelklicken oder `start_tool.sh` starten.
+3. Die Startkonsole zeigt **9 Checkpoints** mit Ampelstatus.
+4. Bei Erfolg öffnet sich die Oberfläche automatisch.
+5. Bei einem Fehler bleibt die Konsole offen und zeigt Fehler-ID, Ursache, Logs und den nächsten sinnvollen Prüfschritt.
+
+### Ampel beim Start
+
+- 🟢 **PASS** — geprüft und bestanden
+- 🟡 **WARN** — Start möglich, Hinweis beachten
+- 🔴 **FAIL** — sicherer Abbruch; Ursache wird erklärt
+- 🔵 **INFO** — normaler Zwischenzustand
+
+Die Startkonsole trennt verständliche Nutzerinformation von technischen Logs. Lokale Logs liegen unter `runtime/` und gehören **nicht** zum Releasepaket.
+
+---
+
+## 🧩 Was kann das Tool aktuell?
+
+### Dashboard
 
 - dauerhaft sichtbarer Monatskalender,
-- nächste Termine,
-- nächste drei TODOs mit direktem Abhaken,
-- letzte fünf verständliche Ereignisse,
-- Versions-, Registry- und Systemstatus,
-- fällige Reminder als sichtbare Hinweise,
-- explizite Reminder-Quittierung über **„Gesehen“**,
-- Schnellzugriff **Häufig / Alle**,
-- kleiner optionaler Entwickler-/Diagnosebereich,
-- vier Themes und Schriftgrößen 90–140 %,
-- automatisch abgeleitete Darstellungsdichte für verschiedene Fenstergrößen,
-- Tastatur-Fokus, Skip-Link, ARIA-Live-Bereiche und Reduced-Motion-Schutz.
+- kommende Termine,
+- nächste drei TODOs,
+- TODO direkt abhaken → wird mit Zeitstempel ins Erledigt-Archiv verschoben,
+- letzte fünf Ereignisse in verständlicher Sprache,
+- Versions-/Registry-/Systemstatus,
+- fällige Erinnerungen mit explizitem **„Gesehen“**,
+- Schnellmodule **Häufig / Alle**,
+- optionaler Entwickler-/Diagnosebereich,
+- vier Themes,
+- Schriftgrößen-Presets,
+- automatische Darstellungsdichte.
 
-## Sicherer Reminder-Vertrag
+### Kalender
 
-Ein fälliger Reminder wird nicht beim bloßen Polling quittiert.
+- Monats-, Wochen- und Jahresperioden im Backend,
+- Termin-Titelgedächtnis,
+- Erinnerungs-Presets,
+- Sommer-/Winterzeit über `zoneinfo`,
+- optionale TODO-Verknüpfung.
 
-`fällig → sichtbar im Dashboard → Nutzer klickt „Gesehen“ → Backend speichert notified_at`
+### TODOs
 
-Ist der Browser-Tab unsichtbar, führt Dashboard V2 keine Quittierung aus. Dadurch bleibt ein noch nicht tatsächlich gesehener Hinweis nach Reload/erneuter Abfrage offen.
+- persistente Aufgaben,
+- Titel werden für spätere Auswahl gemerkt,
+- nächste drei Aufgaben automatisch priorisiert,
+- Erledigt-Archiv mit Zeitstempel.
 
-## Kalender/TODO/Ereignisse
+### Robustheitskern
 
-Die UI verwendet ausschließlich die vorhandenen APIs:
-
-- `/api/status`
-- `/api/todos`
-- `/api/todos/<id>/complete`
-- `/api/events?limit=5`
-- `/api/calendar?view=month|year`
-- `/api/calendar/reminders/due`
-- `/api/calendar/<event>/reminders/<minutes>/ack`
-
-Kalenderperioden, TODO-Reihenfolge, Reminder-Fälligkeit und Persistenz bleiben Backend-Verantwortung.
-
-## Versionierte Dashboard-Texte
-
-`web/dashboard-texts.de.v1.json` enthält die wiederkehrenden deutschen UI-Texte mit eigenem Versionsvertrag. `tests/test_dashboard_contract.py` prüft, dass sichtbare `data-i18n`-Schlüssel vorhanden und nicht leer sind.
-
-## Dashboard-Vertragstest
-
-Automatisch geprüft werden unter anderem:
-
-- Kernbereiche des Dashboards vorhanden,
-- Montag–Sonntag-Vertrag,
-- Nutzung der getesteten Core-APIs,
-- Reminder nicht im unsichtbaren Tab quittieren,
-- Reminder-ACK nur über sichtbare Nutzeraktion,
-- Nutzertitel via `textContent` statt HTML-Injektion,
-- Diagnose enthält keine vollständige Config/Projektpfade/Favoriten,
-- responsive Breakpoints, Fokusdarstellung und Reduced-Motion-Schutz.
-
-## Bestehender Robustheitskern
-
-Weiterhin enthalten sind:
-
-- `AtomicJsonStore` + Backup-Fallback,
+- atomare JSON-Speicherung,
+- Backup-Fallback,
 - VersionRegistry mit Evidenzpflicht,
 - EventRegistry,
-- TODO-Core,
-- Calendar-Core mit `zoneinfo`/DST,
-- positive/negative Testdaten und Mustervorlagen,
-- versionierte Core-Texte und Fehlerregeln,
-- `LEARNING_MEMORY.jsonl` + Learning Guard,
+- versionierte Text-/Fehlerkataloge,
+- positive und negative Testdaten,
+- Entwicklungs-Lerngedächtnis,
 - reproduzierbarer Release-Builder.
 
-## Prüfung
+---
+
+## 🛡️ Warum die Startroutine jetzt sicherer ist
+
+Eine Antwort `200 OK` reicht **nicht** mehr, um eine bereits laufende Instanz zu übernehmen.
+
+Der Launcher prüft:
+
+`Version → Loopback → Ready-Zustand → konkrete Installationskennung`
+
+Ist der Standardport durch eine andere oder alte lokale Instanz belegt, wird sie **nicht** übernommen. Stattdessen wählt die Startroutine transparent einen freien lokalen Ausweichport.
+
+Außerdem verwendet der normale Start nur:
+
+`scripts/runtime_preflight.py`
+
+und **nicht** die Repository-Vollprüfung `scripts/validate.py`. Dadurch bleibt das Runtime-ZIP wirklich unabhängig von README, Tests und Entwicklungsdateien.
+
+---
+
+## 📦 Runtime-ZIP und Repository sind bewusst getrennt
+
+### Im Runtime-ZIP
+
+Nur Dateien aus `manifests/RUNTIME_MANIFEST.json` plus das automatisch erzeugte `MANIFEST_RELEASE.json`:
+
+- Startdateien,
+- benötigter Python-Code,
+- Browseroberfläche,
+- notwendige Text-/Fehlerdaten,
+- geprüfte Referenzvorlagen,
+- Runtime-Preflight,
+- Instanzprüfung.
+
+### Nur im Repository / lokal
+
+- README, AGENTS, TODO, CHANGELOG,
+- Regressionen und Learning Memory,
+- Tests/Testdaten,
+- CI-Konfiguration,
+- Browser-Screenshots und Reports,
+- lokale Logs und Nutzerdaten.
+
+Der Release-Builder arbeitet mit einer **positiven Allowlist**. Neue Repository-Dateien gelangen deshalb nicht automatisch ins Nutzerpaket.
+
+---
+
+## 🏷️ Was bedeuten die Dateinamen?
+
+| Suffix | Bedeutung |
+|---|---|
+| `-DEV.zip` | 🟠 Entwicklung, noch nicht vollständig bewiesen |
+| `-TESTED.zip` | 🟢 automatisiert geprüft |
+| `-RC.zip` | 🟡 Release Candidate |
+| `-RELEASED.zip` | 🟢 offiziell freigegeben |
+| `-BLOCKED.zip` | 🔴 bekannter Blocker |
+| `-ARCHIVED.zip` | ⚪ historischer Stand |
+
+Der Name wird aus der validierten Versionsregistry abgeleitet. Unbekannte oder widersprüchliche Statuskombinationen werden abgelehnt.
+
+---
+
+## 🧪 Wie wird geprüft?
+
+### L0 — Syntax / Schema
+
+- Python-Kompilierung
+- Bash-Syntax
+- JavaScript-Syntax
+- JSON-/Schema-Validatoren
+
+### L1 — Unit / Verträge
+
+Persistenz, Kalender, TODO, Versionierung, Fehlerhilfe, Launcher, UI-Verträge.
+
+### L2 — echtes Runtime-ZIP
+
+CI baut das ZIP, prüft Manifest + SHA256, entpackt es in einen frischen Ordner und startet dort den **Runtime-Preflight**.
+
+### L3 — echte Browser
+
+Chromium und Firefox prüfen über mehrere Viewports:
+
+- 12-Spalten-Raster,
+- Reflow bis 320 CSS-px,
+- horizontale Überbreite,
+- Überlappungen,
+- Mindest-Bediengrößen,
+- Kalender-7-Spalten,
+- TODO-/Reminder-/Einstellungsinteraktionen.
+
+Screenshots und JSON-Report werden als Evidenz erzeugt.
+
+### L4 — echtes Zielsystem
+
+Noch offen: Kubuntu, reale KDE-/DPI-Skalierung, 100–200 % Browserzoom und vollständiger Tastaturdurchlauf. Dieser Status wird nicht aus CI abgeleitet.
+
+---
+
+## 🔧 Entwicklerprüfung
+
+Im Repository:
 
 ```bash
 python3 -m unittest discover -s tests -v
@@ -94,19 +206,45 @@ node --check web/app.js
 python3 scripts/release.py --check
 ```
 
-Der erfolgreiche Run `33026823914` erzeugte `AIO-Tool-0.4.0-dashboard-v2.zip`; der Release-Builder meldete SHA256 `104c361caf65c484626cd24812272e0781c151d2afcbcb933b5fc393a3e9e946`.
+Nur Runtime-Vertrag:
 
-## Noch offen
+```bash
+python3 scripts/runtime_preflight.py --quick
+```
 
-- reale Bedienabnahme auf Kubuntu,
-- Firefox und Chrome/Chromium,
-- 125–200 % Browserzoom,
-- echte Tastatur-/Fokusabnahme im Browser,
+Browser-Acceptance:
+
+```bash
+python3 scripts/ui_acceptance_ci.py --browser chromium --browser firefox --strict
+```
+
+---
+
+## 🧠 Entwicklungsdisziplin
+
+Die wichtigsten verbindlichen Regeln stehen in `AGENTS.md`:
+
+- bewiesene Version nicht nachträglich verändern,
+- Status nur mit Evidenz erhöhen,
+- UI-Renderaussagen nur mit echten Browserläufen,
+- Runtime strikt vom Repository trennen,
+- Fehler als Regression sichern,
+- zuerst kleinste verantwortliche Codezone patchen,
+- keine neue Funktion bei rotem P0/P1-Gate.
+
+---
+
+## ⚠️ Was ist bewusst noch nicht fertig?
+
+- native Kubuntu-Klick-&-Start-Abnahme,
+- echte KDE-/HiDPI-Skalierung,
+- 100/125/150/175/200 % Browserzoom auf dem Zielsystem,
+- kompletter Tastatur-/Screenreader-Praxistest,
 - SAFE-FILE-CORE,
 - persistente Job-/Recovery-Queue.
 
-## Nächste Entwicklungsreihenfolge
+## ➜ Nächste logische Reihenfolge
 
-1. **Dashboard V2 final synchronisieren und mergen.**
-2. **Zielsystem-/Browser-/Zoom-Gate aus sauberem Release.**
-3. Danach **SAFE-FILE-CORE** mit Copy als erster realer Dateioperation.
+1. **`0.4.3-integrity-hardening` vollständig grün prüfen und erst danach zu TESTED hochstufen.**
+2. **Native Kubuntu-/Zoom-/Tastaturabnahme aus dem erzeugten TESTED-ZIP.**
+3. Danach **SAFE-FILE-CORE**, zunächst ausschließlich sichere Copy-Operationen.
