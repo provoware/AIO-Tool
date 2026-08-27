@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "events": [
+    {
+      "id": "fixture-calendar-001",
+      "title": "Backup prüfen",
+      "date": "2026-08-28",
+      "start_time": "09:00",
+      "end_time": "09:30",
+      "category": "System",
+      "description": null,
+      "todo_id": "optional-todo-id",
+      "timezone": "local",
+      "reminders": [
+        {"minutes_before": 60, "notified_at": null},
+        {"minutes_before": 0, "notified_at": null}
+      ],
+      "created_at": "2026-08-27T01:45:00+02:00",
+      "updated_at": "2026-08-27T01:45:00+02:00"
+    },
+    {
+      "id": "fixture-calendar-002",
+      "title": "Ganztägige Notiz",
+      "date": "2026-08-29",
+      "start_time": null,
+      "end_time": null,
+      "category": null,
+      "description": "Ohne Uhrzeit und ohne Erinnerung erlaubt.",
+      "todo_id": null,
+      "timezone": "local",
+      "reminders": [],
+      "created_at": "2026-08-27T01:46:00+02:00",
+      "updated_at": "2026-08-27T01:46:00+02:00"
+    }
+  ],
+  "title_memory": [
+    {"title": "Backup prüfen", "count": 2, "last_used_at": "2026-08-27T01:45:00+02:00"},
+    {"title": "Ganztägige Notiz", "count": 1, "last_used_at": "2026-08-27T01:46:00+02:00"}
+  ]
+}
