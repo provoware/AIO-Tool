@@ -11,6 +11,11 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT / "ui" / "layout-contract.v1.json"
 DEFAULT_OUTPUT = ROOT / "artifacts" / "ui-acceptance"
+READY_JS = """() => {
+  const badge=document.querySelector('#todoCountBadge');
+  const grid=document.querySelector('#monthGrid');
+  return Boolean(badge && badge.textContent.trim() !== '—' && grid && grid.children.length >= 28);
+}"""
 
 
 def load_contract() -> dict[str, Any]:
@@ -75,6 +80,8 @@ def init_script(f: dict[str,Any]) -> str:
     texts=json.loads((ROOT/"web"/"dashboard-texts.de.v1.json").read_text(encoding="utf-8"))
     version=(ROOT/"VERSION").read_text(encoding="utf-8").strip()
     payload=json.dumps({"f":f,"texts":texts,"version":version},ensure_ascii=False).replace("</","<\\/")
+    month=json.dumps(month_payload(f["events"], date.today().isoformat()), ensure_ascii=False)
+    year=json.dumps(year_payload(f["events"], date.today().isoformat()), ensure_ascii=False)
     return f'''(()=>{{
 const x={payload}; const ok=(body,status=200)=>Promise.resolve(new Response(JSON.stringify({{ok:true,...body}}),{{status,headers:{{"Content-Type":"application/json"}}}}));
 window.fetch=(input,options={{}})=>{{const raw=typeof input==="string"?input:input.url; const u=new URL(raw,"http://aio.local"); const p=u.pathname;
@@ -86,7 +93,7 @@ window.fetch=(input,options={{}})=>{{const raw=typeof input==="string"?input:inp
  if(p==="/api/events") return ok({{events:x.f.history.slice(0,5)}});
  if(p==="/api/calendar/reminders/due"){{const e=x.f.events[0];return ok({{reminders:x.f.reminder_acked?[]:[{{event_id:e.id,title:e.title,date:e.date,start_time:e.start_time,minutes_before:0}}]}});}}
  if(p.includes("/reminders/")&&p.endsWith("/ack")){{x.f.reminder_acked=true;return ok({{event:x.f.events[0]}});}}
- if(p==="/api/calendar"){{const anchor=u.searchParams.get("date")||new Date().toISOString().slice(0,10);return ok({{calendar:u.searchParams.get("view")==="year"?{json.dumps(year_payload(f['events'], date.today().isoformat()),ensure_ascii=False)}:{json.dumps(month_payload(f['events'], date.today().isoformat()),ensure_ascii=False)}}});}}
+ if(p==="/api/calendar") return ok({{calendar:u.searchParams.get("view")==="year"?{year}:{month}}});
  return Promise.resolve(new Response(JSON.stringify({{ok:false,error:"fixture endpoint missing: "+p}}),{{status:404,headers:{{"Content-Type":"application/json"}}}}));
 }}; }})()'''
 
@@ -126,7 +133,11 @@ def interactions(page)->dict[str,bool]:
     out={}
     page.locator('[data-module-mode="all"]').click(); out["module_all"]=page.locator("#developerToggle").is_visible()
     page.locator("#settingsToggle").click(); out["settings_open"]=page.locator("#settingsPanel").is_visible(); page.locator("#settingsClose").click(); out["settings_close"]=not page.locator("#settingsPanel").is_visible()
-    before=int(page.locator("#todoCountBadge").inner_text()); page.locator("#todoList .icon-action").first.click(); page.wait_for_timeout(150); after=int(page.locator("#todoCountBadge").inner_text()); out["todo_complete"]=after==before-1
+    badge=page.locator("#todoCountBadge").inner_text().strip(); before=int(badge) if badge.isdigit() else -1
+    todo_action=page.locator("#todoList .icon-action")
+    if todo_action.count(): todo_action.first.click(); page.wait_for_timeout(150)
+    after_text=page.locator("#todoCountBadge").inner_text().strip(); after=int(after_text) if after_text.isdigit() else -1
+    out["todo_complete"]=before>0 and after==before-1
     rem=page.locator("#reminderRegion .reminder-ack"); out["reminder_visible"]=rem.count()>0
     if rem.count(): rem.first.click(); page.wait_for_timeout(100)
     out["reminder_ack"]=page.locator("#reminderRegion .reminder-card").count()==0
@@ -140,8 +151,17 @@ def run_browser(p,browser_name:str,contract:dict[str,Any],output:Path)->dict[str
             context=browser.new_context(viewport={"width":scenario["viewport"][0],"height":scenario["viewport"][1]},locale="de-DE",reduced_motion="reduce")
             page=context.new_page(); errors=[]; page.on("pageerror",lambda e:errors.append(str(e)))
             page.add_init_script(init_script(fixtures(scenario["font_scale"])))
-            page.set_content(inline_page(),wait_until="load"); page.wait_for_timeout(350)
-            a=audit(page,contract,scenario); f=failures(a,contract); inter=interactions(page); f += ["Interaktion fehlgeschlagen: "+k for k,v in inter.items() if not v]
+            page.set_content(inline_page(),wait_until="load")
+            ready_error=None
+            try: page.wait_for_function(READY_JS,timeout=10000)
+            except Exception as exc: ready_error=f"Dashboard wurde nicht rechtzeitig bereit: {type(exc).__name__}"
+            page.wait_for_timeout(100)
+            a=audit(page,contract,scenario); f=failures(a,contract); inter={"boot_ready":ready_error is None}
+            if ready_error: f.append(ready_error)
+            else:
+                try: inter.update(interactions(page))
+                except Exception as exc: f.append(f"Interaktionsprüfung abgebrochen: {type(exc).__name__}: {exc}")
+            f += ["Interaktion fehlgeschlagen: "+k for k,v in inter.items() if not v]
             shot=output/f"{browser_name}-{scenario['id']}.png"; page.screenshot(path=str(shot),full_page=True,animations="disabled")
             report["scenarios"].append({"scenario":scenario,"audit":a,"interactions":inter,"errors":errors,"failures":f+["Browserfehler: "+e for e in errors],"screenshot":shot.name}); context.close()
     finally: browser.close()
@@ -151,12 +171,18 @@ def run_browser(p,browser_name:str,contract:dict[str,Any],output:Path)->dict[str
 def main()->None:
     ap=argparse.ArgumentParser(); ap.add_argument("--browser",action="append",choices=["chromium","firefox"],dest="browsers"); ap.add_argument("--strict",action="store_true"); ap.add_argument("--output",type=Path,default=DEFAULT_OUTPUT); args=ap.parse_args()
     browsers=args.browsers or ["chromium"]; contract=load_contract(); args.output.mkdir(parents=True,exist_ok=True)
-    try: from playwright.sync_api import sync_playwright
-    except ImportError as exc: raise SystemExit("FEHLER: Playwright fehlt. python3 -m pip install -r requirements-ui.txt") from exc
-    report={"schema_version":1,"contract_version":contract["contract_version"],"source_version":(ROOT/"VERSION").read_text().strip(),"browsers":[]}
-    with sync_playwright() as p:
-        for b in browsers: print("UI-Akzeptanz:",b); report["browsers"].append(run_browser(p,b,contract,args.output))
-    all_fail=[f"{b['browser']}/{s['scenario']['id']}: {x}" for b in report["browsers"] for s in b["scenarios"] for x in s["failures"]]; report["failures"]=all_fail; report["failure_count"]=len(all_fail)
+    report={"schema_version":1,"contract_version":contract["contract_version"],"source_version":(ROOT/"VERSION").read_text().strip(),"browsers":[],"failures":[],"failure_count":0}
+    try:
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as p:
+            for b in browsers:
+                print("UI-Akzeptanz:",b)
+                try: report["browsers"].append(run_browser(p,b,contract,args.output))
+                except Exception as exc: report["failures"].append(f"{b}: Browserlauf abgebrochen: {type(exc).__name__}: {exc}")
+    except ImportError:
+        report["failures"].append("Playwright fehlt: python3 -m pip install -r requirements-ui.txt")
+    all_fail=list(report["failures"])+[f"{b['browser']}/{s['scenario']['id']}: {x}" for b in report["browsers"] for s in b["scenarios"] for x in s["failures"]]
+    report["failures"]=all_fail; report["failure_count"]=len(all_fail)
     (args.output/"report.json").write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     if all_fail:
         print("UI ACCEPTANCE: FEHLER"); [print("-",x) for x in all_fail]
