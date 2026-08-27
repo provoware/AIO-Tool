@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import calendar
 import json
+import re
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -16,6 +17,7 @@ READY_JS = """() => {
   const grid=document.querySelector('#monthGrid');
   return Boolean(badge && badge.textContent.trim() !== '—' && grid && grid.children.length >= 28);
 }"""
+LOCAL_STYLESHEETS = {"styles.css", "acceptance.css"}
 
 
 def load_contract() -> dict[str, Any]:
@@ -25,14 +27,40 @@ def load_contract() -> dict[str, Any]:
     return data
 
 
-def inline_page() -> str:
+def inline_page(fixture_script: str) -> str:
+    """Build the exact product page with local assets embedded for set_content().
+
+    The page contract is discovered from index.html instead of hard-coding a
+    dashboard contract query string. This keeps the browser gate valid when the
+    UI contract version changes and guarantees that fixtures exist before
+    product JavaScript starts.
+    """
     html = (ROOT / "web" / "index.html").read_text(encoding="utf-8")
-    css = (ROOT / "web" / "styles.css").read_text(encoding="utf-8")
-    js = (ROOT / "web" / "app.js").read_text(encoding="utf-8")
-    html = html.replace('<link rel="stylesheet" href="/styles.css?contract=dashboard-v2.2">', f"<style>{css}</style>")
-    html = html.replace('<link rel="stylesheet" href="/styles.css">', f"<style>{css}</style>")
-    html = html.replace('<script src="/app.js?contract=dashboard-v2.2" defer></script>', f"<script>{js}</script>")
-    html = html.replace('<script src="/app.js" defer></script>', f"<script>{js}</script>")
+
+    def inline_stylesheet(match: re.Match[str]) -> str:
+        filename = match.group("filename")
+        if filename not in LOCAL_STYLESHEETS:
+            raise RuntimeError(f"Nicht erlaubtes lokales Test-Stylesheet: {filename}")
+        css = (ROOT / "web" / filename).read_text(encoding="utf-8")
+        return f"<style data-inline-source=\"{filename}\">{css}</style>"
+
+    html = re.sub(
+        r'<link\s+rel="stylesheet"\s+href="/(?P<filename>[^"?]+\.css)(?:\?[^\"]*)?"\s*>',
+        inline_stylesheet,
+        html,
+    )
+    app_js = (ROOT / "web" / "app.js").read_text(encoding="utf-8")
+    replacement = f"<script>{fixture_script}</script><script>{app_js}</script>"
+    html, replaced = re.subn(
+        r'<script\s+src="/app\.js(?:\?[^\"]*)?"\s+defer\s*></script>',
+        lambda _match: replacement,
+        html,
+        count=1,
+    )
+    if replaced != 1:
+        raise RuntimeError("app.js konnte im UI-Testdokument nicht eindeutig eingebettet werden.")
+    if re.search(r'<link\s+rel="stylesheet"\s+href="/', html):
+        raise RuntimeError("Nicht eingebettetes lokales Stylesheet im UI-Testdokument.")
     return html
 
 
@@ -150,8 +178,8 @@ def run_browser(p,browser_name:str,contract:dict[str,Any],output:Path)->dict[str
         for scenario in contract["scenarios"]:
             context=browser.new_context(viewport={"width":scenario["viewport"][0],"height":scenario["viewport"][1]},locale="de-DE",reduced_motion="reduce")
             page=context.new_page(); errors=[]; page.on("pageerror",lambda e:errors.append(str(e)))
-            page.add_init_script(init_script(fixtures(scenario["font_scale"])))
-            page.set_content(inline_page(),wait_until="load")
+            fixture_script=init_script(fixtures(scenario["font_scale"]))
+            page.set_content(inline_page(fixture_script),wait_until="load")
             ready_error=None
             try: page.wait_for_function(READY_JS,timeout=10000)
             except Exception as exc: ready_error=f"Dashboard wurde nicht rechtzeitig bereit: {type(exc).__name__}"
@@ -188,5 +216,6 @@ def main()->None:
         print("UI ACCEPTANCE: FEHLER"); [print("-",x) for x in all_fail]
         if args.strict: raise SystemExit(1)
     else: print(f"UI ACCEPTANCE PASS: {len(browsers)} Browser × {len(contract['scenarios'])} Szenarien")
+
 
 if __name__=="__main__": main()
