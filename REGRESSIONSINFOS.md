@@ -27,9 +27,9 @@ Historische Verträge **REG-001 bis REG-066** bleiben verbindlich.
 - Test: `tests/test_server.py`.
 - Status: **UMGESETZT**.
 
-### REG-071 — Kalender zeigt nach Fehler alte Daten unter neuem Monat
-- Vertrag: fehlgeschlagener Monatsreload setzt `state.calendar=null`; Upcoming analog auf leere Liste.
-- Test: `test_failed_loads_do_not_reuse_stale_calendar_or_upcoming_data`.
+### REG-071 — Kalender/Termine zeigen nach Ladefehler alte oder scheinbar leere Daten
+- Vertrag: fehlgeschlagener Monatsreload setzt `state.calendar=null`; kommende Termine analog auf `state.upcoming=null`. Die Oberfläche zeigt **nicht verfügbar** statt alte Daten oder ein falsches „keine Termine“.
+- Test: `test_failed_loads_do_not_reuse_stale_or_fake_empty_data`.
 - Status: **UMGESETZT**.
 
 ### REG-072 — alter TODO-Aktionsfehler hält Dashboard auf „teilweise“
@@ -49,6 +49,33 @@ Historische Verträge **REG-001 bis REG-066** bleiben verbindlich.
 ### REG-075 — Helper-UIs benötigen Inline-CSS/DOM-innerHTML
 - Vertrag: gemeinsames `web/helper-ui.css`, CSP `style-src 'self'`, keine Inline-Styles, keine dynamische `innerHTML`-Erzeugung, gültiger Download-Link statt verschachtelter Interaktion.
 - Test: `tests/test_helper_ui_contract.py`.
+- Status: **UMGESETZT**.
+
+### REG-076 — Browser-Acceptance hängt an alter Contract-Query und verliert Produktassets
+- Auslöser: Dashboard wurde auf `dashboard-v2.3` erhöht, der Harness ersetzte aber nur die fest kodierte v2.2-Signatur; `acceptance.css` wurde ebenfalls nicht eingebettet.
+- Wirkung: beide Browser meldeten gleichzeitig fehlende Rasterspannen, zu kleine Ziele, 1-spaltigen Kalender und Boot-Timeout.
+- Vertrag: lokale Stylesheets werden aus dem aktuellen `index.html` abgeleitet und nur über Allowlist eingebettet; Fixture-Skript wird **vor** Produkt-JavaScript eingefügt; verbleibende lokale Assetreferenzen blockieren den Test.
+- Test: `tests/test_ui_acceptance_harness.py`.
+- Status: **UMGESETZT**, erneuter Chromium-/Firefox-Nachweis offen.
+
+### REG-077 — mehrfaches „Neu prüfen“ oder Theme-Klicken erzeugt konkurrierende UI-Aktionen
+- Vertrag: Refresh und Config-Speichern laufen single-flight. Währenddessen werden konkurrierende Controls gesperrt und mit `aria-busy` markiert.
+- Test: `test_refresh_has_single_flight_busy_feedback`, `test_config_save_is_serialized_and_rolls_back_preview_on_failure`.
+- Status: **UMGESETZT**.
+
+### REG-078 — lokales Backend antwortet nicht und Oberfläche bleibt unbegrenzt in Zwischenzustand
+- Vertrag: API-Anfragen besitzen einen begrenzten 8-Sekunden-Timeout. Timeout und Nichterreichbarkeit liefern verständliche Hinweise auf die Startkonsole.
+- Test: `test_requests_have_timeout_and_clear_user_guidance`.
+- Status: **UMGESETZT**.
+
+### REG-079 — fehlgeschlagene TODO-/Ereignis-/Terminabfrage wird wie „keine Daten vorhanden“ dargestellt
+- Vertrag: `null` bedeutet technisch **nicht verfügbar**; `[]` bedeutet erfolgreich geladen und leer. Renderfunktionen unterscheiden beide Zustände sichtbar.
+- Test: `test_failed_loads_do_not_reuse_stale_or_fake_empty_data`.
+- Status: **UMGESETZT**.
+
+### REG-080 — Theme-Vorschau bleibt nach gescheitertem Speichern optisch aktiv
+- Vertrag: Darstellung darf sofort als Vorschau reagieren, muss bei Config-Fehler aber auf die vorherige bestätigte Konfiguration zurückrollen und den Fehlerstatus anzeigen.
+- Test: `test_config_save_is_serialized_and_rolls_back_preview_on_failure`.
 - Status: **UMGESETZT**.
 
 ## Aktuelle Evidenzgrenze
