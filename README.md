@@ -1,165 +1,130 @@
 # AIO-Tool
 
-> **Lokales, modulares und laienfreundliches All-in-One-Tool für Kubuntu/Linux.** Kernfunktionen laufen offline auf dem eigenen Rechner; das Backend bindet ausschließlich an Loopback.
+> **Aktuelle Entwicklung:** 🟠 `0.5.1-audit-modern-ui-DEV`  
+> **Letzter vollständig bewiesener Stand:** 🟢 `0.5.0-native-acceptance-safe-file-sim-TESTED`  
+> **Betrieb:** lokal · offline-first · keine Telemetrie · Loopback-only
 
-## 🧭 Status auf einen Blick
+AIO-Tool bündelt Kalender, TODOs, Erinnerungen, Ereignisse, Diagnose, Zielsystemabnahme und die weiterhin **nur simulierte** SAFE-FILE-Vorprüfung in einer laienfreundlichen lokalen Oberfläche.
 
-| Bereich | Zustand | Bedeutung |
+## 🚦 Was bedeutet der aktuelle Zustand?
+
+| Bereich | Status | Bedeutung |
 |---|---|---|
-| Aktueller automatisiert bewiesener Stand | 🟢 `0.5.0-native-acceptance-safe-file-sim-TESTED` | L0–L3: Core/Release + Chromium + Firefox erfolgreich |
-| Native Kubuntu-Abnahme | 🟡 offen | L4 muss real über den neuen Prüfassistenten bestätigt werden |
-| Internet für Kernfunktionen | 🟢 nicht nötig | offline-first |
-| Telemetrie | 🟢 keine | keine automatische Nutzungsübertragung |
-| SAFE-FILE-Ausführung | 🔒 gesperrt | getestet wurde die Simulation; echte Copy/Move/Delete existiert nicht |
+| 0.5.0 Baseline | 🟢 TESTED | L0–L3 automatisiert bewiesen |
+| 0.5.1 Audit | 🟠 DEV | Verbesserungen implementiert, finaler CI-/Browsernachweis offen |
+| Native Kubuntu L4 | 🟡 OFFEN | muss real auf dem Zielsystem bestätigt werden |
+| SAFE-FILE echte Copy | 🔒 GESPERRT | Simulation kann keine Dateien verändern |
 
-### Fortschritt
+**Wichtig:** TESTED bedeutet nicht automatisch „auf jeder realen Kubuntu-/DPI-/Zoom-Kombination manuell abgenommen“. Diese L4-Evidenz bleibt getrennt.
+
+## 📊 Entwicklungsfortschritt
 
 ```text
-Native-Acceptance-Datenmodell      ████████████████████ 100 %  🟢
-Native-Acceptance-UI/Runner        ████████████████████ 100 %  🟢
-Release-Evidenzdateien             ████████████████████ 100 %  🟢
-Evidence Guard                     ████████████████████ 100 %  🟢
-SAFE-FILE-Vorprüfung               ████████████████████ 100 %  🟢
-Failure-Matrix SF-001..010         ████████████████████ 100 %  🟢
-Recovery-Vorvertrag                ████████████████████ 100 %  🟢
-Automatisierte L0–L3-Gates         ████████████████████ 100 %  🟢
-Native L4 auf echtem Kubuntu       ░░░░░░░░░░░░░░░░░░░░   0 %  🟡
-Echte Copy-Ausführung              ░░░░░░░░░░░░░░░░░░░░   0 %  🔒
+Foundation / Persistenz         ████████████████████ 100 % 🟢
+Kalender / TODO / Ereignisse    ████████████████████ 100 % 🟢
+Dashboard / Browser-Gates       ████████████████████ 100 % 🟢 Baseline
+Native Acceptance Runner        ████████████████████ 100 % 🟢
+Release-Evidenzsystem           ████████████████████ 100 % 🟢
+SAFE-FILE Simulation            ████████████████████ 100 % 🟢
+0.5.1 Robustheitsaudit          ███████████████████░  95 % 🟠 finaler Gate offen
+Native Kubuntu L4               ██████░░░░░░░░░░░░░░  30 % 🟡 real offen
+SAFE-FILE Copy-Ausführung       ░░░░░░░░░░░░░░░░░░░░   0 % 🔒
 ```
 
-> **TESTED bedeutet hier:** Der implementierte Funktionsumfang wurde automatisiert bis L3 bewiesen. Es bedeutet **nicht**, dass die noch offene reale Kubuntu-L4-Abnahme automatisch bestanden wäre.
+## ✨ Neu im 0.5.1-Audit
 
----
+### Robustheit
 
-## ▶️ Drei Startwege
+- `AtomicJsonStore` serialisiert parallele Thread-Zugriffe; `update()` ist ein zusammenhängender Read→Mutate→Write-Vertrag.
+- Backup-Dateien werden ebenfalls atomar ersetzt.
+- `ConfigStore` nutzt jetzt denselben Persistence-Core statt eigener doppelter Schreiblogik.
+- Hauptbackend und Hilfsserver verwenden denselben strengen Loopback-Host-/Port-Vertrag.
+- Serverlog-Schreibvorgänge sind im Threading-Backend serialisiert.
+- Versions-Fallbacktexte sind nicht mehr fälschlich an den alten Kalender-Slice gekoppelt.
 
-### 1. AIO-Tool normal
+### Nutzerfreundlichkeit
 
-`start_tool.desktop` oder `start_tool.sh`
+- Fehlerhafte Kalender-/Terminabfragen zeigen keine veralteten Daten unter einer neuen Überschrift.
+- Ein später erfolgreicher TODO-Versuch entfernt einen zuvor gespeicherten Aktionsfehler.
+- Der sichtbare Boot-Guard unterscheidet Start, READY und Startfehler.
+- Theme-, Schrift- und Modulwahl verwenden zusätzlich `aria-pressed`.
+- Einstellungen erhalten zuverlässigen Tastaturfokus und geben ihn beim Schließen zurück.
+- Kalenderzellen erzeugen nicht mehr Dutzende unnötige Tabstopps.
 
-Die 9-Checkpoint-Startroutine prüft Runtime, Instanzidentität, Backend und Browserstart.
+### Moderneres Erscheinungsbild
 
-### 2. Native Acceptance Runner
+Fünf klar getrennte Themes verwenden denselben semantischen Komponentenvertrag:
 
-`native_acceptance.desktop` oder `start_native_acceptance.sh`
+- **Aurora Glass** — modernes Cyan/Violett mit ruhigen Glasflächen.
+- **Steel Night** — sachlich-technisch, dunkel und klar.
+- **Trash Neon** — kräftige Subkultur-/Neonwirkung.
+- **Clean Light** — helle, ruhige Arbeitsoberfläche.
+- **High Contrast** — maximaler Kontrast, ohne dekorative Schatten.
 
-Der Assistent führt durch **18 reale L4-Prüfschritte**:
+Farbe ist nie die einzige Statusinformation; Status bleibt zusätzlich durch Text/Icon erkennbar. `prefers-reduced-motion` bleibt verbindlich.
 
-- Kubuntu Desktop-Starter,
-- Shell-Starter,
-- passende Instanz wiederverwenden,
-- fremd belegten Standardport behandeln,
-- kleines / Full-HD / großes Fenster,
-- reiner Tastaturdurchlauf,
-- Firefox bei 100 / 125 / 150 / 175 / 200 %,
-- Chrome/Chromium bei 100 / 125 / 150 / 175 / 200 %.
+## ▶️ Start
 
-Jeder Schritt startet **🟡 OFFEN**. Nur du kannst ihn als 🟢 PASS, 🔴 FAIL oder ⚪ SKIP markieren. Es gibt kein Auto-PASS.
+### Normales Dashboard
 
-Die gemeinsame Sitzung liegt lokal in `runtime/native_acceptance.json`. Automatisch entstehen:
+```bash
+./start_tool.sh
+```
 
-- `runtime/reports/native-acceptance-latest.json`
-- `runtime/reports/native-acceptance-latest.txt`
+oder per `start_tool.desktop`.
 
-Browserdaten wie Viewport, Bildschirmgröße und Device-Pixel-Ratio werden zur Diagnose gespeichert. Der Zielzoom wird dokumentiert, aber nicht fälschlich als automatisch sicher erkannt ausgegeben.
+### Reale Zielsystemabnahme
 
-### 3. SAFE-FILE Simulation
+```bash
+./start_native_acceptance.sh
+```
 
-`safe_file_simulation.desktop` oder `start_safe_file_simulation.sh`
+Der Assistent führt durch 18 echte L4-Schritte. Kein Schritt wird automatisch auf PASS gesetzt.
 
-Ablauf:
+### SAFE-FILE Simulation
 
-**Quelldatei auswählen → Zielordner auswählen → Konfliktoption → sichere Vorschau**
+```bash
+./start_safe_file_simulation.sh
+```
 
-Geprüft werden Quelle, Symlinks, Dateityp, Lesbarkeit, Zielordner, Schreibbarkeit, freier Speicher + Reserve, Quelle/Ziel-Gleichheit und bestehende Zieldatei.
+Die Oberfläche darf nur lesen/prüfen/vorschlagen. Der Vertrag bleibt:
 
-Der Sicherheitsvertrag ist technisch hart:
+```text
+simulation_only=true
+execution_enabled=false
+mutation_performed=false
+```
 
-- `SIMULATION_ONLY=True`
-- `EXECUTION_ENABLED=False`
-- kein `/api/execute`
-- keine Copy-/Move-/Delete-Primitive im Simulator
-- `mutation_performed=false`
+## 🛡️ Sicherheitsprinzipien
 
-Damit hängt die Sperre nicht nur an einem deaktivierten Button.
+1. Nur Loopback, keine Netzwerkfreigabe.
+2. Host und Origin müssen zum exakten lokalen Port passen.
+3. Keine Telemetrie.
+4. Persistente JSON-Zustände werden validiert, atomar geschrieben und mit Backup-Fallback gelesen.
+5. Runtime-ZIP enthält nur die positive Allowlist aus `manifests/RUNTIME_MANIFEST.json`.
+6. Dokumentation, Tests, Logs und Evidenz bleiben im Repository bzw. lokal.
+7. Eine TESTED-Version wird nach ihrer Evidenz nicht weiter verändert; Produktpatches beginnen als neue DEV-Version.
 
----
-
-## 🧯 SAFE-FILE Failure-Matrix
-
-- `SF-001` Quelle fehlt
-- `SF-002` Quelle ist keine normale Datei
-- `SF-003` Quelle ist Symlink
-- `SF-004` Ziel fehlt
-- `SF-005` Ziel ist kein Ordner
-- `SF-006` Ziel ist Symlink
-- `SF-007` Ziel nicht beschreibbar
-- `SF-008` zu wenig freier Speicher
-- `SF-009` Zieldatei existiert
-- `SF-010` Quelle entspricht dem Ziel
-
-Alle zehn Fälle sind automatisiert getestet. Eine spätere echte Copy benötigt trotzdem einen **neuen Versionsslice** mit Jobjournal, Staging, Postvalidation, Crash-/Recoverytests und geschütztem Undo.
-
----
-
-## 🧾 Release-Evidenz
-
-Masterindex:
-
-`evidence/RELEASE_EVIDENCE_INDEX.json`
-
-Für jede TESTED-/höhere Version existiert genau eine Datei:
-
-`evidence/releases/<version>.json`
-
-Sie enthält Commit(s), CI-Runs, Artefakthashstatus, Browsermatrix und offene L4-Gates. `scripts/evidence_guard.py` blockiert Registry-/Evidenzdrift. Historisch nicht aufgezeichnete Werte bleiben ausdrücklich `not-recorded`; sie werden nicht erfunden.
-
----
-
-## 🧪 Automatischer Nachweis für 0.5.0
-
-Der DEV-Head `6cf6754dcf5da88edb13ee34f2e99b4e22bca593` bestand GitHub Actions Run `33038051967`:
-
-- **113/113** Unit-/Contracttests,
-- Foundation Validation,
-- **18/18** Learning-Memory-Regeln,
-- Release Evidence Guard,
-- Documentation Guard,
-- Bash-/JavaScript-Syntax,
-- Runtime-ZIP + frischer Runtime-Preflight,
-- Hauptdashboard in Chromium + Firefox,
-- Native Acceptance Runner in Chromium + Firefox,
-- SAFE-FILE-Simulation in Chromium + Firefox,
-- Reflow-/Bedienzielprüfung der neuen Hilfsoberflächen bei 1280 und 360 CSS-px.
-
-Die anschließende TESTED-Promotion wird erneut durch dieselbe komplette CI geprüft.
-
----
-
-## 🛡️ Datenschutz / lokale Sicherheit
-
-- Keine Telemetrie.
-- Hauptbackend und beide Hilfsserver nur Loopback.
-- Hilfsserver verlangen Host und Origin auf **demselben lokalen Port**.
-- Native Berichte bleiben unter `runtime/` lokal.
-- `evidence/` bleibt Repository-only und wird nicht ins Runtime-ZIP transportiert.
-- SAFE-FILE liest nur für die Vorschau notwendige Metadaten und verändert keine Datei.
-
----
-
-## Qualitätsebenen
+## 🧪 Qualitätspyramide
 
 - **L0:** Syntax / Schema
-- **L1:** Unit / Contract / Failure-Matrix / Evidence Guard
-- **L2:** echtes Runtime-ZIP frisch entpacken + Runtime-Preflight
-- **L3:** echte Chromium-/Firefox-Render-/Interaktionstests
-- **L4:** reales Kubuntu / Zoom / DPI / Tastatur über Native Acceptance Runner
+- **L1:** Unit-, Contract- und Regressionstests
+- **L2:** gebautes Runtime-ZIP frisch entpacken und selbst prüfen
+- **L3:** echte Chromium-/Firefox-Render-, Reflow- und Interaktionsgates
+- **L4:** reale Kubuntu-/Browser-/Zoom-/Tastaturabnahme
 
-Eine niedrigere Ebene darf keine höhere als bestanden behaupten.
+Ein niedrigeres Level darf niemals als Beweis für ein höheres ausgegeben werden.
 
-## ➜ Nächste Reihenfolge
+## 🗂️ Wichtige Projektdateien
 
-1. TESTED-Promotion-Commit erneut vollständig durch L0–L3 prüfen.
-2. Danach Native Acceptance Runner **real auf Kubuntu** durchführen und den L4-Bericht sichern.
-3. Nur bei ausgewerteter Failure-/Recovery-Matrix einen **neuen** Slice für echte Copy einer einzelnen normalen Datei planen.
-4. Move, Rename und Delete bleiben weiterhin gesperrt.
+- `AGENTS.md` — verbindlicher Entwicklungsvertrag
+- `VERSION` / `VERSION_REGISTRY.json` — Versions-/Statuswahrheit
+- `manifests/RUNTIME_MANIFEST.json` — transportierte Runtime-Allowlist
+- `evidence/RELEASE_EVIDENCE_INDEX.json` — bewiesene Release-Evidenz
+- `REGRESSIONSINFOS.md` — bekannte Fehlerverträge
+- `LEARNING_MEMORY.jsonl` — bestätigte Entwicklungslektionen
+- `TODO.md` — aktueller nächster Entwicklungsweg
+
+## ➜ Nächster Gate
+
+`0.5.1-audit-modern-ui` darf erst von DEV auf TESTED wechseln, wenn Unit-/Contracttests, Foundation-/Documentation-/Evidence-Gates, Runtime-ZIP und **Chromium + Firefox inklusive der beiden Hilfsoberflächen** auf demselben Commit grün sind.
