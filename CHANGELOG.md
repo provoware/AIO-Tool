@@ -6,104 +6,78 @@ Alle wesentlichen Änderungen an AIO-Tool werden nachvollziehbar dokumentiert.
 
 ### Geplant
 
-- Dashboard V2 mit Monatskalender, nächsten Terminen, nächsten drei TODOs, letzten fünf Ereignissen, Versions-/Gesundheitsstatus und Debugzugang.
-- sichtbare Reminder-Anzeige im Browser auf Basis des bereits getesteten Reminder-Cores.
-- danach reale Kubuntu-/Browser-/Zoom-Gates und SAFE-FILE-CORE.
+- reale Kubuntu-/Firefox-/Chrome-/Zoom-Abnahme aus sauberem `0.4.0-dashboard-v2`-Release.
+- anschließend SAFE-FILE-CORE mit Copy als erster realer Dateioperation.
 
-## [0.3.0-calendar-core] — 2026-08-27
+## [0.4.0-dashboard-v2] — 2026-08-27
 
 ### Added
 
-- `app/calendar_store.py` als persistenter Kalender-Core auf `AtomicJsonStore`.
-- Terminmodell mit Titel, Datum, optionaler Start-/Endzeit, Kategorie, Beschreibung und optionaler TODO-Verknüpfung.
-- Titelgedächtnis für wiederkehrende Kalendertitel.
-- Erinnerungs-Presets 0 / 10 / 30 / 60 / 1440 Minuten vorher.
-- Abfrage fälliger, noch nicht quittierter Erinnerungen.
-- persistente Reminder-Quittierung über `notified_at`.
-- Monats-, Wochen- und Jahresperioden.
-- System-Zeitzone über Python `zoneinfo` für korrekte zukünftige Sommer-/Winterzeitberechnung.
-- Kalender-Mustervorlage sowie gültige und absichtlich ungültige Kalender-Testdaten.
-- Kalender-Fehlerregeln und laienfreundliche Kalender-/Remindertexte.
-- lokale Kalender-API für Anlegen, Perioden, Vorschläge, fällige Reminder und Quittierung.
-- Integrationstests für optionale TODO-Verknüpfung.
-- Learning-Memory-Einträge für DST, Reminder-Quittierung und versionierte Testmetadaten.
+- kompakte dreispaltige Dashboard-V2-Oberfläche auf den getesteten Core-APIs.
+- dauerhaft sichtbare Monatskalenderansicht mit Montag–Sonntag-Vertrag.
+- nächste Termine und nächste drei TODOs.
+- direktes TODO-Abhaken über bestehenden API-Vertrag.
+- letzte fünf menschenlesbare Ereignisse.
+- Version-, Registry-, Backend- und Fremdpaketstatus.
+- Reminder-Livebereich mit explizitem Button **„Gesehen“**.
+- Schnellmodule mit Umschaltung **Häufig / Alle**.
+- optionaler kompakter Entwickler-/Diagnosebereich.
+- automatische Darstellungsdichte `compact`, `normal`, `wide`.
+- responsive Layouts für große, mittlere und kleine Fenster.
+- Skip-Link, Fokusindikatoren, ARIA-Live-Bereiche und Reduced-Motion-Schutz.
+- versionierter deutscher Dashboard-Textkatalog `web/dashboard-texts.de.v1.json`.
+- `tests/test_dashboard_contract.py` als statischer UI-/API-/Sicherheitsvertrag.
 
 ### Changed
 
-- Fehlerregelversion und Textkatalog wurden für Kalenderfälle erweitert.
-- `/api/status` enthält Kalenderinformationen.
-- `scripts/validate.py` prüft Kalender-Vorlage, Testdaten und Kalender-Persistenz.
-- Metadaten-API-Test liest erwartete Regel-/Textversionen aus den jeweiligen versionierten Quelldateien statt aus redundanten harten Konstanten.
-
-### Fixed
-
-- erster Kalender-CI-Stand scheiterte ausschließlich an einem veralteten harten Testwert für `rules_version` (`1.0.0` statt `1.1.0`).
-- Regressionstest wurde strukturell repariert: Quelle der Wahrheit ist nun die versionierte Regeldatei.
+- Foundation-Validierung prüft Dashboard-Kernbereiche, API-Verbindungen, Textkatalog und Reminder-Sicherheitsvertrag.
+- Validierung von Core-Regel-/Textversionen nutzt die deklarierte Quelldatei statt redundanter harter Versionswerte.
+- Dashboard-Diagnose beschränkt sich auf technische Zustandsdaten und gibt keine vollständige Config, Projektpfade oder Favoriten aus.
 
 ### Safety
 
-- Reminder ohne Startzeit werden abgelehnt.
-- Endzeit muss nach Startzeit liegen.
-- unbekannte TODO-Verknüpfung wird nicht still akzeptiert.
-- Reminder werden nicht automatisch als angezeigt markiert; Quittierung ist ein separater persistenter Schritt.
-- Kalenderdaten bleiben lokal und werden nicht in Runtime-Form in Release-ZIPs übernommen.
+- Polling allein quittiert keinen Reminder.
+- ein unsichtbarer Browser-Tab quittiert keinen Reminder.
+- Quittierung erfolgt erst nach sichtbarer Dashboarddarstellung und explizitem Klick auf „Gesehen“.
+- Nutzer-Titel werden im Dashboard über `textContent` eingesetzt, nicht als HTML interpretiert.
+- Backend-Domänenlogik für Kalender/TODO/Reminder wird nicht in JavaScript dupliziert.
 
-### Verified
+### Verified — Code-Gate
 
-GitHub Actions Run `33026180855`: **SUCCESS**.
+GitHub Actions Run `33026823914`: **SUCCESS**.
 
-Erfolgreich: Python-Syntax, 69 Unit-/Integrationstests, Foundation-/Kalender-Validierung, Learning Guard, Launcher-Syntax, JavaScript-Syntax, Release-Builder und Upload des vollständigen Release-ZIPs.
+- 77 Unit-/Integrations-/Vertragstests,
+- Foundation-/Dashboard-Validierung,
+- Learning Guard mit 9 aktiven Lektionen,
+- Launcher-Syntax,
+- JavaScript-Syntax,
+- Release-Builder,
+- vollständiger Release-ZIP-Upload.
+
+Erzeugtes Release: `AIO-Tool-0.4.0-dashboard-v2.zip`  
+Release-Builder SHA256: `104c361caf65c484626cd24812272e0781c151d2afcbcb933b5fc393a3e9e946`.
 
 ### Not yet verified
 
-- sichtbare Browser-/Desktop-Reminderanzeige,
-- realer Kubuntu-Klick-&-Start,
-- Firefox/Chrome/Chromium auf Zielsystem,
-- 125–200 % Browserzoom.
+- reale Kubuntu-Bedienung,
+- Firefox-/Chrome-/Chromium-Darstellung,
+- 125–200 % Browserzoom,
+- reale Tastatur-/Fokusführung.
+
+## [0.3.0-calendar-core] — 2026-08-27
+
+- persistenter CalendarStore, Reminder-Quittierung, Monats-/Wochen-/Jahresperioden, `zoneinfo`/DST, optionale TODO-Verknüpfung und Kalender-Testverträge.
+- finaler Kalender-Head: Run `33026380907` SUCCESS; Squash-Merge `a5a4290f5d13333498b0e051b1fcd94e24cc8e95`.
 
 ## [0.2.1-robustness] — 2026-08-27
 
-### Added
-
-- versionierte Config-/JSON-Mustervorlagen unter `resources/templates/`.
-- positive und absichtlich negative Testdaten unter `testdata/`.
-- versionierter deutscher Textkatalog `resources/texts/de/v1.json`.
-- versionierte Fehlerregeln `resources/error_rules/v1.json`.
-- `ErrorAdvisor` mit Regel-ID, Kategorie, Ampelstufe, einfacher Handlung, optionalem Vorlagenhinweis und `retry_safe`.
-- `GET /api/help/meta` für Fehlerregel-/Textkatalog-Metadaten.
-- `LEARNING_MEMORY.jsonl` als Entwicklungs-Lerngedächtnis.
-- `scripts/learning_guard.py` als zusätzliches CI-Gate.
-- CI-Upload des vollständigen Release-ZIPs als GitHub-Actions-Artefakt.
-
-### Changed
-
-- wiederkehrende Core-Systemtexte sind aus `server.py` in den versionierten Textkatalog ausgelagert.
-- API-Fehlerantworten enthalten strukturierte, laienverständliche Hilfe.
-- `scripts/validate.py` prüft Vorlagen, Text-/Fehlerregeln und Learning Memory.
-- AGENTS.md verlangt künftig Vorlage + Negativtest pro persistentem Datenformat und gezielte Patchstellen vor Großumbauten.
-
-### Fixed
-
-- Fehlerregeln matchten zunächst nur exakte Klassennamen; spezialisierte Unterklassen wie `ConfigIntegrityError` wurden dadurch nicht als Integritätsfehler erkannt. Matcher nutzt jetzt die Klassenhierarchie; direkter Regressionstest ergänzt.
-
-### Verified
-
-GitHub Actions Run `33025238585`: **SUCCESS** inklusive Release-ZIP-Upload.
+- versionierte Muster-/Testdaten, Texte, Fehlerregeln, ErrorAdvisor, Learning Memory und Release-ZIP-Gate.
+- finaler Head Run `33025238585` SUCCESS; Merge `eec9698d49719579633fc54e6f83eb4fc6834668`.
 
 ## [0.2.0-core] — 2026-08-27
 
-### Added
-
-- gemeinsamer `AtomicJsonStore`.
-- getrackte `VERSION_REGISTRY.json` + lokale Runtime-Registry.
-- VersionRegistry mit Evidenz-/Driftvertrag.
-- EventRegistry für menschenlesbare Ereignisse.
-- persistenter TODO-Core mit Titelgedächtnis und Erledigt-Archiv.
-- API und Regressionstests für Versionen, Events und TODOs.
-
-### Verified
-
-Feature-/Merge-Kandidat Run `33022569880`: **SUCCESS**. Squash-Merge auf `main`: `a110132acc4104e0f0c48c736a3fd4bc98a9c290`.
+- VersionRegistry, EventRegistry, TODO-Core und gemeinsamer AtomicJsonStore.
+- Run `33022569880` SUCCESS; Merge `a110132acc4104e0f0c48c736a3fd4bc98a9c290`.
 
 ## [0.1.1-foundation] — 2026-08-27
 
