@@ -1,7 +1,7 @@
 # AIO-Tool
 
-> **Aktuelle Entwicklung:** 🟠 `0.5.1-audit-modern-ui-DEV`  
-> **Letzter vollständig bewiesener Stand:** 🟢 `0.5.0-native-acceptance-safe-file-sim-TESTED`  
+> **Aktueller Kandidat:** 🟢 `0.5.1-audit-modern-ui-TESTED` — Registry `tested / draft`; Promotion-CI noch offen  
+> **Letzter auf `main` vollständig bewiesener Stand:** 🟢 `0.5.0-native-acceptance-safe-file-sim-TESTED`  
 > **Betrieb:** lokal · offline-first · keine Telemetrie · Loopback-only
 
 AIO-Tool bündelt Kalender, TODOs, Erinnerungen, Ereignisse, Diagnose, Zielsystemabnahme und die weiterhin **nur simulierte** SAFE-FILE-Vorprüfung in einer laienfreundlichen lokalen Oberfläche.
@@ -10,8 +10,8 @@ AIO-Tool bündelt Kalender, TODOs, Erinnerungen, Ereignisse, Diagnose, Zielsyste
 
 | Bereich | Status | Bedeutung |
 |---|---|---|
-| 0.5.0 Baseline | 🟢 TESTED | L0–L3 automatisiert bewiesen |
-| 0.5.1 Audit | 🟠 DEV | Verbesserungen implementiert, finaler CI-/Browsernachweis offen |
+| 0.5.0 Main-Baseline | 🟢 BEWIESEN | L0–L3 auf `main` vollständig grün |
+| 0.5.1 Audit | 🟢 TESTED-Kandidat | DEV-Gate `33045348341` vollständig grün; Promotion-Commit muss nochmals dieselben Gates bestehen |
 | Native Kubuntu L4 | 🟡 OFFEN | muss real auf dem Zielsystem bestätigt werden |
 | SAFE-FILE echte Copy | 🔒 GESPERRT | Simulation kann keine Dateien verändern |
 
@@ -22,31 +22,38 @@ AIO-Tool bündelt Kalender, TODOs, Erinnerungen, Ereignisse, Diagnose, Zielsyste
 ```text
 Foundation / Persistenz         ████████████████████ 100 % 🟢
 Kalender / TODO / Ereignisse    ████████████████████ 100 % 🟢
-Dashboard / Browser-Gates       ████████████████████ 100 % 🟢 Baseline
+Dashboard / Browser-Gates       ████████████████████ 100 % 🟢
 Native Acceptance Runner        ████████████████████ 100 % 🟢
 Release-Evidenzsystem           ████████████████████ 100 % 🟢
 SAFE-FILE Simulation            ████████████████████ 100 % 🟢
-0.5.1 Robustheitsaudit          ███████████████████░  95 % 🟠 finaler Gate offen
+0.5.1 Code-/Robustheitsaudit    ████████████████████ 100 % 🟢 DEV-Gate
+0.5.1 Promotion                 ████████████████░░░░  80 % 🟡 Promotion-CI offen
 Native Kubuntu L4               ██████░░░░░░░░░░░░░░  30 % 🟡 real offen
 SAFE-FILE Copy-Ausführung       ░░░░░░░░░░░░░░░░░░░░   0 % 🔒
 ```
 
-## ✨ Neu im 0.5.1-Audit
+## ✨ Verbesserungen in 0.5.1
 
-### Robustheit
+### Codequalität und Robustheit
 
-- `AtomicJsonStore` serialisiert parallele Thread-Zugriffe; `update()` ist ein zusammenhängender Read→Mutate→Write-Vertrag.
+- `AtomicJsonStore` serialisiert parallele Thread-Zugriffe über den vollständigen Read→Mutate→Write-Zyklus.
 - Backup-Dateien werden ebenfalls atomar ersetzt.
-- `ConfigStore` nutzt jetzt denselben Persistence-Core statt eigener doppelter Schreiblogik.
+- `ConfigStore` nutzt denselben Persistence-Core statt eigener doppelter Schreiblogik.
 - Hauptbackend und Hilfsserver verwenden denselben strengen Loopback-Host-/Port-Vertrag.
 - Serverlog-Schreibvorgänge sind im Threading-Backend serialisiert.
-- Versions-Fallbacktexte sind nicht mehr fälschlich an den alten Kalender-Slice gekoppelt.
+- Browser-Acceptance besitzt **nur noch eine** kanonische Implementierung; der CI-Einstieg ist ein dünner Wrapper.
+- UI-Testassets werden aus dem aktuellen `index.html` abgeleitet statt Contract-Versionen doppelt zu hardcodieren.
+- Entwicklungs-Lerngedächtnis umfasst nun 21 aktive strukturelle Regeln.
 
-### Nutzerfreundlichkeit
+### Nutzerfreundlichkeit und Feedback
 
+- Backend-Anfragen haben einen klaren 8-Sekunden-Timeout mit Hinweis auf die Startkonsole.
+- „Neu prüfen“ läuft single-flight, zeigt `Prüfe …`, sperrt parallele Wiederholungen und setzt `aria-busy`.
+- Theme-/Schriftänderungen zeigen sofort eine Vorschau, werden serialisiert gespeichert und bei Fehler auf den letzten bestätigten Stand zurückgesetzt.
+- **Leer** und **nicht verfügbar** sind getrennte Zustände: Ladefehler werden nicht mehr als „keine TODOs/Termine/Ereignisse“ ausgegeben.
 - Fehlerhafte Kalender-/Terminabfragen zeigen keine veralteten Daten unter einer neuen Überschrift.
 - Ein später erfolgreicher TODO-Versuch entfernt einen zuvor gespeicherten Aktionsfehler.
-- Der sichtbare Boot-Guard unterscheidet Start, READY und Startfehler.
+- Der sichtbare Boot-Guard unterscheidet Start, READY, READY mit Hinweisen und Startfehler.
 - Theme-, Schrift- und Modulwahl verwenden zusätzlich `aria-pressed`.
 - Einstellungen erhalten zuverlässigen Tastaturfokus und geben ihn beim Schließen zurück.
 - Kalenderzellen erzeugen nicht mehr Dutzende unnötige Tabstopps.
@@ -100,7 +107,7 @@ mutation_performed=false
 1. Nur Loopback, keine Netzwerkfreigabe.
 2. Host und Origin müssen zum exakten lokalen Port passen.
 3. Keine Telemetrie.
-4. Persistente JSON-Zustände werden validiert, atomar geschrieben und mit Backup-Fallback gelesen.
+4. Persistente JSON-Zustände werden validiert, atomar und thread-sicher geschrieben und mit Backup-Fallback gelesen.
 5. Runtime-ZIP enthält nur die positive Allowlist aus `manifests/RUNTIME_MANIFEST.json`.
 6. Dokumentation, Tests, Logs und Evidenz bleiben im Repository bzw. lokal.
 7. Eine TESTED-Version wird nach ihrer Evidenz nicht weiter verändert; Produktpatches beginnen als neue DEV-Version.
@@ -127,4 +134,4 @@ Ein niedrigeres Level darf niemals als Beweis für ein höheres ausgegeben werde
 
 ## ➜ Nächster Gate
 
-`0.5.1-audit-modern-ui` darf erst von DEV auf TESTED wechseln, wenn Unit-/Contracttests, Foundation-/Documentation-/Evidence-Gates, Runtime-ZIP und **Chromium + Firefox inklusive der beiden Hilfsoberflächen** auf demselben Commit grün sind.
+Der aktuelle Promotion-Commit muss erneut **Core/Release + Chromium + Firefox + Native Runner + SAFE-FILE-Hilfsoberfläche** vollständig grün durchlaufen. Erst danach wird der echte TESTED-Artefakthash in die Evidenzdatei eingetragen und der Merge nach `main` vorbereitet.
