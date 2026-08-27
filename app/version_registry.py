@@ -8,9 +8,17 @@ from typing import Any
 from .persistence import AtomicJsonStore, PersistenceError
 
 SCHEMA_VERSION = 1
-VERSION_STATUSES = {"development", "tested", "release-candidate", "released", "deprecated"}
-RELEASE_STATUSES = {"draft", "candidate", "released", "deprecated"}
+VERSION_STATUSES = {"development", "tested", "release-candidate", "released", "blocked", "deprecated"}
+RELEASE_STATUSES = {"draft", "candidate", "released", "blocked", "deprecated"}
 EVIDENCE_REQUIRED = {"tested", "release-candidate", "released"}
+STATUS_RELEASE_COMPATIBILITY = {
+    "development": {"draft"},
+    "tested": {"draft"},
+    "release-candidate": {"candidate"},
+    "released": {"released"},
+    "blocked": {"blocked"},
+    "deprecated": {"deprecated"},
+}
 
 DEFAULT_REGISTRY: dict[str, Any] = {
     "schema_version": SCHEMA_VERSION,
@@ -45,6 +53,30 @@ def _string_list(value: Any, field: str) -> list[str]:
     return [item.strip() for item in value if item.strip()]
 
 
+def _evidence_list(value: Any) -> list[dict[str, Any]]:
+    if not isinstance(value, list) or not all(isinstance(item, dict) for item in value):
+        raise VersionRegistryError("evidence muss eine Liste aus Objekten sein.")
+    clean: list[dict[str, Any]] = []
+    for index, item in enumerate(value):
+        kind = _text(item.get("kind"), f"evidence[{index}].kind")
+        reference = _text(item.get("reference"), f"evidence[{index}].reference")
+        clean.append({
+            "time": _optional_text(item.get("time"), f"evidence[{index}].time"),
+            "kind": kind,
+            "reference": reference,
+            "note": _text(item.get("note", ""), f"evidence[{index}].note", allow_empty=True),
+        })
+    return clean
+
+
+def _validate_status_pair(status: str, release_status: str) -> None:
+    allowed = STATUS_RELEASE_COMPATIBILITY.get(status)
+    if allowed is None or release_status not in allowed:
+        raise VersionRegistryError(
+            f"Unzulässige Statuskombination: status={status}, release_status={release_status}."
+        )
+
+
 def validate_registry(value: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise VersionRegistryError("Versions-Registry muss ein Objekt sein.")
@@ -69,9 +101,10 @@ def validate_registry(value: dict[str, Any]) -> dict[str, Any]:
             raise VersionRegistryError(f"Unbekannter Versionsstatus: {status}")
         if release_status not in RELEASE_STATUSES:
             raise VersionRegistryError(f"Unbekannter Release-Status: {release_status}")
-        evidence = raw.get("evidence", [])
-        if not isinstance(evidence, list) or not all(isinstance(item, dict) for item in evidence):
-            raise VersionRegistryError("evidence muss eine Liste aus Objekten sein.")
+        _validate_status_pair(status, release_status)
+        evidence = _evidence_list(raw.get("evidence", []))
+        if status in EVIDENCE_REQUIRED and not evidence:
+            raise VersionRegistryError(f"Status '{status}' benötigt mindestens einen Evidenznachweis.")
         clean_versions.append({
             "version": version,
             "created_at": _text(raw.get("created_at"), "created_at"),
@@ -82,7 +115,7 @@ def validate_registry(value: dict[str, Any]) -> dict[str, Any]:
             "changes": _string_list(raw.get("changes", []), "changes"),
             "known_issues": _string_list(raw.get("known_issues", []), "known_issues"),
             "regression_status": _text(raw.get("regression_status", "pending"), "regression_status"),
-            "evidence": deepcopy(evidence),
+            "evidence": evidence,
         })
 
     current = value.get("current_version")
@@ -177,8 +210,11 @@ class VersionRegistry:
         status = _text(status, "status")
         if status not in VERSION_STATUSES:
             raise VersionRegistryError(f"Unbekannter Versionsstatus: {status}")
-        if release_status is not None and release_status not in RELEASE_STATUSES:
+        if release_status is None:
+            release_status = next(iter(STATUS_RELEASE_COMPATIBILITY[status]))
+        if release_status not in RELEASE_STATUSES:
             raise VersionRegistryError(f"Unbekannter Release-Status: {release_status}")
+        _validate_status_pair(status, release_status)
 
         def mutate(data: dict[str, Any]) -> dict[str, Any]:
             item = self._find(data, version)
@@ -187,8 +223,7 @@ class VersionRegistry:
                     f"Status '{status}' benötigt zuerst mindestens einen Evidenznachweis."
                 )
             item["status"] = status
-            if release_status is not None:
-                item["release_status"] = release_status
+            item["release_status"] = release_status
             if regression_status is not None:
                 item["regression_status"] = _text(regression_status, "regression_status")
             return data
