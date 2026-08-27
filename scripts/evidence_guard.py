@@ -14,7 +14,12 @@ if str(ROOT) not in sys.path:
 from app.version_registry import validate_registry
 
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 PROVEN_STATUSES = {"tested", "release-candidate", "released"}
+
+
+def _valid_commit(value: Any) -> bool:
+    return isinstance(value, str) and bool(COMMIT_RE.fullmatch(value))
 
 
 def validate_release_evidence(row: dict[str, Any], registry_row: dict[str, Any]) -> dict[str, Any]:
@@ -23,17 +28,58 @@ def validate_release_evidence(row: dict[str, Any], registry_row: dict[str, Any])
         raise ValueError(f"Evidenzdatei ungültig für {version}.")
     if row.get("registry_commit") != registry_row.get("commit_sha"):
         raise ValueError(f"Registry-Commit driftet für {version}.")
+
     runs = row.get("ci_runs")
     if not isinstance(runs, list) or not runs or any(not isinstance(run, int) or run <= 0 for run in runs):
         raise ValueError(f"CI-Runs fehlen für {version}.")
+    if len(runs) != len(set(runs)):
+        raise ValueError(f"CI-Runs enthalten Duplikate für {version}.")
+
     artifact = row.get("artifact")
     if not isinstance(artifact, dict) or artifact.get("status") not in {"recorded", "not-recorded"}:
         raise ValueError(f"Artefaktstatus ungültig für {version}.")
     if artifact["status"] == "recorded":
         if not isinstance(artifact.get("sha256"), str) or not SHA256_RE.fullmatch(artifact["sha256"]):
             raise ValueError(f"SHA256 fehlt/ist ungültig für {version}.")
+        wrapper = artifact.get("wrapper_digest")
+        if wrapper is not None and (not isinstance(wrapper, str) or not SHA256_RE.fullmatch(wrapper)):
+            raise ValueError(f"Wrapper-Digest ist ungültig für {version}.")
     elif artifact.get("sha256") is not None:
         raise ValueError(f"Nicht aufgezeichneter Hash muss null sein: {version}.")
+
+    main_commit = row.get("main_commit")
+    main_ci_run = row.get("main_ci_run")
+    if main_commit is not None and not _valid_commit(main_commit):
+        raise ValueError(f"main_commit ist ungültig für {version}.")
+    if main_ci_run is not None:
+        if not isinstance(main_ci_run, int) or main_ci_run <= 0 or main_ci_run not in runs:
+            raise ValueError(f"main_ci_run fehlt in ci_runs für {version}.")
+        if main_commit is None:
+            raise ValueError(f"main_ci_run ohne main_commit für {version}.")
+
+    reproducibility = row.get("runtime_reproducibility")
+    if reproducibility is not None:
+        if not isinstance(reproducibility, dict) or reproducibility.get("status") not in {"passed", "not-recorded"}:
+            raise ValueError(f"runtime_reproducibility ungültig für {version}.")
+        if reproducibility["status"] == "passed":
+            if artifact.get("status") != "recorded":
+                raise ValueError(f"Reproduzierbarkeit ohne aufgezeichnetes Artefakt für {version}.")
+            if not _valid_commit(reproducibility.get("source_commit")) or not _valid_commit(reproducibility.get("main_commit")):
+                raise ValueError(f"Reproduzierbarkeits-Commit ungültig für {version}.")
+            if reproducibility.get("main_commit") != main_commit:
+                raise ValueError(f"Reproduzierbarkeits-main_commit driftet für {version}.")
+            if reproducibility.get("sha256") != artifact.get("sha256"):
+                raise ValueError(f"Reproduzierbarkeits-SHA driftet für {version}.")
+
+    superseded = row.get("superseded_artifacts", [])
+    if not isinstance(superseded, list):
+        raise ValueError(f"superseded_artifacts muss Liste sein für {version}.")
+    for item in superseded:
+        if not isinstance(item, dict) or not isinstance(item.get("sha256"), str) or not SHA256_RE.fullmatch(item["sha256"]):
+            raise ValueError(f"Ungültiges superseded_artifact für {version}.")
+        if not isinstance(item.get("reason"), str) or not item["reason"].strip():
+            raise ValueError(f"Begründung für superseded_artifact fehlt: {version}.")
+
     matrix = row.get("browser_matrix")
     if not isinstance(matrix, dict) or matrix.get("status") not in {"passed", "not-recorded", "not-applicable"}:
         raise ValueError(f"Browsermatrix ungültig für {version}.")
@@ -44,6 +90,7 @@ def validate_release_evidence(row: dict[str, Any], registry_row: dict[str, Any])
             item = matrix.get(browser)
             if not isinstance(item, dict) or item.get("status") != "passed" or not item.get("scenarios"):
                 raise ValueError(f"Browser-Evidenz fehlt für {version}/{browser}.")
+
     gates = row.get("open_l4_gates")
     if not isinstance(gates, list) or any(not isinstance(item, str) or not item for item in gates):
         raise ValueError(f"open_l4_gates ungültig für {version}.")
