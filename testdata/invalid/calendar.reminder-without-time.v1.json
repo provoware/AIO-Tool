@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "events": [{
+    "id": "bad-calendar-002",
+    "title": "Erinnerung ohne Uhrzeit",
+    "date": "2026-08-27",
+    "start_time": null,
+    "end_time": null,
+    "category": null,
+    "description": null,
+    "todo_id": null,
+    "timezone": "local",
+    "reminders": [{"minutes_before": 10, "notified_at": null}],
+    "created_at": "2026-08-27T01:45:00+02:00",
+    "updated_at": "2026-08-27T01:45:00+02:00"
+  }],
+  "title_memory": []
+}
