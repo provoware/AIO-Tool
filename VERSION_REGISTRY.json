@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "current_version": "0.3.0-calendar-core",
+  "current_version": "0.4.0-dashboard-v2",
   "versions": [
     {
       "version": "0.1.0-foundation",
@@ -55,33 +55,37 @@
       "created_at": "2026-08-27T02:10:00+02:00",
       "status": "tested",
       "release_status": "draft",
-      "commit_sha": "54657a632ba5e4f3a742ec17f66f658c8f145e82",
+      "commit_sha": "a5a4290f5d13333498b0e051b1fcd94e24cc8e95",
       "summary": "Persistenter Kalender-Core mit Monats-/Wochen-/Jahresperioden, Titelgedächtnis, Reminder-Quittierung und optionaler TODO-Verknüpfung.",
+      "changes": ["CalendarStore", "Reminder-Quittierung", "Monats-/Wochen-/Jahresperioden", "zoneinfo/DST", "optionale TODO-Verknüpfung", "Kalender-Muster-/Testdaten"],
+      "known_issues": ["reale Kubuntu-/Browser-/Zoom-Gates offen"],
+      "regression_status": "passed-ci",
+      "evidence": [{"time": "2026-08-27T02:18:09+02:00", "kind": "github-actions", "reference": "run:33026380907", "note": "Finaler Kalender-Head vollständig erfolgreich inklusive ZIP-Upload."}]
+    },
+    {
+      "version": "0.4.0-dashboard-v2",
+      "created_at": "2026-08-27T02:25:00+02:00",
+      "status": "development",
+      "release_status": "draft",
+      "commit_sha": null,
+      "summary": "Kompaktes Dashboard V2 auf den getesteten Version-, TODO-, Kalender- und Ereignis-APIs.",
       "changes": [
-        "CalendarStore auf AtomicJsonStore",
-        "Terminmodell mit optionaler Start-/Endzeit",
-        "Erinnerungs-Presets 0/10/30/60/1440 Minuten",
-        "fällige Reminder plus persistente Quittierung",
-        "Monats-/Wochen-/Jahresperioden",
-        "IANA-Systemzeitzone via zoneinfo für DST",
-        "optionale TODO-Verknüpfung",
-        "Kalender-Muster-/Testdaten und Fehlerhilfe",
-        "versionierte API-Metadaten ohne redundante harte Testversionsnummer"
+        "dauerhaft sichtbare Monatskalenderübersicht",
+        "nächste Termine und serverseitige nächste drei TODOs",
+        "letzte fünf menschenlesbare Ereignisse",
+        "System-/Registry-/Versionsstatus",
+        "sichtbare Reminder mit expliziter Quittierung erst nach Darstellung",
+        "Häufig/Alle-Modulfilter und kompakter Entwicklerbereich",
+        "responsive Dichteführung und vier bestehende Themes",
+        "versionierter deutscher Dashboard-Textkatalog",
+        "statischer Dashboard-Vertragstest und erweitertes Foundation-Gate"
       ],
       "known_issues": [
-        "sichtbare Kalenderoberfläche folgt in Dashboard V2",
-        "Desktop-/Browser-Benachrichtigung nutzt den Core erst im nächsten UI-Slice",
-        "reale Kubuntu-/Browser-/Zoom-Gates offen"
+        "reale Firefox-/Chrome-/Zoom-/Tastatur-Abnahme auf Kubuntu noch offen",
+        "SAFE-FILE-CORE noch nicht enthalten"
       ],
-      "regression_status": "passed-ci",
-      "evidence": [
-        {
-          "time": "2026-08-27T02:14:39+02:00",
-          "kind": "github-actions",
-          "reference": "run:33026180855",
-          "note": "SUCCESS: Python-Syntax, 69 Unit-/Integrationstests, Kalender-/Foundation-Validierung, Learning Guard, Launcher, JavaScript, Release-Builder und ZIP-Upload."
-        }
-      ]
+      "regression_status": "pending",
+      "evidence": []
     }
   ]
 }
