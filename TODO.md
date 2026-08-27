@@ -2,9 +2,10 @@
 
 ## Aktueller Stand
 
-**🟢 `0.5.1-audit-modern-ui` — TESTED / draft für L0–L3**
+**🟢 `0.5.1-audit-modern-ui` — BEWIESEN / TESTED / draft für L0–L3 auf `main`**
 
-Promotion-Evidenz: DEV-Run `33045348341`, TESTED-Promotion `33045669222`. Evidence-Sync/Main-Merge sind noch offen.
+Main-Commit: `ee6adcfd3427e8328920edaceb804e7b6655cdb8`  
+Main-CI: `33048070879` — vollständig grün.
 
 ## Fortschritt
 
@@ -18,15 +19,15 @@ Helper-UI Modernisierung         ███████████████�
 Code-/Harness-Konsolidierung     ████████████████████ 100 % 🟢
 138 Unit-/Contracttests          ████████████████████ 100 % 🟢
 Chromium + Firefox               ████████████████████ 100 % 🟢
-TESTED-Promotion                 ████████████████████ 100 % 🟢
-Evidence-Sync / Main-Merge       ████████████████░░░░  80 % 🟡
+Evidence-Sync                    ████████████████████ 100 % 🟢
+PR / Squash-Merge                ████████████████████ 100 % 🟢
+Main-CI / Runtime-Reproduktion   ████████████████████ 100 % 🟢
 Native Kubuntu L4                ░░░░░░░░░░░░░░░░░░░░ real offen 🟡
 SAFE-FILE echte Copy             ░░░░░░░░░░░░░░░░░░░░ gesperrt 🔒
 ```
 
 ## Erledigt in 0.5.1
 
-- [x] neue Version nach eingefrorenem `0.5.0-TESTED` angelegt.
 - [x] AtomicJsonStore gegen parallele Thread-Updates gehärtet.
 - [x] ConfigStore auf gemeinsamen Persistence-Core konsolidiert.
 - [x] Hauptbackend auf kanonischen exakten Loopback-Port-Vertrag umgestellt.
@@ -42,13 +43,21 @@ SAFE-FILE echte Copy             ░░░░░░░░░░░░░░░�
 - [x] Browser-Harness auf eine kanonische Implementierung reduziert.
 - [x] 21 strukturelle Learning-Regeln aktiv.
 - [x] kompletter DEV-Gate grün (`33045348341`).
-- [x] Chromium + Firefox grün.
-- [x] TESTED-Promotion vollständig grün (`33045669222`).
-- [x] TESTED-ZIP SHA256 aufgezeichnet: `a7ab6d64e978e27c1fa550c549e12dc7ee21e24a17a55fd9c160c19cd3001b72`.
-- [ ] reinen Evidence-Sync erneut grün prüfen.
-- [ ] PR per Squash nach `main` und Main-CI abschließen.
+- [x] TESTED-Promotion grün (`33045669222`).
+- [x] finaler Evidence-Sync grün (`33047743876`).
+- [x] PR-Integrationsgate grün (`33047885115`).
+- [x] PR #9 per Squash nach `main` gemergt.
+- [x] Main-CI vollständig grün (`33048070879`).
+- [x] finaler Runtime-ZIP reproduzierbar: Feature-Head und Main jeweils SHA256 `f8ffd88e2f3e40416f0d76b20786aa168cebb4e11fe3ef9d0eefa6dcf93b19ee`.
 
-## Danach
+## Jetzt — Native L4
 
-1. **Native L4 real auf Kubuntu** mit dem Acceptance Runner durchführen.
-2. **SAFE-FILE Recovery-Simulation** vertiefen; echte Copy bleibt bis zu eigenem evidenzgebundenen Slice gesperrt.
+1. **Native Acceptance Runner auf echtem Kubuntu starten.**
+2. Firefox und Chromium/Chrome real prüfen.
+3. Browserzoom 100–200 %, Display-/KDE-Skalierung und Tastaturbedienung nach Runner-Schritten bestätigen.
+4. Jeden Schritt ausschließlich nach echter Beobachtung als `pass`, `fail` oder `skip` markieren.
+5. FAIL-Befunde erhalten und vor einer Statusverbesserung analysieren.
+
+## Sicherheitsgrenze
+
+SAFE-FILE bleibt unverändert Simulation. **Keine echte Copy/Move/Delete-Ausführung freischalten**, bevor ein eigener evidenzgebundener Recovery-/Execution-Slice dafür angelegt wurde.
