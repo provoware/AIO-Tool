@@ -3,109 +3,97 @@
 ## 1. Projektstatus
 
 - **Produkt:** AIO-Tool
-- **Runtime-Baseline:** `0.5.1-audit-modern-ui` — 🟢 `tested / draft`, **L0–L3 BEWIESEN**
-- **Runtime-Baseline-Commit:** `ee6adcfd3427e8328920edaceb804e7b6655cdb8`
-- **Runtime-ZIP:** `AIO-Tool-0.5.1-audit-modern-ui-TESTED.zip`
-- **Runtime-SHA256:** `f8ffd88e2f3e40416f0d76b20786aa168cebb4e11fe3ef9d0eefa6dcf93b19ee`
-- **Native L4:** 🟡 **OFFEN · 0/18 real bestätigt**
+- **Aktuelle Produktversion im Repository:** `0.6.0-autostart-selfheal`
+- **Status:** `development`
+- **Release-Status:** `draft`
+- **Artefaktmarker:** `0.6.0-autostart-selfheal-DEV`
+- **Runtime-Baseline:** `0.5.1-audit-modern-ui` bleibt der letzte bereits bewiesene L0–L3-Stand.
+- **Native Kubuntu L4:** 🟡 **OFFEN · 0 % automatisch aufgewertet**
 - **SAFE-FILE-Ausführung:** 🔒 **GESPERRT**
-- **Backend:** Python-Standardbibliothek · Loopback-only
-- **Telemetrie:** keine
 
-Die maschinenlesbare kanonische Release-Evidenz liegt unter `evidence/releases/0.5.1-audit-modern-ui.json`.
+`0.6.0-autostart-selfheal` wird erst nach der vollständigen achtstufigen Pipeline zur Promotion bewertet. Ein `development`-Datensatz besitzt bewusst noch keine vorweggenommene Release-Evidenz.
 
 ## 2. Wahrheitsebenen
 
 | Ebene | Kanonische Quelle | Aussage |
 |---|---|---|
-| Versions-/Releasezustand | `VERSION` + `VERSION_REGISTRY.json` | Produktversion und Statuspaar |
-| Runtime-Transport | `manifests/RUNTIME_MANIFEST.json` | positive Allowlist des Runtime-ZIPs |
-| Release-Beweis | `evidence/RELEASE_EVIDENCE_INDEX.json` + Einzeldatei | Commit, CI, Browsermatrix, Hash, offene L4-Gates |
-| Repository-Bestand | `manifests/DEVELOPMENT_MANIFEST.json` | repo-only Doku-, Test-, Evidenz- und Entwicklungsbestand |
-| Menschenlesbare Zusammenfassung | `MANIFEST.md` | komprimierte Sicht auf die obigen Quellen |
+| Version / Status | `VERSION` + `VERSION_REGISTRY.json` | aktueller Produkt-/Entwicklungszustand |
+| Runtime-Transport | `manifests/RUNTIME_MANIFEST.json` | positive Runtime-Allowlist |
+| Release-Beweis | `evidence/RELEASE_EVIDENCE_INDEX.json` + Einzelevidenz | nur bewiesene Versionen |
+| Repository-Bestand | `manifests/DEVELOPMENT_MANIFEST.json` | repo-only Doku, Tests, Build, CI, Evidenz |
+| Menschenlesbarer Status | `MANIFEST.md` | Zusammenfassung ohne Parallelwahrheit |
 
-### Begriffsregel
+## 3. Runtime-Manifest 2.0.0
 
-- **Runtime-Baseline-Commit** = der bewiesene Programm-/Transportstand.
-- **Repository-Head** = der neueste Commit eines Branches; er darf danach reine repo-only Metadaten enthalten.
-- **Registry-Commit** = Commit, der den Versionsdatensatz begründet.
+Die 0.6.0-Runtime enthält zusätzlich den autonomen Start-/Recovery-Vertrag:
 
-Diese drei Commit-Arten dürfen nicht als Synonyme verwendet werden.
+- `app/autostart.py`
+- `app/preflight.py`
+- `app/runtime_health.py`
+- `app/runtime_recovery.py`
+- `app/startup_progress.py`
+- `scripts/portable_entry.py`
 
-## 3. Manifestfamilie
+Build-generiert und deshalb nicht als feste Quelldatei geführt:
 
-### `manifests/RUNTIME_MANIFEST.json`
+- `MANIFEST_RELEASE.json`
+- `RECOVERY_BASIS.zip`
 
-- Manifest-Version: **`1.3.0`**
-- Status für 0.5.1: **eingefroren**
-- Aufgabe: positive Runtime-Allowlist plus Transportverbote
-- Änderung daran würde den Runtime-ZIP-Hash verändern und benötigt deshalb eine **neue Produktversion**.
+Lokal erzeugt und nicht transportiert:
 
-### `manifests/DEVELOPMENT_MANIFEST.json`
+- `runtime/**`
+- `web/.aio-instance-id`
 
-- Manifest-Version: **`1.2.0`**
-- Scope: **repository-only**
-- Aufgabe: Dokumentation, Tests, Release-Evidenz, CI-/Build-Hilfen, lokale Reports und Manifest-Policy klassifizieren.
-- Definiert zusätzlich Statusdokumente, Evidenz-Zusammenfassungen, Authority-Matrix und Invarianten.
+## 4. Development-Inventar
 
-### `MANIFEST_RELEASE.json`
+Repository-only bleiben unter anderem:
 
-Wird vom Release-Builder reproduzierbar in das Runtime-ZIP erzeugt und enthält:
+- `.github/`
+- `tests/`
+- `testdata/`
+- `docs/`
+- `evidence/`
+- `requirements-ui.txt`
+- `requirements-build.txt`
+- Release-/Failure-/Recovery-/Portable-Buildhelper.
 
-- Toolversion und Status,
-- Runtime-Manifest-Version,
-- Archivname,
-- Dateizahl,
-- Pfad, Größe und SHA256 jeder Runtime-Basisdatei.
+## 5. Atomare Gate-Kette
 
-### `manifests/README.md`
+```text
+01 Core-CI
+02 Failure-Matrix
+03 Source-ZIP
+04 RECOVERY_BASIS
+05 Portable-Build
+06 Portable-Smoke
+07 Chromium
+08 Firefox
+```
 
-Erklärt die Rollen, Änderungsregeln und die bewusste Trennung zwischen Runtime-Baseline und Repository-Metadaten.
+Jeder Job benötigt den vorherigen Job. Das verhindert, dass ein visuelles PASS einen fehlerhaften Core-/Buildzustand verdeckt.
 
-## 4. Bekannte historische Manifest-Semantik
+## 6. Invarianten
 
-Runtime-Manifest `1.3.0` verwendet noch das gemeinsame Feld `generated_files` für zwei Arten:
+1. Ein Slice wird aus genau einem Git-Tree und einem Commit geprüft.
+2. Source-ZIP und alle Builds stammen aus exakt diesem Commit.
+3. Runtime-Recovery arbeitet nur in einem gebauten Release mit `MANIFEST_RELEASE.json` und `RECOVERY_BASIS.zip`.
+4. Beschädigte Nutzerdaten werden vor Ersatz quarantänisiert.
+5. Repo-only Dateien gelangen nicht in das Runtime-ZIP.
+6. `development` darf keine Release-Evidenz vortäuschen.
+7. Native L4 bleibt **OFFEN**, bis reale Zielsystembeobachtung vorliegt.
+8. SAFE-FILE-Ausführung bleibt **GESPERRT**.
 
-- `MANIFEST_RELEASE.json` — beim Build erzeugt und transportiert,
-- `web/.aio-instance-id` sowie `runtime/**` — erst lokal nach dem Start erzeugt und **nicht** transportiert.
+## 7. Automatische Prüfer
 
-Diese Semantik wird durch `scripts/manifest_guard.py` explizit geprüft. Das Feld wird in 0.5.1 nicht nachträglich strukturell geändert, weil dadurch die eingefrorene Runtime-Baseline verändert würde. Eine Feldaufspaltung gehört in eine spätere neue Runtime-Version.
+- `scripts/manifest_guard.py`
+- `scripts/evidence_guard.py`
+- `scripts/documentation_guard.py`
+- `scripts/release.py --check`
+- `scripts/failure_matrix.py`
+- `scripts/build_recovery_basis.py --check`
+- `scripts/build_portable.py --check`
+- `scripts/portable_smoke.py`
 
-## 5. Runtime-Invarianten
+## 8. Evidenzgrenze
 
-1. Das Runtime-ZIP wird ausschließlich aus der positiven Allowlist plus generiertem `MANIFEST_RELEASE.json` gebaut.
-2. Repo-only Dokumentation, Tests, Release-Evidenz und lokale Reports dürfen nicht in das Runtime-ZIP gelangen.
-3. Eine repo-only Metadatenänderung darf den Runtime-SHA256 der eingefrorenen Baseline nicht verändern.
-4. Statusdokumente dürfen keinen höheren Status behaupten als Registry + reale Evidenz.
-5. Offene Native-L4-Schritte bleiben OFFEN; CI ersetzt keine reale Nutzerbeobachtung.
-6. SAFE-FILE-Ausführung bleibt bis zu einem eigenen neuen Versionsslice gesperrt.
-
-## 6. Automatische Konsistenzgates
-
-- `scripts/manifest_guard.py` — Runtime-/Development-Manifest, Überschneidungen, Policy und Legacy-generated-files-Semantik.
-- `scripts/evidence_guard.py` — Release-Evidenz, Commit-/CI-/Hash-Provenienz und Browsermatrix.
-- `scripts/documentation_guard.py` — aktuelle Version, Status, kanonischer Runtime-Commit/SHA und L4-Grenze in Statusdokumenten.
-- `scripts/release.py --check` — reproduzierbarer Build, Dateimengen- und Einzelhashprüfung.
-
-## 7. Runtime-Beweis 0.5.1
-
-- **Runtime-Baseline-Commit:** `ee6adcfd3427e8328920edaceb804e7b6655cdb8`
-- **Main-CI:** `33048070879`
-- **Runtime-SHA256:** `f8ffd88e2f3e40416f0d76b20786aa168cebb4e11fe3ef9d0eefa6dcf93b19ee`
-- **GitHub-Artefakt-Wrapper-Digest:** `95238af6cae63091262fbaf2aea6ce267c71fd16eeefcebde56d97f3b482d71b`
-
-Der finale Feature-Runtime-Head `3dec31d22110f738c9964b937a53ddfe251a4d79` und die Runtime-Baseline auf `main` erzeugen bytegleich denselben Runtime-SHA256.
-
-Der frühere Promotion-Hash `a7ab6d64…` ist in der Release-Evidenz als abgelöstes Vorartefakt vermerkt und **nicht** der finale Runtime-Baseline-Hash.
-
-## 8. Offene Gates
-
-### Native L4 — OFFEN
-
-- 18 manuelle Schritte vorhanden,
-- 0 real bestätigt,
-- Kubuntu, Anzeige, Tastatur sowie Firefox/Chromium 100–200 % real zu prüfen.
-
-### SAFE-FILE-Ausführung — GESPERRT
-
-Die Runtime enthält weiterhin nur die Simulation. Eine reale Ausführungsfähigkeit erfordert eine neue Version mit eigenem Recovery-/Execution-Nachweis.
+Die **Runtime-Baseline** 0.5.1 besitzt kanonische Release-Evidenz. `0.6.0-autostart-selfheal` ist im vorliegenden Tree `development / draft`; CI-Ergebnisse werden erst nach erfolgreichem Lauf in einen späteren Promotion-/Evidenzschritt überführt.

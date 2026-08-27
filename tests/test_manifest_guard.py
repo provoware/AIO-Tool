@@ -17,8 +17,10 @@ class ManifestGuardTests(unittest.TestCase):
 
     def test_current_manifests_are_consistent(self) -> None:
         runtime, development = validate_manifests(copy.deepcopy(self.runtime), copy.deepcopy(self.development))
-        self.assertEqual(runtime["manifest_version"], "1.3.0")
-        self.assertEqual(development["manifest_version"], "1.2.0")
+        self.assertEqual(runtime["manifest_version"], "2.0.0")
+        self.assertEqual(development["manifest_version"], "1.3.0")
+        self.assertIn("RECOVERY_BASIS.zip", runtime["generated_files"])
+        self.assertIn("requirements-build.txt", runtime["repo_only_root_files"])
 
     def test_runtime_file_cannot_be_classified_repo_only(self) -> None:
         development = copy.deepcopy(self.development)
@@ -40,7 +42,13 @@ class ManifestGuardTests(unittest.TestCase):
         with self.assertRaises(ManifestContractError):
             validate_manifests(runtime, copy.deepcopy(self.development))
 
-    def test_legacy_generated_file_semantics_are_explicitly_guarded(self) -> None:
+    def test_generated_recovery_basis_is_explicitly_guarded(self) -> None:
+        runtime = copy.deepcopy(self.runtime)
+        runtime["generated_files"].remove("RECOVERY_BASIS.zip")
+        with self.assertRaises(ManifestContractError):
+            validate_manifests(runtime, copy.deepcopy(self.development))
+
+    def test_release_manifest_is_still_explicitly_guarded(self) -> None:
         runtime = copy.deepcopy(self.runtime)
         runtime["generated_files"].remove("MANIFEST_RELEASE.json")
         with self.assertRaises(ManifestContractError):

@@ -15,11 +15,14 @@ concurrency:
   group: aio-ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  PYTHONUNBUFFERED: '1'
+
 jobs:
-  validate:
-    name: core-and-release
+  core-ci:
+    name: 01-core-ci
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -46,28 +49,164 @@ jobs:
           node --check web/app.js
           node --check web/native-acceptance.js
           node --check web/safe-file-sim.js
-      - name: Release builder
-        id: release
-        shell: bash
-        run: |
-          set -euo pipefail
-          output="$(python scripts/release.py --check)"
-          printf '%s\n' "$output"
-          status="$(printf '%s\n' "$output" | awk '/^STATUS /{print $2}')"
-          test -n "$status"
-          echo "status=$status" >> "$GITHUB_OUTPUT"
+      - name: Runtime release build/check
+        run: python scripts/release.py --check
       - name: Upload runtime release ZIP
-        if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: AIO-Tool-RUNTIME-${{ steps.release.outputs.status }}-${{ github.sha }}
-          path: dist/*.zip
+          name: 01-runtime-${{ github.sha }}
+          path: dist/AIO-Tool-*-DEV.zip
           if-no-files-found: error
           retention-days: 30
 
-  ui-acceptance:
-    name: ui-acceptance-chromium-firefox
-    needs: validate
+  failure-matrix:
+    name: 02-failure-matrix
+    needs: core-ci
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Execute deterministic failure matrix
+        run: python scripts/failure_matrix.py --output artifacts/failure-matrix.json
+      - name: Upload failure evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: 02-failure-matrix-${{ github.sha }}
+          path: artifacts/failure-matrix.json
+          if-no-files-found: error
+          retention-days: 30
+
+  source-zip:
+    name: 03-source-zip
+    needs: failure-matrix
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Build exact-commit source ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(cat VERSION)"
+          mkdir -p dist/source
+          archive="dist/source/AIO-Tool-${version}-SOURCE-${GITHUB_SHA}.zip"
+          git archive --format=zip --prefix="AIO-Tool-${version}-SOURCE/" -o "$archive" HEAD
+          sha256sum "$archive" | tee "$archive.sha256"
+      - name: Upload source ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: 03-source-${{ github.sha }}
+          path: dist/source/
+          if-no-files-found: error
+          retention-days: 30
+
+  recovery-basis:
+    name: 04-recovery-basis
+    needs: source-zip
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build and verify RECOVERY_BASIS
+        run: python scripts/build_recovery_basis.py --check
+      - name: Upload RECOVERY_BASIS
+        uses: actions/upload-artifact@v4
+        with:
+          name: 04-recovery-basis-${{ github.sha }}
+          path: |
+            dist/recovery/RECOVERY_BASIS.zip
+            dist/recovery/RECOVERY_BASIS.zip.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+  portable-build:
+    name: 05-portable-build
+    needs: recovery-basis
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: requirements-build.txt
+      - name: Install pinned portable builder
+        run: python -m pip install -r requirements-build.txt
+      - name: Build portable Linux x86_64 package
+        run: python scripts/build_portable.py --check
+      - name: Upload portable package
+        uses: actions/upload-artifact@v4
+        with:
+          name: 05-portable-linux-x86_64-${{ github.sha }}
+          path: |
+            dist/portable/*.zip
+            dist/portable/*.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+  portable-smoke:
+    name: 06-portable-smoke
+    needs: portable-build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: 05-portable-linux-x86_64-${{ github.sha }}
+          path: artifacts/portable
+      - name: Portable normal + read-only mirror smoke
+        run: python scripts/portable_smoke.py --zip-glob 'artifacts/portable/*.zip' --output artifacts/portable-smoke.json
+      - name: Upload portable smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: 06-portable-smoke-${{ github.sha }}
+          path: artifacts/portable-smoke.json
+          if-no-files-found: error
+          retention-days: 30
+
+  chromium:
+    name: 07-chromium
+    needs: portable-smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: requirements-ui.txt
+      - name: Install pinned UI dependency
+        run: python -m pip install -r requirements-ui.txt
+      - name: Install Chromium
+        run: python -m playwright install --with-deps chromium
+      - name: Chromium strict UI gate
+        run: python scripts/ui_acceptance_ci.py --browser chromium --strict
+      - name: Upload Chromium evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: 07-chromium-${{ github.sha }}
+          path: artifacts/ui-acceptance/
+          if-no-files-found: error
+          retention-days: 30
+
+  firefox:
+    name: 08-firefox
+    needs: chromium
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
@@ -77,19 +216,19 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
           cache-dependency-path: requirements-ui.txt
-      - name: Install pinned UI test dependency
+      - name: Install pinned UI dependency
         run: python -m pip install -r requirements-ui.txt
-      - name: Install pinned Playwright browsers
-        run: python -m playwright install --with-deps chromium firefox
-      - name: Dashboard render, raster and interaction gate
-        run: python scripts/ui_acceptance_ci.py --browser chromium --browser firefox --strict
-      - name: Native Runner and SAFE-FILE helper UI gate
+      - name: Install Firefox and Chromium for final cross-browser helper gate
+        run: python -m playwright install --with-deps firefox chromium
+      - name: Firefox strict UI gate
+        run: python scripts/ui_acceptance_ci.py --browser firefox --strict
+      - name: Native Runner and SAFE-FILE cross-browser helper gate
         run: python scripts/aux_ui_acceptance.py
-      - name: Upload UI screenshots and reports
+      - name: Upload Firefox and helper evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: AIO-Tool-UI-Acceptance-${{ github.sha }}
+          name: 08-firefox-${{ github.sha }}
           path: |
             artifacts/ui-acceptance/
             artifacts/aux-ui-acceptance/

@@ -12,7 +12,7 @@ if str(ROOT) not in sys.path:
 
 from app import VERSION
 from app.version_registry import validate_registry
-from scripts.evidence_guard import validate_evidence_index
+from scripts.evidence_guard import PROVEN_STATUSES, validate_evidence_index
 from scripts.manifest_guard import load_and_validate
 from scripts.release import status_label
 
@@ -25,8 +25,10 @@ def _load_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _current_evidence(index: dict, version: str) -> dict:
+def _current_evidence(index: dict, version: str) -> dict | None:
     matches = [entry for entry in index["entries"] if entry["version"] == version]
+    if not matches:
+        return None
     if len(matches) != 1:
         fail(f"Evidenzindex kennt aktuelle Version nicht eindeutig: {version}")
     return _load_json(ROOT / matches[0]["file"])
@@ -43,6 +45,11 @@ def main() -> None:
     index = _load_json(ROOT / "evidence" / "RELEASE_EVIDENCE_INDEX.json")
     validate_evidence_index(index, registry, root=ROOT)
     evidence = _current_evidence(index, VERSION)
+    proven = current["status"] in PROVEN_STATUSES
+    if proven and evidence is None:
+        fail(f"Bewiesene Version ohne Einzelevidenz: {VERSION}")
+    if not proven and evidence is not None:
+        fail(f"Development-Version darf keine vorweggenommene Release-Evidenz beanspruchen: {VERSION}")
 
     status_docs = development["status_documents"]
     evidence_docs = development["evidence_summary_documents"]
@@ -65,7 +72,7 @@ def main() -> None:
     if current["status"] not in manifest or current["release_status"] not in manifest:
         fail("MANIFEST zeigt aktuellen Versions-/Release-Status nicht an.")
 
-    if current["status"] in {"tested", "release-candidate", "released"}:
+    if proven and evidence is not None:
         artifact = evidence.get("artifact", {})
         digest = artifact.get("sha256") if artifact.get("status") == "recorded" else None
         main_commit = evidence.get("main_commit")
@@ -82,19 +89,17 @@ def main() -> None:
         if "Runtime-Baseline" not in texts[rel]:
             fail(f"{rel} trennt Runtime-Baseline und Repository-Metadaten nicht ausdrücklich.")
 
-    if evidence.get("open_l4_gates"):
-        for rel in status_docs:
-            upper = texts[rel].upper()
-            if "L4" not in upper or "OFFEN" not in upper:
-                fail(f"{rel} muss die reale L4-Grenze ausdrücklich als OFFEN kennzeichnen.")
-        progress = re.search(r"Native Kubuntu L4[^\n]*?(\d+)\s*%", readme, re.IGNORECASE)
-        if progress and int(progress.group(1)) != 0:
-            fail("README darf für vollständig offene Native-L4-Schritte keinen Fortschritt > 0 % anzeigen.")
+    # Native L4 bleibt eine reale Feldbeobachtung. Development-Versionen dürfen
+    # sie niemals aus CI als bestanden ableiten.
+    for rel in status_docs:
+        upper = texts[rel].upper()
+        if "L4" not in upper or "OFFEN" not in upper:
+            fail(f"{rel} muss die reale L4-Grenze ausdrücklich als OFFEN kennzeichnen.")
+    progress = re.search(r"Native Kubuntu L4[^\n]*?(\d+)\s*%", readme, re.IGNORECASE)
+    if progress and int(progress.group(1)) != 0:
+        fail("README darf für vollständig offene Native-L4-Schritte keinen Fortschritt > 0 % anzeigen.")
 
-    print(
-        f"DOCUMENTATION GUARD PASS: {VERSION} / {current['status']} / "
-        f"{current['release_status']} / {label} / evidence-driven"
-    )
+    print(f"DOCUMENTATION GUARD PASS: {VERSION} / {current['status']} / {current['release_status']} / {label} / evidence-policy-consistent")
 
 
 if __name__ == "__main__":

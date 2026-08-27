@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 from app.version_registry import validate_registry
-from scripts.evidence_guard import validate_evidence_index
+from scripts.evidence_guard import PROVEN_STATUSES, validate_evidence_index
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -16,24 +16,34 @@ class ReleaseEvidenceIndexTests(unittest.TestCase):
         index = json.loads((ROOT / "evidence" / "RELEASE_EVIDENCE_INDEX.json").read_text(encoding="utf-8"))
         return registry, index
 
-    def _current_evidence(self):
+    def _latest_proven_evidence(self):
         registry, index = self._registry_and_index()
-        current = registry["current_version"]
-        entry = next(item for item in index["entries"] if item["version"] == current)
+        proven_rows = [row for row in registry["versions"] if row["status"] in PROVEN_STATUSES]
+        self.assertTrue(proven_rows, "Mindestens eine bewiesene Runtime-Baseline muss existieren.")
+        baseline = proven_rows[-1]
+        entry = next(item for item in index["entries"] if item["version"] == baseline["version"])
         row = json.loads((ROOT / entry["file"]).read_text(encoding="utf-8"))
-        return registry, row
+        return registry, baseline, row
 
-    def test_all_tested_versions_have_exactly_one_evidence_file(self):
+    def test_all_proven_versions_have_exactly_one_evidence_file(self):
         registry, index = self._registry_and_index()
         validate_evidence_index(index, registry)
-        proven = {row["version"] for row in registry["versions"] if row["status"] in {"tested", "release-candidate", "released"}}
+        proven = {row["version"] for row in registry["versions"] if row["status"] in PROVEN_STATUSES}
         indexed = {row["version"] for row in index["entries"]}
         self.assertEqual(proven, indexed)
         self.assertEqual(len(indexed), len(index["entries"]))
 
-    def test_current_tested_baseline_has_main_ci_artifact_and_cross_browser_evidence(self):
-        registry, row = self._current_evidence()
-        self.assertEqual(row["version"], registry["current_version"])
+    def test_development_current_version_does_not_pretend_to_have_release_evidence(self):
+        registry, index = self._registry_and_index()
+        current = next(row for row in registry["versions"] if row["version"] == registry["current_version"])
+        if current["status"] not in PROVEN_STATUSES:
+            self.assertNotIn(current["version"], {entry["version"] for entry in index["entries"]})
+            self.assertEqual(current["evidence"], [])
+
+    def test_latest_proven_baseline_has_main_ci_artifact_and_cross_browser_evidence(self):
+        _, baseline, row = self._latest_proven_evidence()
+        self.assertEqual(row["version"], baseline["version"])
+        self.assertEqual(row["version"], "0.5.1-audit-modern-ui")
         self.assertEqual(row["main_commit"], "ee6adcfd3427e8328920edaceb804e7b6655cdb8")
         self.assertEqual(row["main_ci_run"], 33048070879)
         self.assertIn(row["main_ci_run"], row["ci_runs"])
@@ -46,7 +56,7 @@ class ReleaseEvidenceIndexTests(unittest.TestCase):
         self.assertTrue(row["open_l4_gates"])
 
     def test_superseded_promotion_artifact_is_explicit_not_silent(self):
-        _, row = self._current_evidence()
+        _, _, row = self._latest_proven_evidence()
         old_hashes = {item["sha256"] for item in row.get("superseded_artifacts", [])}
         self.assertIn("a7ab6d64e978e27c1fa550c549e12dc7ee21e24a17a55fd9c160c19cd3001b72", old_hashes)
         self.assertNotIn(row["artifact"]["sha256"], old_hashes)

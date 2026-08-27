@@ -1,148 +1,92 @@
 # TOOLBESCHREIBUNG — AIO-Tool
 
-## Aktueller Qualitätsstand
+## Qualitätsstand
 
-**Runtime-Baseline:** `0.5.1-audit-modern-ui` — 🟢 `tested / draft`, **L0–L3 BEWIESEN**  
-**Runtime-Baseline-Commit:** `ee6adcfd3427e8328920edaceb804e7b6655cdb8`  
-**Runtime-ZIP SHA256:** `f8ffd88e2f3e40416f0d76b20786aa168cebb4e11fe3ef9d0eefa6dcf93b19ee`  
-**Native L4:** 🟡 **OFFEN · 0/18 real bestätigt**  
+**Aktueller Entwicklungsslice:** `0.6.0-autostart-selfheal` — `development / draft`  
+**Runtime-Baseline:** `0.5.1-audit-modern-ui` — letzter bereits bewiesener L0–L3-Stand  
+**Native L4:** 🟡 **OFFEN · 0 % automatisch aufgewertet**  
 **SAFE-FILE-Ausführung:** 🔒 **GESPERRT**
 
-AIO-Tool ist ein lokales, offline-first Werkzeug mit Python-Loopback-Backend und Browseroberfläche. Die Runtime-Baseline 0.5.1 fokussiert Robustheit, Wartbarkeit, verständliches Nutzerfeedback, Barrierefreiheit und ein modernes Theme-System, ohne die SAFE-FILE-Simulation in eine reale Ausführungsfunktion umzuwandeln.
+AIO-Tool ist ein lokales, offline-first Werkzeug mit Python-Loopback-Backend und Browseroberfläche. Version 0.6.0 erweitert den Startpfad um autonome Vorprüfung, begrenzte Selbstreparatur, Release-Recovery und einen selbstenthaltenen Linux-x86_64-Build.
 
-## Architektur in Kurzform
+## Architektur 0.6.0
 
 ```text
-Launcher
-   ↓
-Loopback-Backend
-   ↓
-Domänen-Stores / Persistenz
-   ↓
-Browser-Dashboard
-   ↓
-separate Test- und Evidence-Schichten
+start_tool.sh / AIO-Tool-Start
+          ↓
+      app.autostart
+          ↓
+ ┌────────┼─────────┐
+ │        │         │
+Preflight Self-Heal Recovery
+ │        │         │
+ └────────┼─────────┘
+          ↓
+ freie Loopback-Instanz
+          ↓
+ Backend-READY
+          ↓
+ Browser-/Dashboard-Handshake
 ```
 
-Runtime, Entwicklung, Release-Evidenz und lokale Nutzerdaten sind bewusst getrennte Ebenen.
+## Autostart
 
-## Wahrheitsebenen
+`app/autostart.py` ist der kanonische Startkoordinator. Er besitzt sichtbare Checkpoints und behandelt Portwahl, stale PID, Runtime-Recovery, Persistenzgesundheit, Preflight, Backend-Start und Browser-Handshake in einer reproduzierbaren Reihenfolge.
 
-| Thema | Kanonische Quelle |
-|---|---|
-| Produktversion / Status | `VERSION` + `VERSION_REGISTRY.json` |
-| Runtime-Dateimenge | `manifests/RUNTIME_MANIFEST.json` |
-| Release-Beweis | `evidence/RELEASE_EVIDENCE_INDEX.json` + `evidence/releases/*.json` |
-| Repository-only Bestand | `manifests/DEVELOPMENT_MANIFEST.json` |
-| Menschenlesbarer Status | `MANIFEST.md` |
+## Self-Healing
 
-Der **Runtime-Baseline-Commit** ist der bewiesene Programm-/Transportstand. Ein späterer **Repository-Head** kann zusätzliche reine Dokumentations- oder Evidenzänderungen enthalten und ist deshalb nicht automatisch eine neue Runtime-Version.
+`app/runtime_health.py` prüft die lokalen Kernstores vor dem Serverstart. Reihenfolge pro Datei:
 
-## Persistenz und Robustheit
+1. Hauptdatei validieren.
+2. Bei Fehler gültiges Backup prüfen.
+3. Beschädigte Hauptdatei vor Ersatz quarantänisieren.
+4. Bei brauchbarem Backup dieses atomar wiederherstellen.
+5. Sind Hauptdatei und Backup unbrauchbar, beide quarantänisieren und nur dann einen validierten sicheren Standard erzeugen.
 
-`AtomicJsonStore` serialisiert parallele Read→Mutate→Write-Zyklen über einen gemeinsamen reentranten Lock. Hauptdatei und Backup werden atomar ersetzt. `ConfigStore` verwendet denselben Persistence-Core statt einer zweiten Schreibimplementierung.
+Damit wird ein kaputter Zustand repariert, ohne das ursprüngliche Beweismaterial still zu vernichten.
 
-Wichtige Zustandsregeln:
+## Release-Recovery
 
-- beschädigte Persistenz ist kein normaler Eingabefehler,
-- fehlgeschlagene Reloads dürfen keine alten Werte als aktuell anzeigen,
-- **leer**, **nicht verfügbar** und **veraltet** bleiben getrennte Zustände,
-- konkurrierende Refresh-/Config-Aktionen laufen single-flight,
-- Wartevorgänge besitzen einen begrenzten Timeout und eine verständliche nächste Handlung.
+`app/runtime_recovery.py` arbeitet nur, wenn **beide** Buildmarker vorhanden sind:
 
-## Lokale Sicherheit
+- `MANIFEST_RELEASE.json`
+- `RECOVERY_BASIS.zip`
 
-Hauptbackend, Native Runner und SAFE-FILE Simulator verwenden denselben exakten Loopback-Host-/Port-Vertrag. Fremde Hosts und Cross-Port-Origin-Anfragen gelten nicht als vertrauenswürdig. Es gibt keine Telemetrie.
+Ein Source-Checkout ohne diese Marker wird nicht automatisch verändert. Die Recovery-Basis enthält für jede Runtime-Allowlist-Datei Größe und SHA256. Eine beschädigte Runtime-Datei wird vor Ersatz in die Runtime-Quarantäne verschoben.
 
-## Dashboard und Barrierefreiheit
+## Read-only-Quelle
 
-- Boot-Guard für Start, READY, Hinweise und Fehler,
-- sichtbare Busy-Zustände mit `aria-busy`,
-- `aria-pressed` für Auswahlzustände,
-- Fokusführung und logische Tastaturreihenfolge,
-- dynamische Inhalte ohne `innerHTML`,
-- Farbe nie als einziges Statussignal,
-- `prefers-reduced-motion` wird respektiert.
+Ist die Installationsbasis tatsächlich nicht schreibbar, wird sie in einen benutzereigenen Zustandsbereich gespiegelt. Die Installation selbst bleibt unangetastet; anschließend startet dieselbe Version aus dem beschreibbaren Spiegel.
 
-## Theme-System
+## Portable Linux x86_64
 
-Fünf Themes nutzen denselben semantischen Tokenvertrag:
+- Entry-Point: `scripts/portable_entry.py`
+- Builder: `scripts/build_portable.py`
+- Build-Abhängigkeit: `requirements-build.txt`
+- Technik: PyInstaller onedir
+- Starter im Paket: `AIO-Tool-Start`
+- zusätzlicher Laienstart: `start_tool.sh`
+- eingebettet: `MANIFEST_RELEASE.json` + `RECOVERY_BASIS.zip`
 
-- Aurora Glass
-- Steel Night
-- Trash Neon
-- Clean Light
-- High Contrast
+## Qualitätskette
 
-Oberflächenebenen, Akzent, Fokus, Status, Schatten und Kontrast sind getrennt definiert.
+1. **Core-CI:** Syntax, Unit-/Integrationstests, Guards, Runtime-Release.
+2. **Failure-Matrix:** künstliche Port-, PID-, Persistenz- und Recovery-Fehler.
+3. **Source-ZIP:** exaktes `git archive` desselben Commits.
+4. **RECOVERY_BASIS:** deterministische Hash-/Dateimengenprüfung.
+5. **Portable-Build:** gepinnter PyInstaller-Build.
+6. **Portable-Smoke:** normaler Start plus Read-only-Quellspiegelung.
+7. **Chromium:** striktes UI-Gate.
+8. **Firefox:** striktes UI-Gate.
 
-## Browser-Acceptance
-
-`scripts/ui_acceptance.py` ist die einzige kanonische Browser-Acceptance-Implementierung. Der CI-Einstieg bleibt ein dünner Wrapper. Produktassets werden aus dem aktuellen HTML-Vertrag abgeleitet; Fixture-Reihenfolge und Ready-Zustand sind regressionsgesichert.
-
-L3 umfasst echte Chromium-/Firefox-Render-, Reflow- und Interaktionsgates. L4 wird davon ausdrücklich getrennt.
-
-## Native Acceptance L4
-
-Der Native Runner enthält 18 manuelle Prüfschritte für:
-
-- Kubuntu-Startpfade und Instanzverhalten,
-- fremd belegten Port,
-- kleine / Full-HD / große Anzeige,
-- reine Tastaturbedienung,
-- Firefox 100–200 %,
-- Chrome/Chromium 100–200 %.
-
-Jeder Schritt startet OFFEN. `pass`, `fail` und `skip` werden ausschließlich nach realer Nutzerbeobachtung gespeichert. Solange kein Schritt bestätigt wurde, gilt **0/18 = 0 %**.
-
-## SAFE-FILE-Grenze
-
-Unverändert gilt:
-
-- `SIMULATION_ONLY=True`
-- `EXECUTION_ENABLED=False`
-- kein Execute-Endpunkt
-- keine reale Ausführungsprimitive in der Simulationsstufe
-
-Eine spätere reale Ausführung benötigt eine neue Produktversion mit Jobjournal, Staging, Postvalidation, Crash-/Recoverytests und Guarded Undo.
+Die Jobs sind hart sequenziell voneinander abhängig.
 
 ## Manifest-System
 
-### Runtime-Manifest 1.3.0
+`manifests/RUNTIME_MANIFEST.json` ist in 0.6.0 auf Version `2.0.0` angehoben. Es trennt Runtime-Allowlist, Build-generierte Dateien (`MANIFEST_RELEASE.json`, `RECOVERY_BASIS.zip`) und erst lokal entstehende Zustände (`runtime/**`, Instanzmarker).
 
-`manifests/RUNTIME_MANIFEST.json` ist die positive Transport-Allowlist der bewiesenen 0.5.1-Runtime und deshalb eingefroren.
+`manifests/DEVELOPMENT_MANIFEST.json` klassifiziert Tests, Build-/CI-Helfer und Dokumentation als repository-only.
 
-### Development-Manifest 1.2.0
+## Evidenzgrenze
 
-`manifests/DEVELOPMENT_MANIFEST.json` klassifiziert Repository-only Dokumentation, Tests, Evidenz, CI-/Build-Hilfen, lokale Reports und die Manifest-Policy.
-
-### Manifest Guard
-
-`scripts/manifest_guard.py` verhindert insbesondere:
-
-- Überschneidung von Runtime- und repo-only Klassifikation,
-- fehlende Pflichtdokumente im Development-Inventar,
-- unzulässige Runtime-Dateien unter verbotenen Präfixen,
-- Fehlinterpretation der historischen `generated_files`-Semantik.
-
-Details stehen in `manifests/README.md`.
-
-## Release-Evidenz
-
-Kanonische Quelle für 0.5.1:
-
-`evidence/releases/0.5.1-audit-modern-ui.json`
-
-Darin sind festgehalten:
-
-- Runtime-Baseline-Commit `ee6adcfd3427e8328920edaceb804e7b6655cdb8`,
-- Main-CI `33048070879`,
-- Runtime-ZIP SHA256 `f8ffd88e2f3e40416f0d76b20786aa168cebb4e11fe3ef9d0eefa6dcf93b19ee`,
-- Cross-Browser-Matrix,
-- Reproduzierbarkeit zwischen finalem Runtime-Feature-Head und Main,
-- abgelöstes Promotion-Artefakt,
-- offene L4-Gates.
-
-## Nächster Qualitätsweg
-
-Die Runtime-Baseline bleibt unverändert. Als nächstes wird ausschließlich **Native L4 real auf Kubuntu** durchgeführt. Vor Abschluss dieser realen Abnahme wird kein höherer L4-Status behauptet und SAFE-FILE bleibt technisch gesperrt.
+`0.6.0-autostart-selfheal` ist während dieses Slices noch nicht bewiesen und besitzt deshalb bewusst noch keine vorweggenommene Release-Evidenz. Der Documentation Guard unterscheidet nun Entwicklung und bewiesene Zustände korrekt. Native L4 bleibt **OFFEN**.

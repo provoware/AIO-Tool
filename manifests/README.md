@@ -1,33 +1,57 @@
 # Manifest-System — AIO-Tool
 
-Dieses Verzeichnis trennt Transport, Repository-Inhalt, Build-Inventar und Release-Evidenz.
+Dieses Verzeichnis trennt Runtime-Transport, Repository-Inhalt, Build-Recovery, lokale Laufzeitdaten und Release-Evidenz.
 
 ## Ebenen
 
 | Ebene | Quelle | Bedeutung |
 |---|---|---|
-| Runtime-Transport | `manifests/RUNTIME_MANIFEST.json` | Positive Allowlist der Betriebsdateien im Runtime-ZIP. |
-| Repository-Bestand | `manifests/DEVELOPMENT_MANIFEST.json` | Klassifiziert Dokumentation, Tests, Evidenz, CI und lokale Entwicklungsdaten. |
-| Build-Inventar | `MANIFEST_RELEASE.json` im ZIP | Wird reproduzierbar erzeugt und enthält Version, Status, Dateien, Größen und SHA256. |
-| Release-Evidenz | `evidence/RELEASE_EVIDENCE_INDEX.json` und `evidence/releases/*.json` | Belegt Commit, CI, Browsermatrix und Artefakt-Hash eines geprüften Stands. |
+| Versions-/Statuswahrheit | `VERSION` + `VERSION_REGISTRY.json` | Aktuelle Produktversion und Statuspaar. |
+| Runtime-Transport | `manifests/RUNTIME_MANIFEST.json` | Positive Allowlist aller transportierten Betriebsdateien. |
+| Repository-Bestand | `manifests/DEVELOPMENT_MANIFEST.json` | Dokumentation, Tests, Evidenz, CI, Build-Helfer und lokale Entwicklungsdaten. |
+| Build-Inventar | `MANIFEST_RELEASE.json` | Reproduzierbar erzeugte Datei-/Größen-/SHA256-Liste des Runtime-ZIPs. |
+| Build-Recovery | `RECOVERY_BASIS.zip` | Hashgebundene Wiederherstellungsbasis exakt für die Runtime-Allowlist. |
+| Release-Evidenz | `evidence/RELEASE_EVIDENCE_INDEX.json` + `evidence/releases/*.json` | Belegt ausschließlich TESTED-/höhere Stände. |
+
+## Aktueller Vertrag 0.6.0
+
+`0.6.0-autostart-selfheal` ist `development / draft`. Die zuletzt bereits bewiesene **Runtime-Baseline** bleibt `0.5.1-audit-modern-ui`. Development ist kein Beweisstatus und erhält deshalb noch keine vorweggenommene Release-Evidenz.
+
+`RUNTIME_MANIFEST.json` steht in diesem Slice auf **2.0.0**. Es trennt:
+
+1. `files` — feste positive Runtime-Allowlist,
+2. `generated_files` — explizit nach Build/Start erzeugte Dateien wie `MANIFEST_RELEASE.json`, `RECOVERY_BASIS.zip`, Instanzmarker und `runtime/**`,
+3. `forbidden_prefixes` — Bereiche, die niemals in das Runtime-ZIP gelangen dürfen,
+4. `repo_only_root_files` — Root-Dateien für Entwicklung, Tests und Buildsystem.
+
+## RECOVERY_BASIS
+
+`scripts/build_recovery_basis.py` erzeugt `RECOVERY_BASIS.zip` deterministisch aus exakt derselben `files`-Allowlist. `RECOVERY_MANIFEST.json` enthält pro Datei Pfad, Größe und SHA256. Die Runtime-Recovery ist nur aktiv, wenn im gebauten Paket sowohl `MANIFEST_RELEASE.json` als auch `RECOVERY_BASIS.zip` vorhanden sind. Ein Source-Checkout wird dadurch nicht automatisch verändert.
+
+## Development-Manifest 1.3.0
+
+`DEVELOPMENT_MANIFEST.json` klassifiziert unter anderem:
+
+- Status-/Policy-Dokumentation,
+- Tests und Fixtures,
+- `.github/` und CI,
+- `requirements-ui.txt` und `requirements-build.txt`,
+- Failure-Matrix, Recovery-, Portable- und Release-Builder,
+- lokale `artifacts/`, `dist/`, `build/` und `runtime/`-Ausgaben.
+
+## Atomare Prüfkette
+
+Für 0.6.0 gilt verbindlich:
+
+`Core-CI → Failure-Matrix → Source-ZIP → RECOVERY_BASIS → Portable-Build → Portable-Smoke → Chromium → Firefox`.
+
+Alle Stufen müssen exakt denselben Commit prüfen. `git archive HEAD` bindet das Source-ZIP direkt an diesen Commit. Ein späteres PASS kann ein vorheriges FAIL nicht ersetzen.
 
 ## Begriffe
 
-- **Runtime-Baseline:** eingefrorener Programm- und Transportstand einer bewiesenen Version.
-- **Repository-Head:** neuester Commit eines Branches; er kann nach der Runtime-Baseline noch reine Repository-Metadaten enthalten.
-- **Registry-Commit:** Commit, der den Versionsdatensatz in `VERSION_REGISTRY.json` begründet.
-- **Main-Commit in Release-Evidenz:** geprüfter Runtime-/Produktstand nach Integration auf `main`.
+- **Runtime-Baseline:** letzter bereits bewiesener Programm-/Transportstand.
+- **Repository-Head:** aktuellster Commit eines Branches.
+- **Registry-Commit:** Commit, der einen Versionsdatensatz begründet.
+- **Release-Evidenz:** Nachweis erst nach erfolgreicher Prüfkette eines beweisfähigen Status.
 
-Diese Begriffe sind nicht austauschbar.
-
-## Grenze für 0.5.1
-
-`0.5.1-audit-modern-ui` ist als Runtime-Baseline eingefroren. `RUNTIME_MANIFEST.json` Version `1.3.0` bleibt deshalb in dieser Repository-Metadaten-Härtung unverändert.
-
-Das historische Feld `generated_files` in Runtime-Manifest 1.3.0 vereint zwei Bedeutungen: `MANIFEST_RELEASE.json` entsteht beim Build und wird in das ZIP aufgenommen; `web/.aio-instance-id` und `runtime/**` entstehen erst lokal nach dem Start und werden nicht transportiert. Der Manifest-Guard prüft diese Semantik explizit. Eine strukturelle Feldaufteilung ist erst in einer neuen Runtime-Version zulässig.
-
-## Änderungsregel
-
-Repo-only Änderungen dürfen die eingefrorene Runtime-Baseline nicht verändern. Änderungen an einer Runtime-Allowlist-Datei oder am Runtime-Manifest selbst benötigen dagegen eine neue `development`-Version und die vollständige L0–L3-Prüfkette.
-
-Bei Widersprüchen gilt die Quellenhierarchie aus `AGENTS.md`; unklare Zustände bleiben OFFEN.
+Diese Begriffe sind nicht austauschbar. Native L4 bleibt separat **OFFEN**, bis eine reale Zielsystembeobachtung vorliegt.

@@ -1,19 +1,19 @@
 {
   "schema_version": 1,
-  "manifest_version": "1.3.0",
+  "manifest_version": "2.0.0",
   "name": "AIO-Tool Runtime-Basis",
-  "purpose": "Explizite Allowlist aller Dateien, die ein lauffähiges Transport-/Release-ZIP enthalten darf und muss.",
+  "purpose": "Explizite Allowlist aller Dateien, die ein lauffähiges Transport-/Release-ZIP enthalten darf und muss. 2.0 trennt transportierte Basis, Build-Recovery und lokal erzeugte Zustände.",
   "files": [
     "VERSION", "VERSION_REGISTRY.json", "start_tool.sh", "start_tool.desktop",
     "start_native_acceptance.sh", "native_acceptance.desktop", "start_safe_file_simulation.sh", "safe_file_simulation.desktop",
-    "app/__init__.py", "app/calendar_store.py", "app/config.py", "app/error_advisor.py", "app/event_registry.py", "app/instance_identity.py", "app/loopback_security.py", "app/native_acceptance.py", "app/persistence.py", "app/safe_file_sim.py", "app/server.py", "app/text_catalog.py", "app/todo_store.py", "app/version_registry.py",
-    "scripts/launcher_probe.py", "scripts/runtime_preflight.py", "scripts/native_acceptance_runner.py", "scripts/safe_file_simulator.py",
+    "app/__init__.py", "app/autostart.py", "app/calendar_store.py", "app/config.py", "app/error_advisor.py", "app/event_registry.py", "app/instance_identity.py", "app/loopback_security.py", "app/native_acceptance.py", "app/persistence.py", "app/preflight.py", "app/runtime_health.py", "app/runtime_recovery.py", "app/safe_file_sim.py", "app/server.py", "app/startup_progress.py", "app/text_catalog.py", "app/todo_store.py", "app/version_registry.py",
+    "scripts/launcher_probe.py", "scripts/runtime_preflight.py", "scripts/portable_entry.py", "scripts/native_acceptance_runner.py", "scripts/safe_file_simulator.py",
     "web/index.html", "web/app.js", "web/styles.css", "web/acceptance.css", "web/helper-ui.css", "web/dashboard-texts.de.v1.json", "web/native-acceptance.html", "web/native-acceptance.js", "web/safe-file-sim.html", "web/safe-file-sim.js",
     "resources/error_rules/v1.json", "resources/texts/de/v1.json",
     "resources/templates/calendar/calendar.v1.example.json", "resources/templates/config/config.v1.example.json", "resources/templates/events/events.v1.example.json", "resources/templates/native_acceptance/native_acceptance.v1.example.json", "resources/templates/safe_file_sim/safe_file_preview.v1.example.json", "resources/templates/todos/todos.v1.example.json", "resources/templates/version_registry/version_registry.v1.example.json",
     "manifests/RUNTIME_MANIFEST.json"
   ],
-  "generated_files": ["MANIFEST_RELEASE.json", "web/.aio-instance-id", "runtime/**"],
+  "generated_files": ["MANIFEST_RELEASE.json", "RECOVERY_BASIS.zip", "web/.aio-instance-id", "runtime/**"],
   "forbidden_prefixes": [".git/", ".github/", ".venv/", "artifacts/", "build/", "dist/", "docs/", "evidence/", "runtime/", "testdata/", "tests/"],
-  "repo_only_root_files": ["AGENTS.md", "CHANGELOG.md", "LAIEN-ANLEITUNG.md", "LEARNING_MEMORY.jsonl", "MANIFEST.md", "README.md", "REGRESSIONSINFOS.md", "TODO.md", "TOOLBESCHREIBUNG.md", "requirements-ui.txt"]
+  "repo_only_root_files": ["AGENTS.md", "CHANGELOG.md", "LAIEN-ANLEITUNG.md", "LEARNING_MEMORY.jsonl", "MANIFEST.md", "README.md", "REGRESSIONSINFOS.md", "TODO.md", "TOOLBESCHREIBUNG.md", "requirements-ui.txt", "requirements-build.txt"]
 }

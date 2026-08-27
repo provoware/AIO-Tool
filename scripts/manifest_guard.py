@@ -95,14 +95,21 @@ def validate_manifests(runtime: dict[str, Any], development: dict[str, Any]) -> 
     if not set(evidence_documents).issubset(set(status_documents)):
         raise ManifestContractError("evidence_summary_documents müssen Teil der status_documents sein.")
 
-    # Legacy-Semantik von Runtime-Manifest 1.3.0: MANIFEST_RELEASE.json wird beim Build
-    # erzeugt und transportiert; die übrigen generated_files entstehen erst nach dem Start.
-    if "MANIFEST_RELEASE.json" not in generated:
-        raise ManifestContractError("Build-generiertes MANIFEST_RELEASE.json fehlt in generated_files.")
-    post_start_generated = [path for path in generated if path != "MANIFEST_RELEASE.json"]
-    generated_overlap = sorted(path for path in runtime_files if path in post_start_generated)
+    # Runtime-Manifest 2.0 trennt zwei Arten erzeugter Dateien:
+    # - Build-generiert und in Release-/Portable-Artefakten benötigt.
+    # - Erst lokal nach dem Start erzeugt und niemals Bestandteil der festen Allowlist.
+    required_build_generated = {"MANIFEST_RELEASE.json", "RECOVERY_BASIS.zip"}
+    missing_build_generated = sorted(required_build_generated - set(generated))
+    if missing_build_generated:
+        raise ManifestContractError(
+            "Build-generierte Pflichtdateien fehlen in generated_files: " + ", ".join(missing_build_generated)
+        )
+    local_generated = [path for path in generated if path not in required_build_generated]
+    generated_overlap = sorted(path for path in runtime_files if path in local_generated)
     if generated_overlap:
         raise ManifestContractError("Lokal erzeugte Dateien dürfen nicht fest transportiert werden: " + ", ".join(generated_overlap))
+    if any(path in runtime_files for path in required_build_generated):
+        raise ManifestContractError("Build-generierte Dateien dürfen nicht als feste Quelldateien in runtime.files stehen.")
 
     authority = development.get("authority")
     if not isinstance(authority, dict):
