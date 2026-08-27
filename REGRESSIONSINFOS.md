@@ -27,82 +27,56 @@ Foundation-, Persistenz-, Versions-, TODO-, Fehlerhilfe-, Kalender- und Dashboar
 
 ## UI-Acceptance / Transport / Integrität
 
-### REG-045 — Statische UI-Prüfung meldet „grün“, obwohl Renderfehler existiert
-
-- **Risiko:** Überlappung, Überbreite oder zu kleine Bedienelemente bleiben unentdeckt.
+### REG-045 — Statische UI-Prüfung übersieht Renderfehler
 - **Vertrag:** echte Chromium-/Firefox-Geometrie + Interaktionen über definierte Viewports.
-- **Evidenz:** `scripts/ui_acceptance_ci.py`, Screenshot-/JSON-Artefakt.
-- **Status:** BEWIESEN für `0.4.2` in Run `33032999752`.
+- **Status:** BEWIESEN seit `0.4.2`, erneut erfolgreich in Run `33034359454`.
 
 ### REG-046 — 320-CSS-px-Reflow erzeugt horizontalen Overflow
-
 - **Vertrag:** kein unzulässiger horizontaler Overflow; Hauptbereiche 12/12/12.
-- **Gate:** Browser-Acceptance `wcag-reflow-320`.
-- **Status:** BEWIESEN in Chromium + Firefox für `0.4.2`.
+- **Status:** BEWIESEN in Chromium + Firefox.
 
 ### REG-047 — wichtiges Bedienelement unter Mindestzielgröße
-
-- **Auslöser:** Einstellungsbutton `⚙` war bei 320 px zu klein.
 - **Vertrag:** interaktive Kernziele mindestens 44 CSS-px gemäß Projektvertrag.
-- **Status:** BEWIESEN in Chromium + Firefox für `0.4.2`.
+- **Status:** BEWIESEN in Chromium + Firefox.
 
 ### REG-048 — Browser-Fixture startet nach Produkt-JavaScript
-
-- **Risiko:** Testharness erzeugt falsche Bootfehler/Flakes.
 - **Vertrag:** deterministische Fixtures vor `app.js`; Ready-Zustand messbar; Fehlerartefakt auch bei rotem Gate.
-- **Status:** BEWIESEN für `0.4.2`.
+- **Status:** BEWIESEN.
 
 ### REG-049 — Repo-/Testdateien gelangen in Runtime-ZIP
-
-- **Vertrag:** ausschließlich positive Allowlist aus `manifests/RUNTIME_MANIFEST.json` + generiertes Release-Manifest.
-- **Test:** `ReleaseContractTests` + `scripts/release.py --check`.
-- **Status:** GEPRÜFT im aktuellen 0.4.3-Slice, finale CI noch offen.
+- **Vertrag:** positive Allowlist aus `manifests/RUNTIME_MANIFEST.json` + generiertes Release-Manifest.
+- **Status:** BEWIESEN in Run `33034359454`.
 
 ### REG-050 — Runtime-ZIP ist formal korrekt, aber nicht selbst startprüfbar
-
-- **Risiko:** Launcher erwartet Repo-Datei, die absichtlich nicht transportiert wird.
 - **Vertrag:** ZIP bauen → frisch entpacken → `scripts/runtime_preflight.py --quick` darin erfolgreich ausführen.
 - **Test:** `test_built_runtime_zip_is_self_contained_and_preflightable`.
-- **Status:** UMGESETZT; finale 0.4.3-CI ausstehend.
+- **Status:** BEWIESEN in Run `33034359454`.
 
 ### REG-051 — Launcher übernimmt fremde/alte lokale Instanz durch HTTP 200
-
-- **Risiko:** HTML/JS/API bzw. Nutzerdaten verschiedener Installation werden vermischt.
 - **Vertrag:** Version + Loopback/Ready + konkrete Installationskennung müssen übereinstimmen.
-- **Tests:** `LauncherProbeTests`, `test_launcher_verifies_instance_and_uses_safe_fallback_port`.
-- **Status:** UMGESETZT; finale 0.4.3-CI ausstehend.
+- **Tests:** `LauncherProbeTests`, Launcher-Contract.
+- **Status:** BEWIESEN durch automatisierte Probe-/Contracttests in Run `33034359454`; native Kubuntu-Praxisprüfung bleibt L4-offen.
 
 ### REG-052 — fremd belegter Standardport führt zu falscher Wiederverwendung oder hartem Startfehler
-
 - **Vertrag:** fremde Instanz nicht übernehmen; freien Loopback-Ausweichport suchen und Nutzer transparent informieren.
-- **Test:** Launcher-Contract + Probe-Logik.
-- **Status:** UMGESETZT.
+- **Status:** GEPRÜFT automatisiert; native L4-Abnahme offen.
 
 ### REG-053 — Launcher benötigt Repository-Vollprüfung zum normalen Runtime-Start
-
 - **Vertrag:** normaler Start ruft `runtime_preflight.py`; `validate.py` bleibt Repo-only.
-- **Test:** `test_runtime_start_does_not_require_repository_validator` + Release-End-to-End-Test.
-- **Status:** UMGESETZT.
+- **Status:** BEWIESEN durch Runtime-ZIP-End-to-End-Test.
 
 ### REG-054 — Statusvokabular driftet zwischen Registry und Release-Builder
-
-- **Auslöser:** unerreichbare Varianten wie `release_candidate`/`rc`/`blocked` im Builder gegenüber anderem Registryvokabular.
 - **Vertrag:** eine kanonische Statussprache; zulässige Statuspaare zentral validieren; unknown = Fehler.
-- **Tests:** `VersionRegistryTests` Statuspaar-/Blocked-/RC-Tests + `ReleaseContractTests`.
-- **Status:** UMGESETZT.
+- **Status:** BEWIESEN durch Statuspaar-/Release-Regressionen.
 
 ### REG-055 — bewiesene Version wird nach TESTED weiter verändert
-
-- **Risiko:** Evidenz verweist nicht mehr eindeutig auf denselben Produktstand.
-- **Vertrag:** jeder Produktpatch nach TESTED/RC/RELEASED startet neue Version als development.
-- **Nachweis:** `0.4.2` bleibt als evidenzgebundener Stand erhalten; aktueller Slice ist `0.4.3-integrity-hardening`.
-- **Status:** UMGESETZT.
+- **Vertrag:** jeder Produktpatch nach TESTED/RC/RELEASED startet neue Version als `development`.
+- **Nachweis:** `0.4.2` blieb eingefroren; Integritätsänderungen wurden als `0.4.3` geführt.
+- **Status:** BEWIESEN als Prozessvertrag.
 
 ### REG-056 — Launcher-/Ereignislogs wachsen unbegrenzt
-
 - **Vertrag:** lokale Launcherlogs werden ab definierter Größe rotiert; Release enthält keine Runtime-Logs.
-- **Test:** Launcher-Contract prüft Rotationsvertrag; Runtime-Allowlist schließt `runtime/` aus.
-- **Status:** UMGESETZT.
+- **Status:** GEPRÜFT durch Launcher-Contract + Runtime-Allowlist.
 
 ## Evidenzhistorie
 
@@ -111,19 +85,16 @@ Foundation-, Persistenz-, Versions-, TODO-, Fehlerhilfe-, Kalender- und Dashboar
 - Robustness: Run `33025238585`.
 - Calendar: Run `33026380907`.
 - Dashboard V2: Main-Run `33027125428`.
-- UI-Acceptance/TESTED `0.4.2`: Run `33032999752`, Core/Release + Chromium/Firefox SUCCESS.
+- UI-Acceptance/TESTED `0.4.2`: Run `33032999752`.
+- **Integrity Hardening `0.4.3`: Run `33034359454` — Core/Release + Chromium/Firefox SUCCESS.**
 
-## Aktueller 0.4.3-Gate
+## Aktueller 0.4.3-Status
 
-Noch **OFFEN** bis der finale Code-/Doku-Head vollständig geprüft wurde. Keine TESTED-Promotion vor:
+`0.4.3-integrity-hardening` wurde nach grünem finalem Entwicklungshead auf **`tested / draft`** promoviert.
 
-1. Unit/Contract/Validation/Learning/Launcher/JS/Release grün,
-2. frisch entpacktes Runtime-ZIP + Preflight grün,
-3. Chromium + Firefox Acceptance grün,
-4. Registry-Evidenz eingetragen,
-5. Promotion-Commit erneut vollständig grün.
+Der Promotion-Commit muss danach erneut dieselben Gates bestehen. Erst dieser zweite grüne Lauf beweist, dass auch die Status-/Dokumentationspromotion selbst keinen Drift eingeführt hat.
 
-## Native Gates weiterhin offen
+## Native L4-Gates weiterhin offen
 
 - Kubuntu-Klick-&-Start aus sauberem TESTED-ZIP.
 - KDE-/DPI-Skalierung.
