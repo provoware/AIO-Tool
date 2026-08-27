@@ -4,6 +4,7 @@ import argparse
 import json
 import mimetypes
 import os
+import threading
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -14,6 +15,7 @@ from .calendar_store import CalendarStore, CalendarStoreError, local_now
 from .config import ConfigError, ConfigIntegrityError, ConfigStore
 from .error_advisor import ErrorAdvisor
 from .event_registry import EventRegistry, EventRegistryError
+from .loopback_security import allowed_host_header, allowed_origin as allowed_loopback_origin
 from .persistence import PersistenceError
 from .todo_store import TodoStore, TodoStoreError
 from .version_registry import VersionRegistry, VersionRegistryError, validate_registry
@@ -33,6 +35,7 @@ MAX_BODY_BYTES = 64 * 1024
 ALLOWED_CONFIG_KEYS = {"theme", "font_scale", "expert_visible", "setup_complete", "active_project", "favorites"}
 TODO_ALLOWED_KEYS = {"title", "category", "due_date", "due_time", "priority", "note", "calendar_event_id"}
 CALENDAR_ALLOWED_KEYS = {"title", "date", "start_time", "end_time", "category", "description", "reminders", "todo_id"}
+_LOG_LOCK = threading.Lock()
 
 
 class RequestError(ValueError):
@@ -40,32 +43,21 @@ class RequestError(ValueError):
 
 
 def allowed_host(host: str, port: int) -> bool:
-    host = (host or "").strip().lower()
-    return host in {f"127.0.0.1:{port}", f"localhost:{port}", "127.0.0.1", "localhost"}
+    """Compatibility wrapper around the single canonical loopback host contract."""
+    return allowed_host_header(host, port)
 
 
 def allowed_origin(origin: str | None, port: int) -> bool:
-    if not origin:
-        return True
-    try:
-        parsed = urlparse(origin)
-    except ValueError:
-        return False
-    return parsed.scheme == "http" and parsed.hostname in {"127.0.0.1", "localhost"} and (parsed.port or 80) == port
+    """Compatibility wrapper around the single canonical loopback origin contract."""
+    return allowed_loopback_origin(origin, port)
 
 
 def ensure_core_state() -> None:
     known = {item["version"] for item in VERSION_REGISTRY.load()["versions"]}
     VERSION_REGISTRY.ensure_current(
         VERSION,
-        summary="Kalender-Core mit persistenten Terminen, Ansichten, Titelgedächtnis und Reminder-Quittierung.",
-        changes=[
-            "persistenter Kalender-Core",
-            "Monats-, Wochen- und Jahresperioden",
-            "Erinnerungs-Presets und fällige Reminder",
-            "optionale TODO-Verknüpfung",
-            "Kalender-Vorlagen und negative Testdaten",
-        ],
+        summary="Aktueller AIO-Tool-Runtime-Stand aus der getrackten Versionsregistry.",
+        changes=["Runtime-Version beim Start konsistent registriert"],
     )
     if VERSION not in known:
         try:
@@ -119,8 +111,9 @@ class AIORequestHandler(BaseHTTPRequestHandler):
     def log_message(self, fmt: str, *args: object) -> None:
         RUNTIME_DIR.mkdir(parents=True, exist_ok=True)
         line = "%s [HTTP] %s\n" % (self.log_date_time_string(), fmt % args)
-        with (RUNTIME_DIR / "server.log").open("a", encoding="utf-8") as handle:
-            handle.write(line)
+        with _LOG_LOCK:
+            with (RUNTIME_DIR / "server.log").open("a", encoding="utf-8") as handle:
+                handle.write(line)
 
     def _security_headers(self) -> None:
         self.send_header("X-Content-Type-Options", "nosniff")
@@ -428,6 +421,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="AIO-Tool lokales Backend")
     parser.add_argument("--port", type=int, default=int(os.environ.get("AIO_PORT", "8765")))
     args = parser.parse_args()
+    if not 1024 <= args.port <= 65535:
+        raise SystemExit("Port muss zwischen 1024 und 65535 liegen.")
     server = create_server(args.port)
     print(f"AIO-Tool {VERSION} bereit: http://127.0.0.1:{args.port}")
     try:
