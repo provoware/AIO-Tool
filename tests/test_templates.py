@@ -1,8 +1,8 @@
 import json
-from pathlib import Path
 import unittest
 
 from app import ROOT_DIR
+from app.calendar_store import CalendarStoreError, validate_calendar
 from app.config import ConfigError, validate_config
 from app.event_registry import EventRegistryError, validate_events
 from app.todo_store import TodoStoreError, validate_todos
@@ -18,12 +18,14 @@ class TemplateAndFixtureTests(unittest.TestCase):
         validate_registry(self._json("resources/templates/version_registry/version_registry.v1.example.json"))
         validate_events(self._json("resources/templates/events/events.v1.example.json"))
         validate_todos(self._json("resources/templates/todos/todos.v1.example.json"))
+        validate_calendar(self._json("resources/templates/calendar/calendar.v1.example.json"))
 
     def test_valid_testdata_uses_same_contracts(self):
         validate_config(self._json("testdata/valid/config.v1.json"))
         validate_registry(self._json("testdata/valid/version_registry.v1.json"))
         validate_events(self._json("testdata/valid/events.v1.json"))
         validate_todos(self._json("testdata/valid/todos.v1.json"))
+        validate_calendar(self._json("testdata/valid/calendar.v1.json"))
 
     def test_invalid_config_theme_is_rejected(self):
         with self.assertRaises(ConfigError):
@@ -45,6 +47,14 @@ class TemplateAndFixtureTests(unittest.TestCase):
     def test_duplicate_todo_title_memory_is_rejected(self):
         with self.assertRaises(TodoStoreError):
             validate_todos(self._json("testdata/invalid/todos.duplicate-title-memory.v1.json"))
+
+    def test_calendar_end_before_start_is_rejected(self):
+        with self.assertRaises(CalendarStoreError):
+            validate_calendar(self._json("testdata/invalid/calendar.end-before-start.v1.json"))
+
+    def test_calendar_reminder_without_time_is_rejected(self):
+        with self.assertRaises(CalendarStoreError):
+            validate_calendar(self._json("testdata/invalid/calendar.reminder-without-time.v1.json"))
 
 
 if __name__ == "__main__":
