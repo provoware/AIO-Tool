@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-import json
-import os
 from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
 from . import VERSION
+from .persistence import AtomicJsonStore, PersistenceError
 
-THEMES = {"trash-neon", "steel-night", "clean-light", "high-contrast"}
+THEMES = {"aurora-glass", "trash-neon", "steel-night", "clean-light", "high-contrast"}
 FONT_SCALES = {90, 100, 110, 120, 130, 140}
 
 DEFAULT_CONFIG: dict[str, Any] = {
@@ -52,48 +51,31 @@ def validate_config(value: dict[str, Any]) -> dict[str, Any]:
 
 
 class ConfigStore:
+    """Configuration facade using the shared atomic/thread-safe persistence core."""
+
     def __init__(self, path: Path):
         self.path = Path(path)
         self.backup = self.path.with_suffix(self.path.suffix + ".bak")
+        self._store = AtomicJsonStore(self.path, DEFAULT_CONFIG, validate_config)
 
     def load(self) -> dict[str, Any]:
-        if not self.path.exists():
-            return deepcopy(DEFAULT_CONFIG)
         try:
-            return validate_config(json.loads(self.path.read_text(encoding="utf-8")))
-        except (OSError, json.JSONDecodeError, ConfigError):
-            if self.backup.exists():
-                try:
-                    return validate_config(json.loads(self.backup.read_text(encoding="utf-8")))
-                except (OSError, json.JSONDecodeError, ConfigError):
-                    pass
-            raise ConfigIntegrityError("Konfiguration ist beschädigt und kein gültiges Backup ist verfügbar.")
+            return self._store.load()
+        except PersistenceError as exc:
+            raise ConfigIntegrityError("Konfiguration ist beschädigt und kein gültiges Backup ist verfügbar.") from exc
 
     def save(self, value: dict[str, Any]) -> dict[str, Any]:
-        clean = validate_config(value)
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        temp = self.path.with_suffix(self.path.suffix + ".tmp")
-        payload = json.dumps(clean, ensure_ascii=False, indent=2) + "\n"
-        if self.path.exists():
-            self.backup.write_bytes(self.path.read_bytes())
-            with self.backup.open("rb") as handle:
-                os.fsync(handle.fileno())
-        with temp.open("w", encoding="utf-8") as handle:
-            handle.write(payload)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(temp, self.path)
-        try:
-            directory_fd = os.open(str(self.path.parent), os.O_RDONLY)
-            try:
-                os.fsync(directory_fd)
-            finally:
-                os.close(directory_fd)
-        except OSError:
-            pass
-        return clean
+        return self._store.save(value)
 
     def update(self, changes: dict[str, Any]) -> dict[str, Any]:
-        current = self.load()
-        current.update(changes)
-        return self.save(current)
+        if not isinstance(changes, dict):
+            raise ConfigError("Änderungen müssen ein Objekt sein.")
+
+        def mutate(current: dict[str, Any]) -> dict[str, Any]:
+            current.update(changes)
+            return current
+
+        try:
+            return self._store.update(mutate)
+        except PersistenceError as exc:
+            raise ConfigIntegrityError("Konfiguration ist beschädigt und kein gültiges Backup ist verfügbar.") from exc
