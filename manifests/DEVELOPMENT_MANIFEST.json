@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "manifest_version": "1.3.0",
+  "manifest_version": "1.4.0",
   "name": "AIO-Tool Entwicklungsbestand",
   "scope": "repository-only",
   "purpose": "Klassifiziert Dokumentation, Tests, Build-/CI-Infrastruktur, Release-Evidenz und lokale Entwicklungsartefakte, die nicht Bestandteil der Runtime-Allowlist sind.",
@@ -76,7 +76,8 @@
       "scripts/failure_matrix.py",
       "scripts/build_recovery_basis.py",
       "scripts/build_portable.py",
-      "scripts/portable_smoke.py"
+      "scripts/portable_smoke.py",
+      "scripts/iteration_sync.py"
     ],
     "local_evidence_and_logs": [
       "runtime/",
@@ -92,7 +93,8 @@
     "RECOVERY_BASIS wird deterministisch aus der Runtime-Allowlist erzeugt und hashgeprüft.",
     "Development-Versionen dürfen keine vorweggenommene Release-Evidenz beanspruchen.",
     "Bewiesene Status- und Artefaktangaben werden ausschließlich aus Release-Evidenz abgeleitet.",
-    "Native L4 bleibt von CI getrennt und OFFEN, bis reale Zielsystembeobachtung vorliegt."
+    "Native L4 bleibt von CI getrennt und OFFEN, bis reale Zielsystembeobachtung vorliegt.",
+    "Jede Iteration erzeugt fail-closed einen commitgebundenen Versions-/Repository-Sync-Nachweis; Repo-HEAD wird nicht selbstreferenziell in versionierte Statusdateien zurückgeschrieben."
   ],
   "transport_rule": "Release-/Runtime-ZIPs werden ausschließlich aus manifests/RUNTIME_MANIFEST.json plus den explizit generierten Release-Artefakten aufgebaut. Repository-Dokumentation, Tests, CI, Logs und Evidenz werden nicht in die Runtime-Allowlist aufgenommen."
 }

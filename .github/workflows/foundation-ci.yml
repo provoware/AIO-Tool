@@ -42,6 +42,15 @@ jobs:
         run: python scripts/evidence_guard.py
       - name: Documentation version/status guard
         run: python scripts/documentation_guard.py
+      - name: Iteration version/repository sync guard
+        run: python scripts/iteration_sync.py --check --require-git --require-clean --expect-commit "$GITHUB_SHA" --output artifacts/iteration-sync.json
+      - name: Upload iteration sync evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: 01-iteration-sync-${{ github.sha }}
+          path: artifacts/iteration-sync.json
+          if-no-files-found: error
+          retention-days: 30
       - name: Launcher syntax
         run: bash -n start_tool.sh start_native_acceptance.sh start_safe_file_simulation.sh
       - name: JavaScript syntax
