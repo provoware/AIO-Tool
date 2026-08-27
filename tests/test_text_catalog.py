@@ -1,5 +1,4 @@
 from pathlib import Path
-import json
 import tempfile
 import unittest
 
@@ -11,8 +10,9 @@ class TextCatalogTests(unittest.TestCase):
     def test_default_german_catalog_loads_and_is_versioned(self):
         catalog = TextCatalog(ROOT_DIR / "resources" / "texts" / "de" / "v1.json")
         self.assertEqual(catalog.language, "de")
-        self.assertEqual(catalog.version, "1.0.0")
+        self.assertEqual(catalog.version, "1.1.0")
         self.assertIn("sicher", catalog.get("error.generic").casefold())
+        self.assertIn("Kalender", catalog.get("action.calendar.date"))
 
     def test_missing_key_is_not_silently_invented(self):
         catalog = TextCatalog(ROOT_DIR / "resources" / "texts" / "de" / "v1.json")
@@ -23,7 +23,7 @@ class TextCatalogTests(unittest.TestCase):
         with self.assertRaises(TextCatalogError):
             validate_catalog({
                 "schema_version": 1,
-                "catalog_version": "1.0.0",
+                "catalog_version": "1.1.0",
                 "language": "de",
                 "messages": {"bad": ""},
             })
