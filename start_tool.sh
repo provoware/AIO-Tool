@@ -19,8 +19,18 @@ TOTAL=9
 CURRENT=0
 FAILED_EVENT=""
 FAILED_TEXT=""
+MAX_LOG_BYTES=$((2 * 1024 * 1024))
 
 mkdir -p "$RUNTIME"
+rotate_log(){
+  local file="$1"
+  if [[ -f "$file" ]] && (( $(wc -c < "$file") > MAX_LOG_BYTES )); then
+    mv -f "$file" "$file.1"
+  fi
+}
+rotate_log "$CONSOLE_LOG"
+rotate_log "$BACKEND_LOG"
+rotate_log "$EVENT_LOG"
 touch "$CONSOLE_LOG" "$BACKEND_LOG" "$EVENT_LOG"
 exec > >(tee -a "$CONSOLE_LOG") 2>&1
 
@@ -85,7 +95,8 @@ Weiterführende Prüfung
 1. Letzte Launcher-Ereignisse: tail -n 30 "$EVENT_LOG"
 2. Letzte Backendmeldungen:    tail -n 50 "$BACKEND_LOG"
 3. Backendstatus prüfen:        curl -fsS "$URL/api/status"
-4. Vollprüfung ausführen:       "$VENV/bin/python" scripts/validate.py
+4. Runtime-Vorprüfung:          "$VENV/bin/python" scripts/runtime_preflight.py
+5. Repo-Vollprüfung (falls vorhanden): python3 scripts/validate.py
 EOF
 }
 
@@ -104,7 +115,10 @@ debug_summary(){
   printf '  tail -n 30 "%s"\n' "$EVENT_LOG"
   printf '  tail -n 50 "%s"\n' "$BACKEND_LOG"
   printf '  curl -fsS "%s/api/status"\n' "$URL"
-  printf '  "%s/bin/python" scripts/validate.py\n' "$VENV"
+  printf '  "%s/bin/python" scripts/runtime_preflight.py\n' "$VENV"
+  if [[ -f "$ROOT/scripts/validate.py" ]]; then
+    printf '  python3 scripts/validate.py  # Repository-Vollprüfung\n'
+  fi
   line
 }
 
@@ -131,18 +145,15 @@ on_unexpected_error(){
 }
 trap on_unexpected_error ERR
 
-is_ready(){
-  python3 - "$PORT" <<'PY' >/dev/null 2>&1
-import http.client, sys
-port=int(sys.argv[1])
-try:
-    c=http.client.HTTPConnection('127.0.0.1',port,timeout=.35)
-    c.request('GET','/api/status',headers={'Host':f'127.0.0.1:{port}'})
-    r=c.getresponse(); ok=r.status==200; r.read(); c.close()
-    raise SystemExit(0 if ok else 1)
-except Exception:
-    raise SystemExit(1)
-PY
+probe_instance(){
+  local output
+  mapfile -t output < <(python3 scripts/launcher_probe.py inspect --port "$PORT")
+  PROBE_STATE="${output[0]:-error}"
+  PROBE_DETAIL="${output[1]:-Statusprüfung lieferte kein verwertbares Ergebnis.}"
+}
+is_own_ready(){
+  probe_instance
+  [[ "$PROBE_STATE" == "own-ready" ]]
 }
 
 open_ui(){
@@ -174,26 +185,43 @@ else
   fail "LAUNCH-E102" "Python 3 fehlt" "Python 3 über die Paketverwaltung installieren und erneut starten."
 fi
 
-checkpoint "LAUNCH-CP03" PASS "Diagnosebereich vorbereitet" "runtime/ · getrennte Konsole-, Backend- und Ereignislogs"
+if python3 scripts/launcher_probe.py ensure-marker >/dev/null; then
+  checkpoint "LAUNCH-CP03" PASS "Diagnose und Instanzkennung vorbereitet" "runtime/ getrennt von der lokalen Installationskennung"
+else
+  fail "LAUNCH-E303" "Lokale Instanzkennung konnte nicht vorbereitet werden" "Schreibrechte im Toolordner prüfen."
+fi
 
-if is_ready; then
-  checkpoint "LAUNCH-CP04" PASS "Vorhandene Instanz erkannt" "Backend antwortet bereits auf Port $PORT; kein Doppelstart."
+probe_instance
+if [[ "$PROBE_STATE" == "own-ready" ]]; then
+  checkpoint "LAUNCH-CP04" PASS "Passende vorhandene Instanz erkannt" "$PROBE_DETAIL"
   checkpoint "LAUNCH-CP05" PASS "Lokale Python-Umgebung" "Für die laufende Instanz ist keine Neuinitialisierung nötig."
-  checkpoint "LAUNCH-CP06" PASS "Vorprüfung" "Laufende, antwortende Instanz wird wiederverwendet."
-  checkpoint "LAUNCH-CP07" PASS "Backendprozess" "Bestehende Instanz bleibt unverändert aktiv."
-  checkpoint "LAUNCH-CP08" PASS "Bereitschaft bestätigt" "$URL/api/status antwortet erfolgreich."
+  checkpoint "LAUNCH-CP06" PASS "Runtime-Vertrag" "Version und Installationskennung der laufenden Instanz stimmen überein."
+  checkpoint "LAUNCH-CP07" PASS "Backendprozess" "Bestehende passende Instanz bleibt unverändert aktiv."
+  checkpoint "LAUNCH-CP08" PASS "Bereitschaft bestätigt" "$URL/api/status und Instanzmarker stimmen."
   if open_ui; then
     checkpoint "LAUNCH-CP09" PASS "Oberfläche geöffnet" "$URL"
   else
     checkpoint "LAUNCH-CP09" WARN "Browser nicht automatisch geöffnet" "Adresse manuell öffnen: $URL"
   fi
-  write_report "ERFOLG" "Vorhandene Instanz wiederverwendet"
+  write_report "ERFOLG" "Passende vorhandene Instanz wiederverwendet"
   line
   printf '%s✓ START ERFOLGREICH%s · 9/9 Checkpoints bewertet · Bericht: %s\n' "$C_GREEN$C_BOLD" "$C_RESET" "$REPORT"
   line
   exit 0
 fi
-checkpoint "LAUNCH-CP04" INFO "Keine laufende Instanz" "Port $PORT ist frei bzw. beantwortet den Statuscheck nicht."
+
+if [[ "$PROBE_STATE" == "occupied" ]]; then
+  OLD_PORT="$PORT"
+  if PORT="$(python3 scripts/launcher_probe.py find-free --start $((OLD_PORT + 1)) --span 30)"; then
+    URL="http://127.0.0.1:${PORT}"
+    checkpoint "LAUNCH-CP04" WARN "Standardport anderweitig belegt" "Port $OLD_PORT wird nicht übernommen; sicherer Ausweichport $PORT wird verwendet."
+    event "LAUNCH-D404" "warning" "Portwahl" "Fremde oder alte lokale Instanz nicht übernommen" "Alt=$OLD_PORT · Neu=$PORT"
+  else
+    fail "LAUNCH-E404" "Kein freier lokaler Ausweichport gefunden" "Andere lokale Instanzen beenden oder AIO_PORT mit einem freien Port setzen."
+  fi
+else
+  checkpoint "LAUNCH-CP04" INFO "Keine laufende passende Instanz" "Port $PORT ist frei; neue lokale Instanz wird gestartet."
+fi
 
 if [[ ! -x "$VENV/bin/python" ]]; then
   info "Die lokale Python-Umgebung fehlt und wird sicher im Projektordner erzeugt."
@@ -207,11 +235,11 @@ else
   checkpoint "LAUNCH-CP05" PASS "Lokale Python-Umgebung vorhanden" "$VENV"
 fi
 
-info "Jetzt wird geprüft, ob Version, Dateien, Konfiguration und Sicherheitsverträge zusammenpassen."
-if "$VENV/bin/python" scripts/validate.py --quick; then
-  checkpoint "LAUNCH-CP06" PASS "Vorprüfung bestanden" "Version, Runtime-Basis, Datenvalidatoren und Dashboard-Vertrag konsistent."
+info "Jetzt wird ausschließlich die transportierte Runtime-Basis geprüft; Repository-Dokumentation ist dafür nicht erforderlich."
+if "$VENV/bin/python" scripts/runtime_preflight.py --quick; then
+  checkpoint "LAUNCH-CP06" PASS "Runtime-Vorprüfung bestanden" "Version, Runtime-Manifest, Sicherheitsverträge und atomare Speicherung konsistent."
 else
-  fail "LAUNCH-E306" "Vorprüfung fehlgeschlagen" "Die direkt darüber markierte Validierung prüfen; keine Backendänderung wurde gestartet."
+  fail "LAUNCH-E306" "Runtime-Vorprüfung fehlgeschlagen" "Die direkt darüber markierte Prüfung beachten; das Backend wurde noch nicht gestartet."
 fi
 
 info "Die lokale Serverkomponente wird nur auf 127.0.0.1 gestartet."
@@ -228,7 +256,7 @@ fi
 
 READY=0
 for attempt in $(seq 1 50); do
-  if is_ready; then READY=1; break; fi
+  if is_own_ready; then READY=1; break; fi
   if ! kill -0 "$SERVER_PID" 2>/dev/null; then break; fi
   if (( attempt == 10 || attempt == 25 || attempt == 40 )); then
     event "LAUNCH-D508" "info" "Bereitschaft" "Backend startet noch" "Versuch $attempt/50 · PID $SERVER_PID"
@@ -237,9 +265,9 @@ for attempt in $(seq 1 50); do
   sleep .1
 done
 if [[ "$READY" == "1" ]]; then
-  checkpoint "LAUNCH-CP08" PASS "Backend ist bereit" "API-Statuscheck erfolgreich; lokale Oberfläche darf geöffnet werden."
+  checkpoint "LAUNCH-CP08" PASS "Backend ist verifiziert bereit" "API-Status, Version und Installationskennung stimmen."
 else
-  fail "LAUNCH-E508" "Backend wurde nicht rechtzeitig bereit" "runtime/launcher-backend.log prüfen; die letzten Meldungen werden unten automatisch angezeigt."
+  fail "LAUNCH-E508" "Backend wurde nicht als passende Instanz bereit" "runtime/launcher-backend.log prüfen; die letzten Meldungen werden unten automatisch angezeigt."
 fi
 
 if open_ui; then
@@ -248,7 +276,7 @@ else
   checkpoint "LAUNCH-CP09" WARN "Browser nicht automatisch geöffnet" "Kein Datenfehler: Adresse manuell im Browser öffnen: $URL"
 fi
 
-write_report "ERFOLG" "Neuer Backendprozess erfolgreich gestartet"
+write_report "ERFOLG" "Neuer verifizierter Backendprozess erfolgreich gestartet"
 line
 printf '%s✓ START ERFOLGREICH%s · %d/%d Checkpoints bewertet · %d%%\n' "$C_GREEN$C_BOLD" "$C_RESET" "$CURRENT" "$TOTAL" "$(percent)"
 printf 'Oberfläche: %s\nBericht:    %s\nEreignisse: %s\n' "$URL" "$REPORT" "$EVENT_LOG"
