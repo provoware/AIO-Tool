@@ -3,11 +3,11 @@
 ## Projekt
 
 - **Name:** AIO-Tool
-- **Aktuelle Entwicklung:** `0.5.0-native-acceptance-safe-file-sim` — 🟠 `development / draft`
-- **Letzter bewiesener Stand:** `0.4.3-integrity-hardening` — 🟢 `tested / draft`
+- **Aktueller automatisiert bewiesener Stand:** `0.5.0-native-acceptance-safe-file-sim` — 🟢 `tested / draft` für L0–L3
+- **Native L4:** 🟡 offen und nur über reale Nutzerabnahme beweisbar
 - **Backend:** Python-Standardbibliothek, Loopback-only
 - **Telemetrie:** keine
-- **SAFE-FILE-Ausführung:** technisch gesperrt
+- **SAFE-FILE-Ausführung:** technisch gesperrt (`EXECUTION_ENABLED=False`)
 
 ## Runtime-Architektur
 
@@ -16,32 +16,34 @@
 - `app/persistence.py` — atomare JSON-Persistenz.
 - `app/version_registry.py` — Version/Status/Evidenzpflicht.
 - `app/event_registry.py`, `app/todo_store.py`, `app/calendar_store.py` — bestehender Kern.
-- `app/loopback_security.py` — Host/Origin müssen Loopback **und denselben Port** verwenden.
+- `app/loopback_security.py` — Host/Origin müssen Loopback und denselben Port verwenden.
 
 ### Native Acceptance
 
 - `app/native_acceptance.py` — 18-Schritt-Modell, Validierung, persistente Sitzung, Berichte.
-- `scripts/native_acceptance_runner.py` — eigener lokaler Runner auf Standardport 8778.
-- `web/native-acceptance.html` + `.js` — Button-/Dialog-geführte Oberfläche.
+- `scripts/native_acceptance_runner.py` — lokaler Runner auf Standardport 8778.
+- `web/native-acceptance.html` + `.js` — geführte Oberfläche.
 - `start_native_acceptance.sh` + `native_acceptance.desktop` — Laienstart.
-- lokale Daten: `runtime/native_acceptance.json`, `runtime/reports/native-acceptance-latest.*`.
+- lokale Berichte unter `runtime/`.
+- kein Auto-PASS; nur explizites PASS/FAIL/SKIP.
 
 ### SAFE-FILE Simulation
 
 - `app/safe_file_sim.py` — rein lesende Vorprüfung, Failure-Matrix, Recovery-Vertrag.
-- `scripts/safe_file_simulator.py` — lokaler Simulator auf Standardport 8779, kdialog/zenity-Auswahl.
+- `scripts/safe_file_simulator.py` — lokaler Simulator auf Standardport 8779 mit kdialog/zenity.
 - `web/safe-file-sim.html` + `.js` — Quelle → Ziel → Konflikt → Vorschau.
 - `start_safe_file_simulation.sh` + `.desktop` — Laienstart.
-- **keine Ausführungs-API**.
+- **keine Ausführungs-API und keine Copy-/Move-/Delete-Primitive**.
 
-## SAFE-FILE-Sicherheitskonstanten
+## SAFE-FILE-Sicherheitsvertrag
 
-- `SIMULATION_ONLY = True`
-- `EXECUTION_ENABLED = False`
-- `mutation_performed = false`
+- `SIMULATION_ONLY=True`
+- `EXECUTION_ENABLED=False`
+- `mutation_performed=false`
 - Symlink-Quellen/-Ziele gesperrt.
-- einzelne normale Datei als einziges simuliertes Quellmodell.
-- Standard-Konfliktpolicy: `skip`.
+- einzelne normale Datei als simuliertes Quellmodell.
+- Standard-Konfliktpolicy `skip`.
+- spätere echte Copy benötigt Journal, Staging, Postvalidation, Crash-Recovery und verifiziertes Undo.
 
 ## Failure-Matrix
 
@@ -55,25 +57,25 @@ Repository-only:
 - `evidence/releases/<version>.json`
 - `scripts/evidence_guard.py`
 
-Jede TESTED-/höhere Registry-Version muss exakt eine Evidenzdatei besitzen. Felder: Commit(s), CI-Runs, Artefakthashstatus, Browsermatrix, offene L4-Gates.
+Jede TESTED-/höhere Registry-Version besitzt exakt eine Evidenzdatei. Historisch fehlende Werte werden `not-recorded`, niemals geraten.
 
 ## Transportvertrag
 
 `manifests/RUNTIME_MANIFEST.json` Version **1.2.1** ist die positive Runtime-Allowlist.
 
-Neu transportiert werden die Native-Acceptance- und SAFE-FILE-Simulationsmodule, Starter und Weboberflächen. **Nicht** transportiert werden `evidence/`, Tests, Testdaten, Dokumentation, CI-Evidenz oder lokale Reports.
+Transportiert werden die neuen Native-Acceptance- und SAFE-FILE-Simulationsmodule, Starter, Webdateien und Referenzvorlagen. Nicht transportiert werden `evidence/`, Tests/Testdaten, Repository-Dokumentation, CI-Evidenz oder lokale Reports.
 
-## Qualitätsebenen
+## Qualitätsebenen / Evidenz
 
-- L0 Syntax/Schema
-- L1 Unit/Contract/Failure-Matrix/Evidence Guard
-- L2 gebautes Runtime-ZIP + frischer Runtime-Preflight
-- L3 Chromium + Firefox
-- L4 reale Native-Acceptance-Sitzung auf Kubuntu
+- **L0:** Syntax/Schema — 🟢
+- **L1:** Unit/Contract/Failure-Matrix/Evidence Guard — 🟢 DEV-Run `33038051967`, 113 Tests
+- **L2:** Runtime-ZIP + frischer Runtime-Preflight — 🟢 DEV-Run `33038051967`
+- **L3:** Dashboard + Native Runner + SAFE-FILE in Chromium/Firefox — 🟢 DEV-Run `33038051967`
+- **L4:** echtes Kubuntu/Zoom/DPI/Tastatur — 🟡 offen
 
 ## Aktuell offen
 
-- finale automatisierte 0.5.0-Evidenz,
+- TESTED-Promotion-Commit erneut durch L0–L3,
 - reale L4-Sitzung,
 - persistentes Copy-Jobjournal,
 - Staging/Postvalidation/Undo für echte Copy,
