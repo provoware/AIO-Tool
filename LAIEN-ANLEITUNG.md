@@ -1,54 +1,48 @@
 # LAIEN-ANLEITUNG — AIO-Tool
 
-Aktueller Stand: **`0.5.0-native-acceptance-safe-file-sim` — TESTED für automatische Prüfungen L0–L3.** Die echte Kubuntu-Abnahme L4 ist noch offen. SAFE-FILE ist weiterhin **nur Simulation** und kann keine Datei verändern.
+Aktuelle Entwicklung: **🟠 `0.5.1-audit-modern-ui` (DEV)**. Letzter vollständig bewiesener Vorgänger: **🟢 `0.5.0-native-acceptance-safe-file-sim-TESTED`**. Die echte Kubuntu-Abnahme L4 bleibt offen. SAFE-FILE bleibt reine Simulation und kann keine Datei verändern.
 
-## Welche Datei starte ich?
+## AIO-Tool starten
 
-### AIO-Tool normal
+Doppelklick auf `start_tool.desktop` oder `./start_tool.sh` ausführen. Die Startkonsole zeigt ihre Checkpoints mit Ampelstatus. Das Dashboard öffnet ausschließlich einen lokalen Loopback-Dienst.
 
-Doppelklick auf `start_tool.desktop`.
+## Neue Darstellung
 
-### Oberfläche auf deinem echten Rechner prüfen
+Unter **⚙ Darstellung** stehen fünf klar beschriebene Designs zur Auswahl:
 
-Doppelklick auf `native_acceptance.desktop`.
+- **Aurora Glass** — modern, ruhig, Cyan/Violett.
+- **Steel Night** — technisch, klar, dunkles Blau.
+- **Trash Neon** — kräftiger Neon-/Subkulturstil.
+- **Clean Light** — helle Arbeitsansicht.
+- **High Contrast** — besonders deutliche Kontraste ohne dekorative Schatten.
 
-Es öffnet sich ein Prüfassistent. Oben siehst du den Fortschritt, links den aktuellen Schritt und rechts alle 18 Prüfschritte.
+Die Auswahl wird gespeichert. Farbe ist nie das einzige Statussignal; Ampeltext und Symbole bleiben zusätzlich sichtbar.
 
-Für jeden Schritt gibt es nur drei eindeutige Entscheidungen:
+## Wenn etwas nicht geladen werden kann
 
-- 🟢 **PASS** — ich habe es wirklich geprüft und es funktioniert.
-- 🔴 **FAIL** — ich habe es geprüft und etwas stimmt nicht.
-- ⚪ **Überspringen** — jetzt nicht geprüft; gilt nicht als bestanden.
+Das Dashboard zeigt absichtlich **keine alten Kalender-/Terminwerte als wären sie aktuell**. Ein fehlgeschlagener Bereich wird leer bzw. mit Fehlerhinweis dargestellt. „Neu prüfen“ versucht den Bereich erneut zu laden. Nach erfolgreichem Retry verschwindet ein alter Aktionsfehler wieder.
 
-Bei Browser-Schritten steht genau dabei, welchen Browser und welchen Zoom du einstellen sollst. Der Assistent speichert technische Größen automatisch, aber du bestätigst selbst, ob die Darstellung korrekt war. **Er setzt niemals selbst PASS.**
+## Oberfläche real prüfen
 
-Berichte entstehen automatisch unter `runtime/reports/` und können zusätzlich als JSON/TXT heruntergeladen werden.
+Doppelklick auf `native_acceptance.desktop`. Der Assistent führt durch 18 Schritte und setzt keinen Schritt automatisch auf PASS. Wähle PASS nur nach echter Prüfung auf deinem Kubuntu-System.
 
-## SAFE-FILE gefahrlos ausprobieren
+## SAFE-FILE gefahrlos testen
 
-Doppelklick auf `safe_file_simulation.desktop`.
-
-Oben muss deutlich stehen:
+Doppelklick auf `safe_file_simulation.desktop`. Oben muss stehen:
 
 **🔒 AUSFÜHRUNG TECHNISCH GESPERRT**
 
-Dann:
+Quelle und Ziel werden über einen Auswahldialog gewählt. Die Vorschau prüft nur lesend. Es gibt weiterhin keinen Execute-Endpunkt und keine Copy-/Move-/Delete-Funktion.
 
-1. „Quelldatei auswählen“ klicken.
-2. „Zielordner auswählen“ klicken.
-3. Konfliktoption wählen; empfohlen ist **Sicher: überspringen**.
-4. „Sichere Vorschau erstellen“ klicken.
+## Datenschutz und Sicherheit
 
-Du erhältst eine Ampelprüfung für Quelle, Ziel, Speicherplatz und Konflikte.
+- keine Telemetrie
+- kein Internet für Kernfunktionen nötig
+- Backend nur auf Loopback
+- exakter Host-/Port-Vertrag
+- lokale persistente Daten werden validiert und atomar geschrieben
+- Entwicklungsdokumentation, Tests und CI-Evidenz liegen nicht im Runtime-Transportpaket
 
-### Kann dabei eine Datei kopiert, verschoben oder gelöscht werden?
+## Aktueller Qualitätsstatus
 
-**Nein.** Diese Version besitzt absichtlich keine Ausführungsfunktion. Sie kann nur lesen, prüfen und anzeigen, was eine spätere Copy tun würde. Auch der Status TESTED ändert diese Sperre nicht.
-
-## Wenn ein Prüfschritt FAIL ist
-
-Nicht einfach PASS wählen. Schreibe optional eine kurze Notiz und lasse FAIL gespeichert. Dieser reale Befund soll anschließend als Regressionstest in die Entwicklung zurückfließen.
-
-## Datenschutz
-
-Alle Sitzungs-/Simulationsdaten bleiben lokal. Es gibt keine Telemetrie. Der Release-Evidenzindex liegt im Entwicklungsrepository und wird nicht in dein Runtime-Paket übernommen.
+`0.5.1-audit-modern-ui` ist noch **DEV**. Die Verbesserungen gelten erst als TESTED, wenn Unit-/Regressionstests, Runtime-ZIP und Chromium+Firefox auf demselben Commit grün sind.
