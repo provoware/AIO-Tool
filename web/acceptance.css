@@ -1,73 +1,10 @@
-/* AIO-Tool UI Acceptance Layer — dashboard-v2.2
+/* AIO-Tool UI Acceptance Layer — dashboard-v2.3
    Nur harte Layout-/Bedienverträge. Keine Theme- oder Fachlogik. */
 
-/* Mindestgrößen wichtiger Bedienziele */
-.primary,
-.secondary,
-.compact,
-.segmented button,
-.calendar-controls button,
-.button-row button,
-.nav-button,
-.icon-action,
-.reminder-ack{
-  min-height:44px;
-}
-.nav-button{min-width:44px}
-.segmented button{padding:8px 10px}
-.icon-action{min-width:44px;width:44px;height:44px}
-
-/* Echter 12-Spalten-Vertrag */
-.dashboard-layout{
-  grid-template-columns:repeat(12,minmax(0,1fr));
-  gap:var(--gap);
-}
-.module-column{grid-column:span 3}
-.calendar-column{grid-column:span 6}
-.status-column{grid-column:span 3}
-html[data-density="wide"] .dashboard-layout{grid-template-columns:repeat(12,minmax(0,1fr))}
-
-/* Mittlere Breite: Module 4/12, Kalender 8/12, Status volle Zeile */
-@media(max-width:1180px) and (min-width:981px){
-  .dashboard-layout{grid-template-columns:repeat(12,minmax(0,1fr))}
-  .module-column{grid-column:span 4}
-  .calendar-column{grid-column:span 8}
-  .status-column{grid-column:span 12;grid-template-columns:repeat(3,minmax(0,1fr))}
-}
-
-/* Reflow: keine parallelen Hauptspalten mehr */
-@media(max-width:980px){
-  .dashboard-layout{grid-template-columns:repeat(12,minmax(0,1fr))}
-  .module-column,.calendar-column,.status-column{grid-column:span 12}
-  .status-column{grid-template-columns:repeat(3,minmax(0,1fr))}
-}
-
-@media(max-width:720px){
-  body{min-width:0;overflow-x:hidden}
-  .app-shell,.workspace,.sidebar,.dashboard-layout,.module-column,.calendar-column,.status-column{min-width:0;max-width:100%}
-  .nav-item,.nav-button{min-height:44px}
-  .status-column{grid-template-columns:1fr}
-  .module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .topbar,.focus-strip,.calendar-head,.panel-head{max-width:100%}
-  .header-actions,.calendar-controls,.button-row{max-width:100%;flex-wrap:wrap}
-  .version-chip,.density-chip,.status-pill,.mini-badge{white-space:normal;overflow-wrap:anywhere}
-}
-
-@media(max-width:420px){
-  .workspace{padding-left:6px;padding-right:6px}
-  .sidebar{padding-left:5px;padding-right:5px;gap:4px}
-  .nav-stack{min-width:0;gap:2px}
-  .nav-item{min-width:0;padding:7px 5px}
-  .nav-button{min-width:44px;padding:7px 5px}
-  .module-grid{grid-template-columns:1fr}
-  .focus-metrics{grid-template-columns:repeat(3,minmax(0,1fr));min-width:0}
-  .focus-metrics span{min-width:0;padding:6px 3px}
-  .panel,.calendar-panel{padding:9px}
-  .weekday-row,.month-grid{gap:2px}
-  .day-cell{min-width:0;padding:3px;border-radius:7px}
-  .day-cell.today{padding:2px}
-  .calendar-event,.calendar-more{font-size:.58rem;padding-left:2px;padding-right:2px}
-  .calendar-controls{width:100%}
-  .calendar-controls button{flex:1 1 44px;min-width:44px}
-  .calendar-controls #todayBtn{flex:2 1 88px}
-}
+.primary,.secondary,.compact,.segmented button,.calendar-controls button,.button-row button,.theme-option,.nav-button,.icon-action,.reminder-ack{min-height:44px}
+.nav-button{min-width:44px}.segmented button{padding:8px 10px}.icon-action{min-width:44px;width:44px;height:44px}
+.dashboard-layout{grid-template-columns:repeat(12,minmax(0,1fr));gap:var(--gap)}.module-column{grid-column:span 3}.calendar-column{grid-column:span 6}.status-column{grid-column:span 3}html[data-density="wide"] .dashboard-layout{grid-template-columns:repeat(12,minmax(0,1fr))}
+@media(max-width:1180px) and (min-width:981px){.dashboard-layout{grid-template-columns:repeat(12,minmax(0,1fr))}.module-column{grid-column:span 4}.calendar-column{grid-column:span 8}.status-column{grid-column:span 12;grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:980px){.dashboard-layout{grid-template-columns:repeat(12,minmax(0,1fr))}.module-column,.calendar-column,.status-column{grid-column:span 12}.status-column{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:720px){body{min-width:0;overflow-x:hidden}.app-shell,.workspace,.sidebar,.dashboard-layout,.module-column,.calendar-column,.status-column{min-width:0;max-width:100%}.nav-item,.nav-button{min-height:44px}.status-column{grid-template-columns:1fr}.module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.topbar,.focus-strip,.calendar-head,.panel-head{max-width:100%}.header-actions,.calendar-controls,.button-row{max-width:100%;flex-wrap:wrap}.version-chip,.density-chip,.status-pill,.mini-badge{white-space:normal;overflow-wrap:anywhere}}
+@media(max-width:420px){.workspace{padding-left:6px;padding-right:6px}.sidebar{padding-left:5px;padding-right:5px;gap:4px}.nav-stack{min-width:0;gap:2px}.nav-item{min-width:0;padding:7px 5px}.nav-button{min-width:44px;padding:7px 5px}.module-grid,.theme-picker{grid-template-columns:1fr}.focus-metrics{grid-template-columns:repeat(3,minmax(0,1fr));min-width:0}.focus-metrics span{min-width:0;padding:6px 3px}.panel,.calendar-panel{padding:9px}.weekday-row,.month-grid{gap:2px}.day-cell{min-width:0;padding:3px;border-radius:7px}.day-cell.today{padding:2px}.calendar-event,.calendar-more{font-size:.58rem;padding-left:2px;padding-right:2px}.calendar-controls{width:100%}.calendar-controls button{flex:1 1 44px;min-width:44px}.calendar-controls #todayBtn{flex:2 1 88px}}
