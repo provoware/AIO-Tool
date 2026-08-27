@@ -1,68 +1,148 @@
 # TOOLBESCHREIBUNG — AIO-Tool
 
-## Aktueller Stand
+## Aktueller Qualitätsstand
 
-`0.5.1-audit-modern-ui` — 🟢 **TESTED / draft und BEWIESEN für L0–L3 auf `main`**. Squash-Main-Commit: `ee6adcfd3427e8328920edaceb804e7b6655cdb8`; Main-CI `33048070879` ist vollständig grün. Native Kubuntu L4 bleibt offen; SAFE-FILE-Ausführung bleibt technisch gesperrt.
+**Runtime-Baseline:** `0.5.1-audit-modern-ui` — 🟢 `tested / draft`, **L0–L3 BEWIESEN**  
+**Runtime-Baseline-Commit:** `ee6adcfd3427e8328920edaceb804e7b6655cdb8`  
+**Runtime-ZIP SHA256:** `f8ffd88e2f3e40416f0d76b20786aa168cebb4e11fe3ef9d0eefa6dcf93b19ee`  
+**Native L4:** 🟡 **OFFEN · 0/18 real bestätigt**  
+**SAFE-FILE-Ausführung:** 🔒 **GESPERRT**
 
-AIO-Tool ist ein lokales, offline-first ausgelegtes Werkzeug mit Browseroberfläche und Python-Loopback-Backend. Der 0.5.1-Slice verbessert **Robustheit, Wartbarkeit, Nutzerfeedback und Erscheinungsbild**, ohne SAFE-FILE-Mutation freizuschalten.
+AIO-Tool ist ein lokales, offline-first Werkzeug mit Python-Loopback-Backend und Browseroberfläche. Die Runtime-Baseline 0.5.1 fokussiert Robustheit, Wartbarkeit, verständliches Nutzerfeedback, Barrierefreiheit und ein modernes Theme-System, ohne die SAFE-FILE-Simulation in eine reale Ausführungsfunktion umzuwandeln.
 
-## Audit-Schwerpunkte
+## Architektur in Kurzform
 
-### Persistenz
+```text
+Launcher
+   ↓
+Loopback-Backend
+   ↓
+Domänen-Stores / Persistenz
+   ↓
+Browser-Dashboard
+   ↓
+separate Test- und Evidence-Schichten
+```
 
-`AtomicJsonStore` serialisiert parallele Threadzugriffe und behandelt Read→Mutate→Write als zusammenhängenden In-Process-Vertrag. Backup-Refresh und Hauptdatei werden atomar ersetzt. `ConfigStore` nutzt denselben Kern statt einer zweiten Schreibimplementierung.
+Runtime, Entwicklung, Release-Evidenz und lokale Nutzerdaten sind bewusst getrennte Ebenen.
 
-### Lokale Sicherheit
+## Wahrheitsebenen
 
-Hauptbackend, Native Runner und SAFE-FILE Simulator verwenden denselben exakten Loopback-Host-/Port-Vertrag. Eine Anfrage auf falschem Port oder fremdem Host gilt nicht als vertrauenswürdig.
+| Thema | Kanonische Quelle |
+|---|---|
+| Produktversion / Status | `VERSION` + `VERSION_REGISTRY.json` |
+| Runtime-Dateimenge | `manifests/RUNTIME_MANIFEST.json` |
+| Release-Beweis | `evidence/RELEASE_EVIDENCE_INDEX.json` + `evidence/releases/*.json` |
+| Repository-only Bestand | `manifests/DEVELOPMENT_MANIFEST.json` |
+| Menschenlesbarer Status | `MANIFEST.md` |
 
-### Dashboard-Zustand und Nutzerfeedback
+Der **Runtime-Baseline-Commit** ist der bewiesene Programm-/Transportstand. Ein späterer **Repository-Head** kann zusätzliche reine Dokumentations- oder Evidenzänderungen enthalten und ist deshalb nicht automatisch eine neue Runtime-Version.
 
-- fehlgeschlagene Kalender-/Upcoming-/TODO-/Ereignisabfragen werden als **nicht verfügbar** statt scheinbar leer dargestellt,
-- erfolgreiche Wiederholungen löschen alte Aktionsfehler,
-- der Boot-Guard zeigt Start, READY, Hinweise oder einen klaren Fehlerzustand,
-- Refresh und Config-Speichern laufen single-flight mit `aria-busy`,
-- lokale API-Anfragen besitzen einen 8-Sekunden-Timeout mit verständlicher Hilfe,
-- Theme-Vorschau wird bei Speicherfehler auf den bestätigten Stand zurückgesetzt.
+## Persistenz und Robustheit
 
-### Modernes Theme-System
+`AtomicJsonStore` serialisiert parallele Read→Mutate→Write-Zyklen über einen gemeinsamen reentranten Lock. Hauptdatei und Backup werden atomar ersetzt. `ConfigStore` verwendet denselben Persistence-Core statt einer zweiten Schreibimplementierung.
 
-Fünf Themes nutzen denselben semantischen Tokenvertrag: Aurora Glass, Steel Night, Trash Neon, Clean Light und High Contrast. Oberflächenebenen, Akzent, Fokus, Status, Schatten und Kontrast sind getrennt definiert. Bewegungsreduktion (`prefers-reduced-motion`) wird respektiert.
+Wichtige Zustandsregeln:
 
-### Browser-Acceptance und Wartbarkeit
+- beschädigte Persistenz ist kein normaler Eingabefehler,
+- fehlgeschlagene Reloads dürfen keine alten Werte als aktuell anzeigen,
+- **leer**, **nicht verfügbar** und **veraltet** bleiben getrennte Zustände,
+- konkurrierende Refresh-/Config-Aktionen laufen single-flight,
+- Wartevorgänge besitzen einen begrenzten Timeout und eine verständliche nächste Handlung.
 
-`scripts/ui_acceptance.py` ist die einzige kanonische Browser-Acceptance-Implementierung. `scripts/ui_acceptance_ci.py` ist nur ein dünner Einstieg. Lokale Produktstyles werden aus dem aktuellen `index.html` abgeleitet statt Contract-Versionen an mehreren Stellen zu duplizieren. Regressionstests verhindern eine zweite Harness-Implementierung.
+## Lokale Sicherheit
 
-### Hilfsoberflächen
+Hauptbackend, Native Runner und SAFE-FILE Simulator verwenden denselben exakten Loopback-Host-/Port-Vertrag. Fremde Hosts und Cross-Port-Origin-Anfragen gelten nicht als vertrauenswürdig. Es gibt keine Telemetrie.
 
-Native Acceptance Runner und SAFE-FILE Simulator verwenden ein gemeinsames `web/helper-ui.css`. Inline-Styles wurden entfernt, die lokale CSP auf `style-src 'self'` verschärft und dynamische Inhalte werden mit DOM-/`textContent`-Methoden statt `innerHTML` erzeugt.
+## Dashboard und Barrierefreiheit
+
+- Boot-Guard für Start, READY, Hinweise und Fehler,
+- sichtbare Busy-Zustände mit `aria-busy`,
+- `aria-pressed` für Auswahlzustände,
+- Fokusführung und logische Tastaturreihenfolge,
+- dynamische Inhalte ohne `innerHTML`,
+- Farbe nie als einziges Statussignal,
+- `prefers-reduced-motion` wird respektiert.
+
+## Theme-System
+
+Fünf Themes nutzen denselben semantischen Tokenvertrag:
+
+- Aurora Glass
+- Steel Night
+- Trash Neon
+- Clean Light
+- High Contrast
+
+Oberflächenebenen, Akzent, Fokus, Status, Schatten und Kontrast sind getrennt definiert.
+
+## Browser-Acceptance
+
+`scripts/ui_acceptance.py` ist die einzige kanonische Browser-Acceptance-Implementierung. Der CI-Einstieg bleibt ein dünner Wrapper. Produktassets werden aus dem aktuellen HTML-Vertrag abgeleitet; Fixture-Reihenfolge und Ready-Zustand sind regressionsgesichert.
+
+L3 umfasst echte Chromium-/Firefox-Render-, Reflow- und Interaktionsgates. L4 wird davon ausdrücklich getrennt.
+
+## Native Acceptance L4
+
+Der Native Runner enthält 18 manuelle Prüfschritte für:
+
+- Kubuntu-Startpfade und Instanzverhalten,
+- fremd belegten Port,
+- kleine / Full-HD / große Anzeige,
+- reine Tastaturbedienung,
+- Firefox 100–200 %,
+- Chrome/Chromium 100–200 %.
+
+Jeder Schritt startet OFFEN. `pass`, `fail` und `skip` werden ausschließlich nach realer Nutzerbeobachtung gespeichert. Solange kein Schritt bestätigt wurde, gilt **0/18 = 0 %**.
 
 ## SAFE-FILE-Grenze
 
-Weiterhin unverändert:
+Unverändert gilt:
 
 - `SIMULATION_ONLY=True`
 - `EXECUTION_ENABLED=False`
 - kein Execute-Endpunkt
-- keine Copy-/Move-/Delete-Primitive
+- keine reale Ausführungsprimitive in der Simulationsstufe
 
-Eine spätere echte Copy benötigt einen eigenen neuen Versionsslice mit Journal, Staging, Postvalidation, Crash-/Recoverytests und Guarded Undo.
+Eine spätere reale Ausführung benötigt eine neue Produktversion mit Jobjournal, Staging, Postvalidation, Crash-/Recoverytests und Guarded Undo.
 
-## Qualitätsstatus und Beweiskette
+## Manifest-System
 
-- DEV `33045348341`: PASS.
-- TESTED-Promotion `33045669222`: 138/138 Tests + Guards + Runtime-Preflight + Chromium/Firefox + Helper-UIs PASS.
-- finaler Evidence-Sync `33047743876`: PASS.
-- PR-Integrationsgate `33047885115`: PASS.
-- Squash-Main-Commit `ee6adcfd3427e8328920edaceb804e7b6655cdb8`.
-- Main-CI `33048070879`: Core/Release + Chromium + Firefox + Native Runner + SAFE-FILE Helper-UI PASS.
+### Runtime-Manifest 1.3.0
 
-Der finale Feature-Head und der Squash-Main-Commit erzeugen reproduzierbar denselben Runtime-ZIP-SHA256:
+`manifests/RUNTIME_MANIFEST.json` ist die positive Transport-Allowlist der bewiesenen 0.5.1-Runtime und deshalb eingefroren.
 
-`f8ffd88e2f3e40416f0d76b20786aa168cebb4e11fe3ef9d0eefa6dcf93b19ee`
+### Development-Manifest 1.2.0
 
-Der frühere Promotion-Hash `a7ab6d64…` entstand vor dem abschließenden Runtime-Metadaten-Sync der `VERSION_REGISTRY.json` und ist deshalb nicht der finale Main-Artefakthash.
+`manifests/DEVELOPMENT_MANIFEST.json` klassifiziert Repository-only Dokumentation, Tests, Evidenz, CI-/Build-Hilfen, lokale Reports und die Manifest-Policy.
+
+### Manifest Guard
+
+`scripts/manifest_guard.py` verhindert insbesondere:
+
+- Überschneidung von Runtime- und repo-only Klassifikation,
+- fehlende Pflichtdokumente im Development-Inventar,
+- unzulässige Runtime-Dateien unter verbotenen Präfixen,
+- Fehlinterpretation der historischen `generated_files`-Semantik.
+
+Details stehen in `manifests/README.md`.
+
+## Release-Evidenz
+
+Kanonische Quelle für 0.5.1:
+
+`evidence/releases/0.5.1-audit-modern-ui.json`
+
+Darin sind festgehalten:
+
+- Runtime-Baseline-Commit `ee6adcfd3427e8328920edaceb804e7b6655cdb8`,
+- Main-CI `33048070879`,
+- Runtime-ZIP SHA256 `f8ffd88e2f3e40416f0d76b20786aa168cebb4e11fe3ef9d0eefa6dcf93b19ee`,
+- Cross-Browser-Matrix,
+- Reproduzierbarkeit zwischen finalem Runtime-Feature-Head und Main,
+- abgelöstes Promotion-Artefakt,
+- offene L4-Gates.
 
 ## Nächster Qualitätsweg
 
-Keine neue Produktfunktion in diesem Abschlussstand. Als Nächstes wird ausschließlich **Native L4 real auf Kubuntu** durchgeführt. PASS/FAIL/SKIP darf nur aus realer Nutzerbeobachtung entstehen; CI setzt keinen L4-Schritt automatisch auf PASS.
+Die Runtime-Baseline bleibt unverändert. Als nächstes wird ausschließlich **Native L4 real auf Kubuntu** durchgeführt. Vor Abschluss dieser realen Abnahme wird kein höherer L4-Status behauptet und SAFE-FILE bleibt technisch gesperrt.
