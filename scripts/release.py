@@ -14,6 +14,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from app import ROOT_DIR, VERSION
+from app.version_registry import validate_registry
 
 RUNTIME_MANIFEST_PATH = ROOT_DIR / "manifests" / "RUNTIME_MANIFEST.json"
 REGISTRY_PATH = ROOT_DIR / "VERSION_REGISTRY.json"
@@ -21,10 +22,10 @@ FIXED_TIME = (2026, 8, 27, 0, 0, 0)
 STATUS_LABELS = {
     "development": "DEV",
     "tested": "TESTED",
-    "release_candidate": "RC",
+    "release-candidate": "RC",
     "released": "RELEASED",
-    "deprecated": "ARCHIVED",
     "blocked": "BLOCKED",
+    "deprecated": "ARCHIVED",
 }
 
 
@@ -46,7 +47,7 @@ def load_runtime_manifest() -> dict:
 
 
 def current_version_record() -> dict:
-    registry = _load_json(REGISTRY_PATH)
+    registry = validate_registry(_load_json(REGISTRY_PATH))
     if registry.get("current_version") != VERSION:
         raise SystemExit("FEHLER: VERSION und VERSION_REGISTRY.json weichen voneinander ab.")
     matches = [item for item in registry.get("versions", []) if item.get("version") == VERSION]
@@ -56,13 +57,11 @@ def current_version_record() -> dict:
 
 
 def status_label(record: dict) -> str:
-    status = str(record.get("status", "development")).strip().lower()
-    release_status = str(record.get("release_status", "draft")).strip().lower()
-    if release_status == "released":
-        return "RELEASED"
-    if release_status in {"release_candidate", "rc"}:
-        return "RC"
-    return STATUS_LABELS.get(status, "DRAFT")
+    status = str(record.get("status", "")).strip().lower()
+    try:
+        return STATUS_LABELS[status]
+    except KeyError as exc:
+        raise SystemExit(f"FEHLER: Unbekannter Release-Status für Dateinamen: {status!r}.") from exc
 
 
 def runtime_files(manifest: dict):
@@ -84,8 +83,8 @@ def build(output: Path | None = None) -> tuple[Path, str]:
     label = status_label(record)
     archive_name = f"AIO-Tool-{VERSION}-{label}.zip"
     output = output or (ROOT_DIR / "dist" / archive_name)
-    if not output.name.endswith(f"-{label}.zip"):
-        raise SystemExit(f"FEHLER: Release-Dateiname muss den Status -{label}.zip enthalten.")
+    if output.name != archive_name:
+        raise SystemExit(f"FEHLER: Release-Dateiname muss exakt '{archive_name}' heißen.")
     output.parent.mkdir(parents=True, exist_ok=True)
 
     entries = list(runtime_files(manifest))
@@ -94,8 +93,8 @@ def build(output: Path | None = None) -> tuple[Path, str]:
         "tool": "AIO-Tool",
         "version": VERSION,
         "status": label,
-        "registry_status": record.get("status"),
-        "release_status": record.get("release_status"),
+        "registry_status": record["status"],
+        "release_status": record["release_status"],
         "runtime_manifest_version": manifest.get("manifest_version"),
         "archive_name": output.name,
         "file_count": len(entries) + 1,
@@ -107,7 +106,7 @@ def build(output: Path | None = None) -> tuple[Path, str]:
     with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
         for path, rel in entries:
             info = zipfile.ZipInfo(f"{root_name}/{rel}", FIXED_TIME)
-            mode = 0o755 if os.access(path, os.X_OK) or rel in {"start_tool.sh", "scripts/runtime_preflight.py"} else 0o644
+            mode = 0o755 if os.access(path, os.X_OK) or rel in {"start_tool.sh", "scripts/runtime_preflight.py", "scripts/launcher_probe.py"} else 0o644
             info.external_attr = mode << 16
             info.compress_type = zipfile.ZIP_DEFLATED
             zf.writestr(info, path.read_bytes())
@@ -124,6 +123,8 @@ def verify(output: Path) -> None:
     root_name = f"AIO-Tool-{VERSION}/"
     with zipfile.ZipFile(output) as zf:
         names = [name for name in zf.namelist() if not name.endswith("/")]
+        if len(names) != len(set(names)):
+            raise SystemExit("FEHLER: ZIP enthält doppelte Dateieinträge.")
         if any(not name.startswith(root_name) for name in names):
             raise SystemExit("FEHLER: ZIP enthält Dateien außerhalb des Versionsordners.")
         rel_names = {name.removeprefix(root_name) for name in names}
@@ -134,9 +135,15 @@ def verify(output: Path) -> None:
         release_manifest = json.loads(zf.read(root_name + "MANIFEST_RELEASE.json").decode("utf-8"))
         if release_manifest.get("archive_name") != output.name:
             raise SystemExit("FEHLER: Release-Manifest und Dateiname stimmen nicht überein.")
+        if release_manifest.get("version") != VERSION:
+            raise SystemExit("FEHLER: Release-Manifest und VERSION stimmen nicht überein.")
+        if release_manifest.get("status") != status_label(current_version_record()):
+            raise SystemExit("FEHLER: Release-Manifest und Registry-Status stimmen nicht überein.")
         listed = {item["path"]: item for item in release_manifest.get("files", [])}
         if set(listed) != set(runtime_manifest["files"]):
             raise SystemExit("FEHLER: Release-Manifest listet nicht exakt die Runtime-Basis.")
+        if release_manifest.get("file_count") != len(expected_rel):
+            raise SystemExit("FEHLER: file_count im Release-Manifest ist inkonsistent.")
         for rel, meta in listed.items():
             raw = zf.read(root_name + rel)
             if len(raw) != meta.get("size") or hashlib.sha256(raw).hexdigest() != meta.get("sha256"):
