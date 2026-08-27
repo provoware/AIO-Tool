@@ -2,47 +2,66 @@
 
 Alle wesentlichen Änderungen an AIO-Tool werden nachvollziehbar dokumentiert.
 
-## [Unreleased / 0.4.3-integrity-hardening] — 2026-08-27
+## [0.4.3-integrity-hardening] — 2026-08-27
 
 ### Auditbefunde
 
-- Startroutine hatte beim UX-Umbau die frühere Instanzprüfung auf einen bloßen `HTTP 200` zurückfallen lassen.
-- Launcher rief wieder die Repository-Prüfung `scripts/validate.py --quick` auf, obwohl diese absichtlich nicht zum Runtime-ZIP gehört.
-- VersionRegistry und Release-Builder verwendeten teilweise unterschiedliche/unmögliche Statusschreibweisen.
-- README, TODO, MANIFEST, REGRESSIONSINFOS und LAIEN-ANLEITUNG beschrieben noch `0.4.0` als aktuellen Stand.
-- `0.4.2-TESTED` war nach seiner Evidenz weiter verändert worden; dafür wird jetzt ein neuer Versionsslice verwendet.
-- Learning Memory enthielt real 9 Einträge, obwohl spätere Berichte bereits mehr behauptet hatten.
+- Startroutine war beim UX-Umbau auf einen bloßen `HTTP 200` als Instanzkriterium zurückgefallen.
+- normaler Launcher rief wieder die Repository-Prüfung `scripts/validate.py --quick` auf, obwohl diese absichtlich nicht zum Runtime-ZIP gehört.
+- VersionRegistry und Release-Builder konnten bei Statusbegriffen auseinanderlaufen.
+- statusrelevante Dokumente waren gegenüber dem Produktstand veraltet.
+- `0.4.2-TESTED` war nach seiner Evidenz weiter verändert worden; daraus wurde die Regel abgeleitet, bewiesene Versionen einzufrieren.
+- Learning Memory und Entwicklungsberichte waren zwischenzeitlich nicht mengenmäßig konsistent.
 
 ### Added
 
-- `app/instance_identity.py` als zentraler Installations-/UI-Identitätsvertrag.
+- `app/instance_identity.py` als Installations-/UI-Identitätsvertrag.
 - `scripts/launcher_probe.py` für Instanzprüfung und sicheren Loopback-Ausweichport.
 - echte Launcher-Probe-Regressionen mit lokalem Fake-HTTP-Server.
 - End-to-End-Releasevertrag: Runtime-ZIP bauen → entpacken → `runtime_preflight.py` darin ausführen.
-- neue Learning-Regeln LRN-010 bis LRN-015.
+- `scripts/documentation_guard.py` gegen Versions-/Statusdrift in Pflichtdokumenten.
+- zusätzliche Learning-Regeln bis LRN-015.
+- Launcher-Logrotation.
 
 ### Changed
 
-- neue aktuelle Version `0.4.3-integrity-hardening / development`; `0.4.2-ui-acceptance-TESTED` bleibt eingefrorener Evidenzstand.
 - Launcher prüft Version + Loopback/Ready + konkrete Installationskennung, bevor eine vorhandene Instanz wiederverwendet wird.
 - fremd belegter Standardport wird nicht übernommen; freier lokaler Ausweichport wird transparent gewählt.
+- ungültiger Port oder unbekannter Probe-Zustand führt fail-closed zum sicheren Abbruch.
 - normaler Start nutzt ausschließlich `scripts/runtime_preflight.py`.
-- Launcher-Logs erhalten lokale Größenbegrenzung/Rotation.
 - Statusmodell kanonisiert: `development`, `tested`, `release-candidate`, `released`, `blocked`, `deprecated`.
-- Release-Statuspaare werden zentral validiert und unbekannte Kombinationen fail-closed abgelehnt.
+- Release-Statuspaare werden zentral validiert; unbekannte Kombinationen sind Fehler.
 - Release-Verifikation prüft zusätzlich doppelte ZIP-Einträge, Version, Status und `file_count`.
-- Runtime-Manifest 1.1.0 enthält die Instanz-/Probe-Komponenten.
 - README und AGENTS wurden als Status-/Qualitätscockpit bzw. verbindlicher Entwicklungsvertrag neu strukturiert.
 
-### Verification status
+### Verified — Entwicklungshead
 
-Noch **DEVELOPMENT**. Vollständige Core-/Release-/Chromium-/Firefox-Evidenz für 0.4.3 wird erst nach Abschluss aller Dokumentations- und Regressionpatches eingetragen.
+GitHub Actions Run `33034359454`: **SUCCESS**.
+
+- Core-/Release-Job erfolgreich,
+- Unit-/Integrations-/Vertragstests erfolgreich,
+- Foundation Validation erfolgreich,
+- Learning Guard erfolgreich,
+- Documentation Guard erfolgreich,
+- Launcher-/JavaScript-Syntax erfolgreich,
+- Runtime-ZIP-End-to-End-Vertrag erfolgreich,
+- Chromium + Firefox UI-Acceptance erfolgreich.
+
+Danach wurde `0.4.3-integrity-hardening` regelkonform auf **`tested / draft`** promoviert. Der Promotion-Commit wird erneut durch dieselbe Pipeline geprüft.
+
+### Still open
+
+- native Kubuntu-/KDE-Abnahme,
+- reale 100–200-%-Zoom-/DPI-Matrix,
+- Tastatur-/Screenreader-Praxistest,
+- SAFE-FILE-CORE,
+- persistente Job-/Recovery-Queue.
 
 ## [0.4.2-ui-acceptance] — 2026-08-27
 
 - 12-Spalten-Rastervertrag, Chromium-/Firefox-Acceptance, 320-CSS-px-Reflow, Runtime-Allowlist, Statusdateinamen und `MANIFEST_RELEASE.json`.
 - GitHub Actions Run `33032999752`: Core/Release und Chromium+Firefox vollständig erfolgreich.
-- Erzeugtes TESTED-ZIP SHA256: `57c461b56abd024775de8a38d8edf216066c8fd11631d4d266e4572a6d58a6cc`.
+- TESTED-ZIP SHA256: `57c461b56abd024775de8a38d8edf216066c8fd11631d4d266e4572a6d58a6cc`.
 
 ## [0.4.0-dashboard-v2] — 2026-08-27
 
