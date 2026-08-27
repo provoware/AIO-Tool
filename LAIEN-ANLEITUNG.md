@@ -1,6 +1,6 @@
 # LAIEN-ANLEITUNG — AIO-Tool
 
-Aktuelle Entwicklung: **`0.5.0-native-acceptance-safe-file-sim` (DEV)**. Letzter bewiesener Vorgänger: `0.4.3-integrity-hardening-TESTED`.
+Aktueller Stand: **`0.5.0-native-acceptance-safe-file-sim` — TESTED für automatische Prüfungen L0–L3.** Die echte Kubuntu-Abnahme L4 ist noch offen. SAFE-FILE ist weiterhin **nur Simulation** und kann keine Datei verändern.
 
 ## Welche Datei starte ich?
 
@@ -8,7 +8,7 @@ Aktuelle Entwicklung: **`0.5.0-native-acceptance-safe-file-sim` (DEV)**. Letzter
 
 Doppelklick auf `start_tool.desktop`.
 
-### Oberfläche richtig prüfen
+### Oberfläche auf deinem echten Rechner prüfen
 
 Doppelklick auf `native_acceptance.desktop`.
 
@@ -20,7 +20,7 @@ Für jeden Schritt gibt es nur drei eindeutige Entscheidungen:
 - 🔴 **FAIL** — ich habe es geprüft und etwas stimmt nicht.
 - ⚪ **Überspringen** — jetzt nicht geprüft; gilt nicht als bestanden.
 
-Bei Browser-Schritten steht genau dabei, welchen Browser und welchen Zoom du einstellen sollst. Der Assistent speichert technische Größen automatisch, aber du bestätigst selbst, ob die Darstellung korrekt war.
+Bei Browser-Schritten steht genau dabei, welchen Browser und welchen Zoom du einstellen sollst. Der Assistent speichert technische Größen automatisch, aber du bestätigst selbst, ob die Darstellung korrekt war. **Er setzt niemals selbst PASS.**
 
 Berichte entstehen automatisch unter `runtime/reports/` und können zusätzlich als JSON/TXT heruntergeladen werden.
 
@@ -41,9 +41,9 @@ Dann:
 
 Du erhältst eine Ampelprüfung für Quelle, Ziel, Speicherplatz und Konflikte.
 
-### Kann dabei eine Datei kopiert oder gelöscht werden?
+### Kann dabei eine Datei kopiert, verschoben oder gelöscht werden?
 
-**Nein.** Diese Entwicklungsstufe besitzt keine Ausführungsfunktion. Sie kann nur lesen, prüfen und anzeigen, was eine spätere Copy tun würde.
+**Nein.** Diese Version besitzt absichtlich keine Ausführungsfunktion. Sie kann nur lesen, prüfen und anzeigen, was eine spätere Copy tun würde. Auch der Status TESTED ändert diese Sperre nicht.
 
 ## Wenn ein Prüfschritt FAIL ist
 
