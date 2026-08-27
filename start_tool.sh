@@ -185,6 +185,11 @@ else
   fail "LAUNCH-E102" "Python 3 fehlt" "Python 3 über die Paketverwaltung installieren und erneut starten."
 fi
 
+if [[ ! "$PORT" =~ ^[0-9]+$ ]] || (( PORT < 1024 || PORT > 65535 )); then
+  fail "LAUNCH-E103" "Ungültiger lokaler Port" "AIO_PORT muss eine Zahl zwischen 1024 und 65535 sein."
+fi
+URL="http://127.0.0.1:${PORT}"
+
 if python3 scripts/launcher_probe.py ensure-marker >/dev/null; then
   checkpoint "LAUNCH-CP03" PASS "Diagnose und Instanzkennung vorbereitet" "runtime/ getrennt von der lokalen Installationskennung"
 else
@@ -192,6 +197,10 @@ else
 fi
 
 probe_instance
+case "$PROBE_STATE" in
+  own-ready|occupied|free) ;;
+  *) fail "LAUNCH-E304" "Instanzprüfung lieferte keinen sicheren Zustand" "Probe-Ausgabe prüfen; bei unbekanntem Zustand wird nicht gestartet.";;
+esac
 if [[ "$PROBE_STATE" == "own-ready" ]]; then
   checkpoint "LAUNCH-CP04" PASS "Passende vorhandene Instanz erkannt" "$PROBE_DETAIL"
   checkpoint "LAUNCH-CP05" PASS "Lokale Python-Umgebung" "Für die laufende Instanz ist keine Neuinitialisierung nötig."
