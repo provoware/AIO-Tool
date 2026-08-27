@@ -53,9 +53,9 @@
     {
       "version": "0.3.0-calendar-core",
       "created_at": "2026-08-27T02:10:00+02:00",
-      "status": "development",
+      "status": "tested",
       "release_status": "draft",
-      "commit_sha": null,
+      "commit_sha": "54657a632ba5e4f3a742ec17f66f658c8f145e82",
       "summary": "Persistenter Kalender-Core mit Monats-/Wochen-/Jahresperioden, Titelgedächtnis, Reminder-Quittierung und optionaler TODO-Verknüpfung.",
       "changes": [
         "CalendarStore auf AtomicJsonStore",
@@ -65,15 +65,23 @@
         "Monats-/Wochen-/Jahresperioden",
         "IANA-Systemzeitzone via zoneinfo für DST",
         "optionale TODO-Verknüpfung",
-        "Kalender-Muster-/Testdaten und Fehlerhilfe"
+        "Kalender-Muster-/Testdaten und Fehlerhilfe",
+        "versionierte API-Metadaten ohne redundante harte Testversionsnummer"
       ],
       "known_issues": [
         "sichtbare Kalenderoberfläche folgt in Dashboard V2",
         "Desktop-/Browser-Benachrichtigung nutzt den Core erst im nächsten UI-Slice",
         "reale Kubuntu-/Browser-/Zoom-Gates offen"
       ],
-      "regression_status": "pending",
-      "evidence": []
+      "regression_status": "passed-ci",
+      "evidence": [
+        {
+          "time": "2026-08-27T02:14:39+02:00",
+          "kind": "github-actions",
+          "reference": "run:33026180855",
+          "note": "SUCCESS: Python-Syntax, 69 Unit-/Integrationstests, Kalender-/Foundation-Validierung, Learning Guard, Launcher, JavaScript, Release-Builder und ZIP-Upload."
+        }
+      ]
     }
   ]
 }
