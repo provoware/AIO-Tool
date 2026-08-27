@@ -1,6 +1,7 @@
 import re
 import unittest
 
+from app import ROOT_DIR
 from scripts.ui_acceptance import inline_page
 
 
@@ -24,6 +25,14 @@ class UiAcceptanceHarnessTests(unittest.TestCase):
         page = inline_page("window.__fixture_ready = true;")
         self.assertNotIn("?contract=dashboard-v2.3", page)
         self.assertEqual(len(re.findall(r'data-inline-source="(?:styles|acceptance)\.css"', page)), 2)
+
+    def test_ci_entrypoint_is_only_a_thin_wrapper(self):
+        ci = (ROOT_DIR / "scripts" / "ui_acceptance_ci.py").read_text(encoding="utf-8")
+        self.assertIn("from ui_acceptance import main", ci)
+        self.assertNotIn("def run_browser", ci)
+        self.assertNotIn("def inline_page_with_fixture", ci)
+        self.assertNotIn("dashboard-v2.", ci)
+        self.assertLess(len(ci.splitlines()), 25)
 
 
 if __name__ == "__main__":
