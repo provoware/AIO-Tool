@@ -26,8 +26,9 @@ class LauncherContractTests(unittest.TestCase):
 
     def test_actionable_error_ids_cover_start_phases(self) -> None:
         for event_id in (
-            "LAUNCH-E102", "LAUNCH-E205", "LAUNCH-E303", "LAUNCH-E306",
-            "LAUNCH-E404", "LAUNCH-E407", "LAUNCH-E508", "LAUNCH-E900",
+            "LAUNCH-E102", "LAUNCH-E103", "LAUNCH-E205", "LAUNCH-E303",
+            "LAUNCH-E304", "LAUNCH-E306", "LAUNCH-E404", "LAUNCH-E407",
+            "LAUNCH-E508", "LAUNCH-E900",
         ):
             self.assertIn(event_id, self.launcher)
 
@@ -56,6 +57,14 @@ class LauncherContractTests(unittest.TestCase):
         self.assertIn('PROBE_STATE" == "own-ready"', self.launcher)
         self.assertIn('PROBE_STATE" == "occupied"', self.launcher)
         self.assertIn("LAUNCH-D404", self.launcher)
+
+    def test_launcher_rejects_invalid_port_and_unknown_probe_state(self) -> None:
+        self.assertIn('[[ ! "$PORT" =~ ^[0-9]+$ ]]', self.launcher)
+        self.assertIn("PORT < 1024", self.launcher)
+        self.assertIn("PORT > 65535", self.launcher)
+        self.assertIn("LAUNCH-E103", self.launcher)
+        self.assertIn("LAUNCH-E304", self.launcher)
+        self.assertIn('own-ready|occupied|free', self.launcher)
 
     def test_backend_remains_loopback_only(self) -> None:
         self.assertIn("http://127.0.0.1:${PORT}", self.launcher)
